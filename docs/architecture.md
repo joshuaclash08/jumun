@@ -1,14 +1,15 @@
 # Architecture
 
-This document describes the folder structure, core patterns, and platform policies planned for Jumun's Phase 1 app. Nothing here is scaffolded yet — see `plan.md` for the current documentation-only scope. This is the plan to execute once a future round begins actual implementation.
+This document describes the folder structure, core patterns, and platform policies for Jumun's Phase 1 app. Foundation scaffolding (dependencies, shadcn init, this folder skeleton, app shell) is in progress per `plan.md`'s current status; screens and business logic are not built yet.
 
 ## Folder structure
 
 ```
 /app
   layout.tsx              # <html lang="ko">, next/font (Pretendard + Noto Sans KR), theme/a11y sync provider
-  page.tsx                 # entry point — QR/NFC lands here
-  /order/[storeId]/         # deep-link route encoding store + table, e.g. /order/{storeId}?table={n}
+  page.tsx                 # root fallback — no encoded storeId/table (direct visit, home-screen relaunch, or QR/NFC
+                           # read failure); renders straight into the manual store/table entry bottom sheet
+  /order/[storeId]/         # the real entry point — every QR/NFC tag encodes this route, e.g. /order/{storeId}?table={n}
   globals.css                # @import "tailwindcss" + @theme tokens sourced from docs/design-system.md
 /components
   /ui                        # shadcn-generated primitives ONLY — never hand-edited beyond shadcn's own codegen
@@ -33,6 +34,10 @@ components.json                     # shadcn CLI config
 ```
 
 Compared to legacy's `components/{a11y,kiosk,layout,steps,ui}` split, this collapses `kiosk/` and `steps/` into a single `flow/` — legacy split them because it had two parallel systems (a disability-gated onboarding wizard in `steps/`, and the main ordering UI in `kiosk/`). With the onboarding gate removed (`docs/decisions/0001-onboarding-model.md`), there's no reason to keep two parallel directories; it's one flow.
+
+### PWA manifest
+
+`public/manifest.json` makes the app installable for anyone who chooses to (never a requirement — see `PRODUCT.md`'s positioning), and supplies the browser-chrome theming for anyone who doesn't install. Required fields: `name` ("Jumun — 바리어프리 셀프오더"), `short_name` ("Jumun"), `start_url: "/"` (deliberately the root fallback route above, not a specific `/order/[storeId]`, since a stale store/table context baked into a home-screen icon would be wrong the next time it's tapped at a different venue), `display: "standalone"`, `background_color`/`theme_color` set to `--color-bg` (`#F7F3EC`, `docs/design-system.md`) so the OS splash/chrome matches the app instead of defaulting to white, and an icon set (192px/512px minimum, plus a maskable variant for Android's adaptive-icon treatment). No app-install banner or prompt is ever shown proactively — this stays purely opt-in, consistent with `docs/decisions/0001-onboarding-model.md`'s no-gate principle extending to installation, not just onboarding.
 
 ## Patterns worth keeping from legacy
 

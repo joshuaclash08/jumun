@@ -43,8 +43,27 @@ Motion (React), GSAP, and Lenis all do "animation" in some sense, which makes th
 
 | Choice | Notes |
 |---|---|
-| **Pretendard** (primary) + **Noto Sans KR** (CJK-coverage fallback), loaded via `next/font` | `next/font/local` for Pretendard's static/variable `.woff2` files, `next/font/google` for Noto Sans KR. This is a concrete improvement over legacy, not just a style preference: legacy loaded Pretendard from an external jsdelivr CDN via a CSS `@import` at the top of `globals.css`, which is a render-blocking network request with no `font-display`/preload control. Self-hosting via `next/font` avoids that entirely. |
+| **Pretendard** (primary) + **Noto Sans KR** (CJK-coverage fallback), loaded via `next/font` | `next/font/local` for Pretendard's static/variable `.woff2` file, `next/font/google` for Noto Sans KR. This is a concrete improvement over legacy, not just a style preference: legacy loaded Pretendard from an external jsdelivr CDN via a CSS `@import` at the top of `globals.css`, which is a render-blocking network request with no `font-display`/preload control. Self-hosting via `next/font` avoids that entirely. |
+| Exact sourcing (verified live, not assumed) | Install the `pretendard` npm package — it ships the actual font files, no manual download needed. Point `next/font/local` at `./node_modules/pretendard/dist/web/variable/woff2/PretendardVariable.woff2` with `variable: '--font-pretendard'`. **Required, easy to miss**: pass an explicit `weight: '45 920'` (the variable font's real weight range) — omitting it renders the wrong weight specifically in WebKit/Safari, which matters here because iOS Safari is an explicit target browser for this product (see the Vibration API constraint in `plan.md`). |
 | Fallback stack | `-apple-system, BlinkMacSystemFont, system-ui, "Apple SD Gothic Neo", sans-serif` — kept from legacy's own fallback choice as the final safety net if both primary fonts fail to load. |
+
+## Korean Language & Utility Ecosystem
+
+| Library | Role | Notes |
+|---|---|---|
+| **`es-hangul`** | Korean NLP & Search | Handles Hangul particle affixing (조사 처리: `이/가`, `을/를`) for accessible screen-reader sentences and dynamic toast messages, as well as initial consonant search (초성 검색: "ㅇㅁㄹㅋㄴ" → "아메리카노"). |
+| **`@toss/es-toolkit`** | Utility functions | Blazingly fast, modern utility library from Toss for array/object manipulation and debounce utilities (touch debounce for motor accessibility). |
+
+**Language switching (ko/en) — no i18n framework.** The settings language toggle (`docs/features.md`) is served by a small static dictionary object plus a `useTranslation` hook (conceptually kept from legacy's own hook of the same name), not `next-intl`/`next-i18next`/a routed-locale setup. Phase 1 has no locale-specific routing, SEO, or pluralization-rule complexity to justify a framework — two flat string maps and a store-driven lookup is the whole requirement. Revisit only if a real i18n framework's other features (locale-aware routing, ICU pluralization) become genuinely needed, not preemptively.
+
+## Design Systems: Toss TDS vs. Shadcn UI + Radix
+
+Full reasoning recorded as [ADR 0005](decisions/0005-toss-tds-vs-shadcn.md); summarized here for stack-reference convenience.
+
+| Candidate | Verdict | Why & Strategy |
+|---|---|---|
+| **`@toss/tds-mobile` / `@emotion/react`** | Evaluated & rejected | `@toss/tds-mobile` relies on `@emotion/react` and React 17/18. In Next.js 16 (App Router) + React 19, Emotion suffers from CSS-in-JS style injection bugs and React Server Components incompatibilities. Furthermore, TDS Mobile components are pre-compiled for Toss internal App-in-Toss (AIT) environments, making customized accessibility tokens (WCAG AAA contrast palette, safe-area tokens) difficult to override. |
+| **shadcn (`--base radix`) + Toss-inspired token layer** | **Chosen strategy** | The **clean, tactile feel** (large corner radii, generous 56–64px touch targets, subtle active-press springs, fluid bottom sheets — formalized in `DESIGN.md`'s Shapes/Components sections) is achieved on top of **shadcn + Radix Primitives + Tailwind v4 + Motion**, as design tokens this project owns, not as inherited component code. Full React 19 compatibility, zero Emotion runtime overhead, and every accessibility token stays overridable. |
 
 ## Testing
 
@@ -61,7 +80,7 @@ Full testing approach, including what's deliberately deferred, in `docs/testing-
 | Choice | Confidence | Notes |
 |---|---|---|
 | **Bun** | Recommended default | Legacy's own `docs/architecture.md` explicitly specified "Bun 1.3+," even though the legacy repo itself shipped both `bun.lock` and `package-lock.json` (an unresolved ambiguity there). Jumun picks one explicitly: Bun. Plain `npm` is the documented fallback if Bun isn't available in a given environment. |
-| **Cloudflare Workers**, via `@opennextjs/cloudflare` + `wrangler` | Lower-confidence, inferred only | Matches legacy's actual (internally consistent, working) deployment configuration — `wrangler.jsonc` + `open-next.config.ts` + the `opennextjs-cloudflare build`/`deploy` scripts. Legacy's README mentions Vercel, but that's unedited `create-next-app` boilerplate, not a real decision. Flagged as lower-confidence than everything else in this document specifically because hosting wasn't part of this project's explicit requirements — revisit if there's a reason to prefer something else. |
+| **Cloudflare Workers**, via `@opennextjs/cloudflare` + `wrangler` | Lower-confidence, inferred only | Matches legacy's actual (internally consistent, working) deployment configuration — `wrangler.jsonc` + `open-next.config.ts` + the `opennextjs-cloudflare build`/`deploy` scripts. Legacy's README mentions Vercel, but that's unedited `create-next-app` boilerplate, not a real decision. Flagged as lower-confidence than everything else in this document specifically because hosting wasn't part of this project's explicit requirements — revisit if there's a reason to prefer something else. **Live, current compatibility risk, verified before writing this**: Next.js 16 renamed `middleware.ts` to `proxy.ts` (the exported function changed from `middleware()` to `proxy()`) as part of a new proxy architecture. `@opennextjs/cloudflare` officially lists Next.js 16 as supported, but its current Wrangler-facing build logic still targets the old `middleware` convention, and proxy handlers can fail to build under Next 16 as a result (tracked upstream: [cloudflare/workers-sdk#13755](https://github.com/cloudflare/workers-sdk/issues/13755), [#13937](https://github.com/cloudflare/workers-sdk/issues/13937)). Not a blocker for Phase 1 foundation work — nothing in `docs/architecture.md`'s thin route inventory needs middleware/proxy logic yet — but re-check this specific issue's status before adding any `proxy.ts` (auth gate, redirect, header rewrite) or before running a real `opennextjs-cloudflare build` for deployment. |
 
 ## Explicitly considered and rejected
 
