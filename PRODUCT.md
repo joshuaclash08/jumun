@@ -8,7 +8,7 @@ web
 
 ## Stack
 
-Next.js (App Router) + TypeScript (strict) + Tailwind CSS v4 + shadcn (`--base radix`) + Radix UI Primitives + Lucide icons + Zustand + Framer Motion + GSAP + Lenis + Pretendard/Noto Sans KR via `next/font`. Bun package manager. Cloudflare Workers (via OpenNext + wrangler) deployment. Confirmed explicitly across this project's planning sessions, not delegated. Full rationale in `docs/tech-stack.md`.
+Next.js (App Router) + TypeScript (strict) + Tailwind CSS v4 + shadcn (`--base radix`) + Radix UI Primitives + Lucide icons + Zustand + Motion (formerly Framer Motion; package `motion`) + GSAP + Lenis + Pretendard/Noto Sans KR via `next/font`. Bun package manager. Cloudflare Workers (via OpenNext + wrangler) deployment. Confirmed explicitly across this project's planning sessions, not delegated. Full rationale in `docs/tech-stack.md`.
 
 ## Users
 

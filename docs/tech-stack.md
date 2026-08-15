@@ -27,15 +27,15 @@ This document describes the full technology stack planned for Jumun's Phase 1 we
 
 ## Animation — three libraries, one rule, explicit division of labor
 
-Framer Motion, GSAP, and Lenis all do "animation" in some sense, which makes them redundant unless responsibilities are explicitly divided. They are:
+Motion (React), GSAP, and Lenis all do "animation" in some sense, which makes them redundant unless responsibilities are explicitly divided. They are:
 
 | Library | Owns | Reasoning |
 |---|---|---|
-| **Framer Motion** | React component/page-transition animation: step-to-step wizard transitions (`AnimatePresence`), micro-interactions tied to component state (button press scale, bottom-sheet open/close, toast enter/exit, cart-item add/remove layout reflow via the `layout` prop) | This is the **default** choice for anything tied to React state or lifecycle. Matches legacy's actual usage pattern already. |
-| **GSAP** | Complex, imperative, timeline-based sequences that are awkward to express as React state transitions: the loading-screen intro, the order-success reveal choreography, any future scroll-scrubbed effect via ScrollTrigger | The **exception**, reached for only when Framer Motion's declarative model gets awkward — precise multi-node staggered sequencing, for example. Legacy's loading-screen technique (`yPercent: -100` slide-off on completion) is worth keeping verbatim as a GSAP pattern. |
+| **Motion** — package `motion`, imported as `import { motion } from "motion/react"` — **not** the `framer-motion` package. Framer Motion rebranded to Motion; `framer-motion` still exists but is the legacy/compatibility name. Legacy's own `package.json` used `framer-motion`, which was correct when it was written and is now the outdated name — verified live against current docs before writing this, not assumed from training data or copied from legacy. | React component/page-transition animation: step-to-step wizard transitions (`AnimatePresence`), micro-interactions tied to component state (button press scale, bottom-sheet open/close, toast enter/exit, cart-item add/remove layout reflow via the `layout` prop) | This is the **default** choice for anything tied to React state or lifecycle. Matches legacy's actual usage pattern already (modulo the package rename above). |
+| **GSAP** | Complex, imperative, timeline-based sequences that are awkward to express as React state transitions: the loading-screen intro, the order-success reveal choreography, any future scroll-scrubbed effect via ScrollTrigger | The **exception**, reached for only when Motion's declarative model gets awkward — precise multi-node staggered sequencing, for example. Legacy's loading-screen technique (`yPercent: -100` slide-off on completion) is worth keeping verbatim as a GSAP pattern. |
 | **Lenis** | Smooth-scroll momentum on the menu-list scroll container only | A "feel" layer under both of the above, not a replacement for either. |
 
-**Rule that applies to all three, without exception:** every animation must collapse to instant/off when the app's `reduceMotion` setting is true — Framer transitions drop to `duration: 0`, GSAP timelines are skipped or seeked straight to their end state, and `<ReactLenis>` (the current official `lenis/react` integration) is not instantiated at all. This generalizes legacy's own CSS-level reduced-motion override (confirmed in `legacy-reference/app/globals.css`, forcing all animation/transition durations to `0.01ms` under `prefers-reduced-motion: reduce`) up to the JS animation layer too.
+**Rule that applies to all three, without exception:** every animation must collapse to instant/off when the app's `reduceMotion` setting is true — Motion transitions drop to `duration: 0`, GSAP timelines are skipped or seeked straight to their end state, and `<ReactLenis>` (the current official `lenis/react` integration) is not instantiated at all. This generalizes legacy's own CSS-level reduced-motion override (confirmed in `legacy-reference/app/globals.css`, forcing all animation/transition durations to `0.01ms` under `prefers-reduced-motion: reduce`) up to the JS animation layer too.
 
 **Lenis-specific caveat worth remembering**: Lenis's own defaults auto-detect the OS-level `prefers-reduced-motion` and switch to instant/1:1 scrolling on their own. That's not sufficient here, because Jumun's accessibility settings store is meant to be the single source of truth for `reduceMotion` — seeded from the OS preference, but independently overridable by the user in the in-app settings panel. So: gate `<ReactLenis>` behind the app's own store value, not Lenis's built-in OS check alone. Also, smooth-scroll hijacking is a known anti-pattern for screen-reader/switch-control users, whose navigation is focus-driven rather than scroll-driven — a programmatic `focus()`-triggered scroll (e.g., "focus jumped to the next field") should never be smoothed by Lenis.
 
@@ -45,6 +45,16 @@ Framer Motion, GSAP, and Lenis all do "animation" in some sense, which makes the
 |---|---|
 | **Pretendard** (primary) + **Noto Sans KR** (CJK-coverage fallback), loaded via `next/font` | `next/font/local` for Pretendard's static/variable `.woff2` files, `next/font/google` for Noto Sans KR. This is a concrete improvement over legacy, not just a style preference: legacy loaded Pretendard from an external jsdelivr CDN via a CSS `@import` at the top of `globals.css`, which is a render-blocking network request with no `font-display`/preload control. Self-hosting via `next/font` avoids that entirely. |
 | Fallback stack | `-apple-system, BlinkMacSystemFont, system-ui, "Apple SD Gothic Neo", sans-serif` — kept from legacy's own fallback choice as the final safety net if both primary fonts fail to load. |
+
+## Testing
+
+| Library | Role |
+|---|---|
+| **Vitest** | Unit + component test runner. Matches legacy's precedent, pairs natively with Vite-family tooling and Next.js. |
+| **@testing-library/react** | Component tests queried by role/accessible name — see `docs/testing-strategy.md` for why this matters more than usual here (a passing test that used a `data-testid` proves nothing about screen-reader usability). |
+| **@axe-core/react** (or `vitest-axe`) | Automated accessibility violation checks, run as part of the component-test suite, treated as build-breaking per `docs/testing-strategy.md`. |
+
+Full testing approach, including what's deliberately deferred, in `docs/testing-strategy.md`.
 
 ## Package manager & deployment
 

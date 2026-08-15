@@ -101,7 +101,7 @@ Tailwind's default numeric spacing scale already lands exactly on these values (
 
 ## Motion rules
 
-- Every animation (Framer Motion, GSAP, or Lenis — see `docs/tech-stack.md`) collapses to instant/off when the user's `reduceMotion` setting is true. Mechanism differs per library; the outcome must not.
+- Every animation (Motion, GSAP, or Lenis — see `docs/tech-stack.md`) collapses to instant/off when the user's `reduceMotion` setting is true. Mechanism differs per library; the outcome must not.
 - **No countdown timers or time-pressure UI anywhere, without exception.** If idle/session handling is ever needed later for a real backend/security reason, it must be silent — no visible ticking countdown — and must never auto-clear a user's cart from inactivity in this prototype, since there's no real session-security justification for that yet.
 - Any celebratory animation (e.g., an order-success confetti effect) needs a non-animated equivalent state when `reduceMotion` is true — never skip the moment entirely, just skip the motion.
 - Keep transitions short and predictable: 150–300ms as a working range. This product's audience benefits from directness over decorative flourish, though small, skippable polish (button press scale, success confetti) is fine.
