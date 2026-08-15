@@ -17,9 +17,23 @@ The baseline requirements below were specified directly for this project:
 
 Everything below is these six rules translated into exact values.
 
+## Visual direction
+
+Jumun is an **Operate**-mode surface (a visitor completing a task — ordering — not being persuaded or entertained). In Operate mode, expression never outranks scanability, consistency, and familiar affordances; brand and personality live in precise details, not loud gestures. This shapes every choice below, and is why the direction stays closer to "a very well-made ordering app" than to a portfolio piece.
+
+**Color strategy: Restrained** (neutrals plus one accent) — the default and correct choice for an Operate surface, chosen deliberately rather than by default. `--color-bg`/`--color-text-primary` carry the whole surface; `--color-accent` ("Jumun Blue") is spent only on primary actions, links, and selected state — never a whole-region wash. A Committed or Drenched strategy (color owning 30%+ of the surface) would fight legibility and focus precisely where this product can least afford it.
+
+**Typography: workhorse, not display.** Pretendard and Noto Sans KR are system-style UI faces, not faces with a point of view — correct for Operate, where a reader needs speed and neutrality, not a typographic mood. A display serif or an expressive grotesque would be the wrong tool here even before accessibility is considered.
+
+**Explicitly avoided, on purpose:** AI-generated interfaces cluster around a handful of recognizable looks regardless of subject — warm cream ground + high-contrast serif display + terracotta/signal-red accent; near-black + one neon accent with glowing edges; broadsheet-editorial hairlines + italic serif + small tracked mono labels. Jumun's palette (warm off-white, deep charcoal, a restrained mid-blue accent, no glow, no editorial mono) doesn't land in any of those three — checked deliberately, not by accident. If a future revision of this palette starts resembling one of them, that's a signal to rework it, not a coincidence to ignore.
+
+**What "not AI slop" actually means here**: not decoration — restraint, applied precisely. The bar is: does every screen look like it belongs to a real, shipped, maintained ordering product a person could download today, with the small correct details (real button hierarchy, real loading states, real empty states, safe-area-aware spacing) that generic scaffolds skip. Sections below on elevation, radius, button hierarchy, imagery, and loading/empty states exist specifically to close that gap.
+
 ## Color
 
 All contrast ratios are computed via the WCAG relative-luminance formula, not estimated.
+
+**Floor vs. actual, stated explicitly to avoid ambiguity:** 4.5:1 is the enforced *minimum* for default-mode body text — nothing may ever go below it — and 7:1 is the enforced *minimum* once high-contrast mode is on. The values below exceed both floors by design (default ≈15:1, high-contrast ≈17:1): the floor is a compliance guarantee, not a target to land exactly on. A default theme that only just cleared 4.5:1 would still pass an automated check while looking washed-out; landing well past it is what makes text feel effortless rather than merely legible, which matters more here than in a typical product given the audience.
 
 ### Default theme
 
@@ -91,3 +105,67 @@ Tailwind's default numeric spacing scale already lands exactly on these values (
 - **No countdown timers or time-pressure UI anywhere, without exception.** If idle/session handling is ever needed later for a real backend/security reason, it must be silent — no visible ticking countdown — and must never auto-clear a user's cart from inactivity in this prototype, since there's no real session-security justification for that yet.
 - Any celebratory animation (e.g., an order-success confetti effect) needs a non-animated equivalent state when `reduceMotion` is true — never skip the moment entirely, just skip the motion.
 - Keep transitions short and predictable: 150–300ms as a working range. This product's audience benefits from directness over decorative flourish, though small, skippable polish (button press scale, success confetti) is fine.
+
+## Elevation
+
+Elevation communicates layering (what's a sheet, what's a card, what's above what) without relying on color alone — important given rule 4-style "never convey by color alone" thinking extends naturally to state.
+
+| Token | Value | Used for |
+|---|---|---|
+| `--elevation-0` | none (flat, sits on `--color-bg`) | Page background, inline content |
+| `--elevation-1` | `0 1px 2px rgba(33,30,26,0.06), 0 1px 1px rgba(33,30,26,0.04)` | Product cards, resting surfaces |
+| `--elevation-2` | `0 4px 12px rgba(33,30,26,0.10), 0 2px 4px rgba(33,30,26,0.06)` | Bottom sheets, popovers, the settings panel |
+| `--elevation-3` | `0 12px 32px rgba(33,30,26,0.16), 0 4px 8px rgba(33,30,26,0.08)` | Toasts, anything floating above a sheet |
+
+Shadows use the charcoal token at low opacity rather than pure black — keeps elevation feeling native to the warm palette instead of generic. `--color-surface` (`#FBF9F5`) plus `--elevation-1` is the default card treatment; never combine flat `--color-bg`-on-`--color-bg` with no shadow and expect a boundary to read — pair every elevated surface with either a shadow or `--color-border-subtle`, not neither.
+
+## Corner radius
+
+| Token | Value | Used for |
+|---|---|---|
+| `--radius-sm` | 8px | Chips, badges, small controls |
+| `--radius-md` | 12px | Cards, inputs |
+| `--radius-lg` | 20px | Buttons at CTA height (56–64px), bottom sheets' top corners |
+| `--radius-full` | 9999px | Pills (cart status pill), avatar-style icons |
+
+One radius family used consistently is part of what separates a considered system from a generated-looking one — don't let individual components invent their own radius values.
+
+## Button hierarchy
+
+Every screen should have exactly one `primary` button at a time (the CTA that advances the flow — 담기/다음/결제하기). Everything else is visually subordinate, on purpose:
+
+| Variant | Look | Used for |
+|---|---|---|
+| `primary` | Filled `--color-accent`, `--color-accent-foreground` text, `--elevation-1` | The single advancing action per screen |
+| `secondary` | `--color-surface` fill, `--color-border-strong` outline, `--color-text-primary` text | Non-destructive alternatives (e.g. "다시 담기" after undo) |
+| `ghost` | No fill, no border, `--color-text-primary` text, background tint only on press/focus | Low-emphasis actions (back, cancel inside a sheet) |
+| `destructive` | `--color-error` text or outline, no heavy fill unless it's a confirming step | Remove item, clear cart |
+
+Maps directly onto shadcn's `Button` variant prop (`default`/`secondary`/`ghost`/`destructive`) — this table is what those variants mean *in Jumun*, not a new component to build.
+
+## Imagery
+
+No real menu photography exists yet (see `PRODUCT.md`'s Evidence on Hand), and attempting photorealistic fake food photos for a fictional menu risks landing exactly in "obviously AI-generated stock photo" territory — the opposite of what's being asked for. Instead: **a consistent, flat, geometric icon/illustration treatment per menu item**, not photography. Concretely — a fixed-aspect (1:1) container per product, `--radius-md` corners, a limited 2–3 tone illustration style built from the same palette (charcoal linework, accent-blue or warm neutral fills, no gradients, no drop shadows on the illustration itself), consistent stroke weight across every item. This reads as a deliberate design system decision rather than a placeholder, is achievable without real assets or image generation, and sidesteps the fake-photo problem entirely. Every image still carries real, descriptive alt text (see "Screen-reader content" below) — the illustration is a visual aid, not the source of truth for what the item is.
+
+## Loading states
+
+Skeleton screens, not spinners, for anything with a predictable shape (menu grid, cart list, order summary) — skeletons preserve layout stability (no content jump when data resolves) and read as considered rather than generic. Reserve a spinner for genuinely unpredictable-duration actions with no shape to preview (the mocked checkout "processing" moment in `docs/features.md`). Skeleton blocks use `--color-border-subtle` as a base with a subtle shimmer sweep — gated behind `reduceMotion` like every other animation; the static (non-shimmering) skeleton shape alone is enough signal when motion is off.
+
+## Empty states
+
+Every list that can legitimately be empty (cart, a filtered menu category) gets a real empty state: a short, specific sentence (not "No results"), one small illustration in the same style as product imagery, and — where there's an obvious next action — a single `secondary`-variant button back to where the user came from. Never a blank area with no explanation; blank-by-omission is exactly the kind of gap that separates a finished product from a scaffold.
+
+## Screen-reader content authoring
+
+Every interactive component carries a deliberately authored, descriptive label — not just its visible text repeated as `aria-label`. This is a first-class design requirement (see `PRODUCT.md`'s Accessibility & Inclusion), not a markup afterthought layered on at the end. Concretely:
+
+- **Product cards**: the accessible name is the full sentence a sighted user gets from glancing at the card, not just the item name — e.g. `아메리카노, 4,500원, 뜨거운 아메리카노` rather than just `아메리카노`. Options/customization state gets summarized the same way once selected.
+- **Cart mutations**: every add/remove/quantity change announces via an `aria-live="polite"` region with a complete sentence ("아메리카노 1잔이 장바구니에 담겼습니다"), matching the toast the sighted UI already shows — one authored message, two channels, never a visual-only toast with no live-region equivalent.
+- **Icon-only controls** (quantity stepper +/-, remove, back): always a real `aria-label` describing the action and, where ambiguous, its target — "아메리카노 수량 늘리기," not "increase," and never an icon shipped with no label at all.
+- **Buttons whose visible label is short**: get an `aria-describedby` pointing at additional context when the button's consequence isn't obvious from its label alone (e.g. 결제하기 on the final screen can reference the order total).
+
+Writing this content is part of building each component, at the same time as its visual design — not a separate accessibility pass done afterward.
+
+## Safe-area-inset handling
+
+The fixed bottom action bar (`docs/decisions/0003-navigation-paradigm.md`) sits directly above the home indicator on notched iPhones and gesture-nav Android devices. Its bottom padding must account for `env(safe-area-inset-bottom)` (via Tailwind's `pb-[env(safe-area-inset-bottom)]` or a token wrapping the same value), on top of — not instead of — the 12px baseline gap, or the CTA reads as uncomfortably close to the system gesture area on real devices. The root `<html>`/`<body>` needs `viewport-fit=cover` in the viewport meta for `env()` values to resolve at all; without it every safe-area token silently computes to zero and this becomes invisible in a desktop-browser device-toolbar preview while still being wrong on a real phone.
