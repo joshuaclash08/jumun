@@ -14,7 +14,7 @@ The physical entry point is a single tag at the table carrying both a printed QR
 
 ## Current status
 
-**Phase 1, foundation stage.** The documentation set is in place (see "How this documentation set works" below) and basic project scaffolding is being laid down — framework, dependencies, and folder structure per `docs/tech-stack.md` and `docs/architecture.md`. No real screens or business logic are built yet. See "Phase 1 scope" below for exactly what's in and out at this stage.
+**Phase 1, foundation complete.** The documentation set is in place (see "How this documentation set works" below), and the project foundation is built: dependencies installed, shadcn initialized (`--base radix`), the folder structure from `docs/architecture.md` in place with real types/data/services/stores/hooks, and the app shell (fonts, design tokens, viewport, routing) wired and verified in a browser. No real ordering screens (menu browsing, cart, checkout) or their business logic are built yet — that's the next round. See "Phase 1 scope" below for exactly what's in and out at this stage.
 
 A `legacy-reference/` folder exists alongside this plan (not tracked in this repo's git history — see `.gitignore`) containing a prior, partially-built attempt at this same product. It's used strictly as a source of ideas, constraints, and cautionary examples — not as a spec to inherit. Every place this documentation set draws on it, it says so explicitly, including where legacy got things wrong (a dead-end button, a countdown timer, disabled pinch-zoom, trademarked mock data — see the decision records in `docs/decisions/` for specifics).
 
