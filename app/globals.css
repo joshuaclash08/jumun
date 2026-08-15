@@ -2,12 +2,17 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-@custom-variant dark (&:is(.dark *));
+/* Jumun has no light/dark distinction -- it has a default theme and an
+   opt-in AAA/high-contrast mode (docs/design-system.md). Repurposing
+   shadcn's "dark" variant as "high-contrast" rather than keeping the name
+   "dark" so it doesn't imply a color-scheme swap that isn't what this is. */
+@custom-variant high-contrast (&:is(.high-contrast *));
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
+  --font-sans: var(--font-pretendard), var(--font-noto-sans-kr), -apple-system,
+    BlinkMacSystemFont, system-ui, "Apple SD Gothic Neo", sans-serif;
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);
@@ -39,40 +44,45 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  /* docs/design-system.md's Shapes scale, set directly rather than derived
+     via multiplier so sm/md/lg land on the documented 8/12/20px exactly. */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1.25rem;
+  --radius-xl: 1.25rem;
+  --radius-2xl: 1.25rem;
+  --radius-3xl: 1.25rem;
+  --radius-4xl: 1.25rem;
 }
 
+/* Default theme -- docs/design-system.md's Color section. Every value here
+   clears its documented contrast ratio; see that doc for the computed
+   numbers, not restated here so there's one source of truth. */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --background: #f7f3ec; /* Warm Linen */
+  --foreground: #211e1a; /* Deep Charcoal */
+  --card: #fbf9f5; /* Lifted Linen */
+  --card-foreground: #211e1a;
+  --popover: #fbf9f5;
+  --popover-foreground: #211e1a;
+  --primary: #1a56b0; /* Jumun Blue -- deliberately distinct from legacy's Toss Blue #3182f6 */
+  --primary-foreground: #ffffff;
+  --secondary: #fbf9f5;
+  --secondary-foreground: #211e1a;
+  --muted: #fbf9f5;
+  --muted-foreground: #55504a; /* Warm Slate */
+  --accent: #e8eef7; /* subtle Jumun-Blue-tinted hover background, never the fill itself */
+  --accent-foreground: #211e1a;
+  --destructive: #a32118; /* Brick Red */
+  --border: #d8d2c4; /* Faint Linen Line -- decorative only, see DESIGN.md's Never-Alone Rule */
+  --input: #55504a; /* Warm Slate -- real interactive boundaries (inputs) get the stronger stroke */
+  --ring: #211e1a; /* focus ring reuses --foreground, not a separate color */
+  --radius: 0.75rem;
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
@@ -83,38 +93,22 @@
   --sidebar-ring: oklch(0.708 0 0);
 }
 
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+/* AAA/high-contrast mode -- switches on request (docs/design-system.md rule
+   1), stays in the same warm family rather than jumping to literal pure
+   black/white. Only background/foreground/surface move: accent, success, and
+   destructive keep their default-theme values, since they already clear 6:1+
+   and this mode's job is maximizing body-text legibility specifically. */
+.high-contrast {
+  --background: #fbf9f5;
+  --foreground: #17140f; /* Deepest Charcoal, ~17.47:1 on this background */
+  --card: #fbf9f5;
+  --card-foreground: #17140f;
+  --popover: #fbf9f5;
+  --popover-foreground: #17140f;
+  --secondary-foreground: #17140f;
+  --muted-foreground: #211e1a;
+  --accent-foreground: #17140f;
+  --ring: #17140f;
 }
 
 @layer base {
@@ -126,5 +120,20 @@
   }
   html {
     @apply font-sans;
+  }
+
+  /* Safety net matching legacy's verified-good technique (docs/architecture.md).
+     This is the OS-level fallback; the app's own reducedMotion setting (seeded
+     from this, then independently overridable -- docs/tech-stack.md) is the
+     primary mechanism once Motion/GSAP/Lenis are wired into real screens. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }
