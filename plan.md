@@ -8,9 +8,13 @@ It exists to replace physical self-order kiosks, which are frequently unusable f
 
 The product design principle is not "a special mode for disabled users." It's a single, well-designed, modern ordering experience — with real animation and polish — that happens to meet a strict accessibility baseline (WCAG 2.2 AA contrast, 44px+ touch targets, visible focus rings, no time-pressure UI) for every single user, by default. See [docs/decisions/0001-onboarding-model.md](docs/decisions/0001-onboarding-model.md) for the full reasoning behind that choice.
 
+The physical entry point is a single tag at the table carrying both a printed QR code and an NFC chip behind it — scanning or tapping either leads to the same instant, no-install page, which automatically restores the user's previously saved accessibility settings and sets the current store/table context. See [PRODUCT.md](PRODUCT.md) for the full product record this plan is grounded in.
+
+**Beyond food.** Food ordering is Jumun's first proof of concept, not its ceiling. The underlying pattern — a physical QR/NFC tag that instantly opens an accessible, no-install, no-gate transaction flow with settings that follow the user everywhere — is meant to generalize to other service verticals over time (flight tickets and cinema were both raised as examples, not commitments). Phase 1 stays concretely food-scoped; see Product Principles in `PRODUCT.md` for how this shapes decisions without expanding current scope.
+
 ## Current status
 
-**Phase 1, documentation stage.** This repository currently contains planning documents only — no application code, no dependencies installed, no scaffolding. See "Phase 1 scope" below for exactly what that means.
+**Phase 1, foundation stage.** The documentation set is in place (see "How this documentation set works" below) and basic project scaffolding is being laid down — framework, dependencies, and folder structure per `docs/tech-stack.md` and `docs/architecture.md`. No real screens or business logic are built yet. See "Phase 1 scope" below for exactly what's in and out at this stage.
 
 A `legacy-reference/` folder exists alongside this plan (not tracked in this repo's git history — see `.gitignore`) containing a prior, partially-built attempt at this same product. It's used strictly as a source of ideas, constraints, and cautionary examples — not as a spec to inherit. Every place this documentation set draws on it, it says so explicitly, including where legacy got things wrong (a dead-end button, a countdown timer, disabled pinch-zoom, trademarked mock data — see the decision records in `docs/decisions/` for specifics).
 
@@ -32,7 +36,9 @@ Once there's a real native app, add an iOS App Clip target. App Clips can't be d
 
 ### Phase 4 — Universal Links / App Links
 
-Wire up iOS Universal Links (`apple-app-site-association`) and Android App Links (`assetlinks.json`) so a QR/NFC scan auto-routes: installed users deep-link straight into the native app, uninstalled users fall back to the App Clip (iOS) or the Phase 1 web experience (Android / no App Clip support). This is the phase where the web version stops being the primary experience and becomes the fallback.
+Wire up iOS Universal Links (`apple-app-site-association`) and Android App Links (`assetlinks.json`) so a QR/NFC scan auto-routes: users who've installed the native app deep-link straight into it, users who haven't land on the App Clip (iOS) or the web experience (Android / no App Clip support).
+
+**Important, confirmed distinction:** this is not the point where the web version becomes a legacy fallback. The native app is a companion surface, not a replacement — someone who deliberately prefers not to install anything keeps a fully-supported web experience indefinitely, not just until they're nudged to install. Auto-routing logic should route *un-installed* users toward native, not treat everyone on web as someone who simply hasn't upgraded yet.
 
 ## Phase 1 scope
 
@@ -58,10 +64,13 @@ Wire up iOS Universal Links (`apple-app-site-association`) and Android App Links
 |---|---|
 | `README.md` | Entry point — one-line pitch, current status, links to everything below |
 | `plan.md` (this file) | The roadmap and current-phase scope boundary — the "why" and "when" |
+| `PRODUCT.md` | The confirmed product record — users, purpose, positioning, operating context, constraints. Written via the impeccable skill's `init` flow; update it when product truth changes, not when the design changes |
+| `DESIGN.md` | The established visual world for the web surface — the "how it should feel," grounding every UI decision so it doesn't drift toward generic defaults |
 | `docs/tech-stack.md` | Every library in use, why, and how responsibilities are divided between similar tools |
-| `docs/architecture.md` | Folder structure, patterns (service layer, hook wrappers), state shape, viewport policy |
-| `docs/design-system.md` | The accessibility spec turned into concrete design tokens — colors, type, spacing, motion |
-| `docs/features.md` | The screen-by-screen user flow for the Phase 1 MVP |
+| `docs/architecture.md` | Folder structure, patterns (service layer, hook wrappers), data model, service contracts, state shape, viewport policy |
+| `docs/design-system.md` | Design tokens and component-level visual/interaction patterns — colors, type, spacing, motion, elevation, screen-reader content authoring |
+| `docs/features.md` | The screen-by-screen user flow for the Phase 1 MVP, including states and motion choreography |
+| `docs/testing-strategy.md` | Unit/component/accessibility testing approach |
 | `docs/decisions/*.md` | Short ADRs — one per real architectural fork, capturing context and reasoning permanently, so it survives edits to the docs above |
 | `CHANGELOG.md` | Append-only history — one entry per commit, in Keep a Changelog format |
 
