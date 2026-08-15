@@ -3,7 +3,7 @@
 import * as React from "react";
 import { MenuCategoryHeader } from "./MenuCategoryHeader";
 import { ProductCard } from "./ProductCard";
-import type { MenuCategory, Product } from "@/lib/types";
+import type { MenuCategory, Product, StoreInfo } from "@/lib/types";
 import { CartSummaryPill } from "./CartSummaryPill";
 import { ProductDetailSheet } from "./ProductDetailSheet";
 import { CartDrawer } from "./CartDrawer";
@@ -14,9 +14,10 @@ import { useCartStore } from "@/store/useCartStore";
 interface MenuClientViewProps {
   categories: MenuCategory[];
   products: Product[];
+  storeInfo?: StoreInfo;
 }
 
-export function MenuClientView({ categories, products }: MenuClientViewProps) {
+export function MenuClientView({ categories, products, storeInfo }: MenuClientViewProps) {
   const [activeCategoryId, setActiveCategoryId] = React.useState<string>(
     categories[0]?.id || ""
   );
@@ -26,7 +27,14 @@ export function MenuClientView({ categories, products }: MenuClientViewProps) {
   const [isCartDrawerOpen, setIsCartDrawerOpen] = React.useState(false);
   const [isCheckoutSheetOpen, setIsCheckoutSheetOpen] = React.useState(false);
 
+  const setStoreInfo = useCartStore((state) => state.setStoreInfo);
   const orderStatus = useCartStore((state) => state.orderStatus);
+
+  React.useEffect(() => {
+    if (storeInfo) {
+      setStoreInfo(storeInfo);
+    }
+  }, [storeInfo, setStoreInfo]);
 
   const handleCategorySelect = (id: string) => {
     setActiveCategoryId(id);

@@ -47,7 +47,7 @@ export default async function OrderPage({
         </p>
       </header>
 
-      <MenuClientView categories={categories} products={products} />
+      <MenuClientView categories={categories} products={products} storeInfo={storeInfo} />
     </main>
   );
 }

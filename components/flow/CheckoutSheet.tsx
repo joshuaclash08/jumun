@@ -25,11 +25,15 @@ export function CheckoutSheet({ open, onOpenChange, onConfirm }: CheckoutSheetPr
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const handleCheckout = async () => {
+    if (!storeInfo) {
+      console.error("StoreInfo is missing");
+      return;
+    }
     setIsSubmitting(true);
     setOrderStatus("submitting");
 
     try {
-      const receipt = await OrderService.submitOrder(items, orderType, storeInfo!);
+      const receipt = await OrderService.submitOrder(storeInfo, items, orderType);
       setLastReceipt(receipt);
       setOrderStatus("confirmed");
       clearCart();
