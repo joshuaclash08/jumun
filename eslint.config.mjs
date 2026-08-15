@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Reference-only material, not part of this project (see docs/plan.md) --
+    // its own @/* imports collide with this project's path alias otherwise.
+    "legacy-reference/**",
   ]),
 ]);
 
