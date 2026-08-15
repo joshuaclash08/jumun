@@ -9,6 +9,7 @@ import { ProductDetailSheet } from "./ProductDetailSheet";
 import { CartDrawer } from "./CartDrawer";
 import { CheckoutSheet } from "./CheckoutSheet";
 import { ConfirmationStep } from "./ConfirmationStep";
+import { A11yToastContainer } from "./A11yToastContainer";
 import { useCartStore } from "@/store/useCartStore";
 
 interface MenuClientViewProps {
@@ -118,6 +119,8 @@ export function MenuClientView({ categories, products, storeInfo }: MenuClientVi
           window.scrollTo({ top: 0, behavior: "instant" });
         }}
       />
+
+      <A11yToastContainer />
     </div>
   );
 }

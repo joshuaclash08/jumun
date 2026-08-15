@@ -111,6 +111,13 @@
   --ring: #17140f;
 }
 
+.dyslexia-spacing,
+.dyslexia-spacing * {
+  letter-spacing: 0.1em !important;
+  line-height: 1.6 !important;
+  word-spacing: 0.14em !important;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

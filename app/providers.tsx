@@ -12,10 +12,40 @@ export function Providers({ children }: { children: ReactNode }) {
   const hydrateReducedMotionFromSystem = useAccessibilityStore(
     (state) => state.hydrateReducedMotionFromSystem,
   );
+  const highContrast = useAccessibilityStore((state) => state.highContrast);
+  const fontScale = useAccessibilityStore((state) => state.fontScale);
+  const dyslexiaSpacing = useAccessibilityStore((state) => state.dyslexiaSpacing);
 
   useEffect(() => {
     hydrateReducedMotionFromSystem(osPrefersReducedMotion);
   }, [osPrefersReducedMotion, hydrateReducedMotionFromSystem]);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (highContrast) {
+      root.classList.add("high-contrast");
+    } else {
+      root.classList.remove("high-contrast");
+    }
+  }, [highContrast]);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (dyslexiaSpacing) {
+      root.classList.add("dyslexia-spacing");
+    } else {
+      root.classList.remove("dyslexia-spacing");
+    }
+  }, [dyslexiaSpacing]);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (fontScale && fontScale !== 1) {
+      root.style.fontSize = `${fontScale * 100}%`;
+    } else {
+      root.style.fontSize = "";
+    }
+  }, [fontScale]);
 
   return children;
 }

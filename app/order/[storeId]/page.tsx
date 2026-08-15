@@ -1,5 +1,6 @@
 import { StoreService, MenuService } from "@/lib/services";
 import { MenuClientView } from "@/components/flow/MenuClientView";
+import { HeaderBar } from "@/components/layout/HeaderBar";
 
 // The real entry point every QR/NFC tag encodes: /order/{storeId}?table={n}.
 // Exercises the real chain (route param -> StoreService.resolveStore ->
@@ -39,14 +40,7 @@ export default async function OrderPage({
 
   return (
     <main id="main-content" className="flex min-h-full flex-col bg-background">
-      {/* A simple header showing the store and table */}
-      <header className="sticky top-0 z-50 bg-background/90 p-4 text-center backdrop-blur-md">
-        <h1 className="text-lg font-bold text-foreground">{storeInfo.storeName}</h1>
-        <p className="text-sm text-muted-foreground">
-          {storeInfo.table}번 테이블
-        </p>
-      </header>
-
+      <HeaderBar storeInfo={storeInfo} />
       <MenuClientView categories={categories} products={products} storeInfo={storeInfo} />
     </main>
   );
