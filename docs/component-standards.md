@@ -4,7 +4,9 @@ This document is the prescriptive layer on top of `DESIGN.md` (tokens) and `docs
 
 ---
 
-## 1. Icon / illustration tiles & Card Geometry
+## 1. Product imagery tiles & Card Geometry
+
+> **Stale as of `docs/decisions/0013-menu-photography.md` (2026-08-16)**: menu/product imagery moved from the `TossIllustrations.tsx` illustrations this table describes to real photography (`next/image` + `product.imageUrl`) in `ProductCard.tsx`, `FeaturedMenuSection.tsx`, and `ProductDetailSheet.tsx`. Those three components were under active, fast-moving revision at the time of this note, so the table below (tile sizes, illustration `size` prop, borderless treatment) was not re-measured against the new implementation — treat it as historical until a follow-up pass re-documents the photo-card specs once that work settles. The empty/celebratory-state row is unaffected and still accurate.
 
 Every product/illustration graphic (`components/ui/TossIllustrations.tsx`) sits seamlessly inside a card without separate tinted box containers. As of ADR 0012, the product catalog is rendered in a **2-Column Borderless Card Grid with Fluid Vertical Title Auto-Expansion** (`grid grid-cols-2 gap-3 sm:gap-4`):
 

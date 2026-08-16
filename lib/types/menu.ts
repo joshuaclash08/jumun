@@ -38,6 +38,9 @@ export interface Product {
   price: number;
   /** Relative URL to menu item photo (e.g. "/images/menu/americano.jpg") */
   imageUrl: string;
+  /** Theme background solid color hex (e.g. "#F0EFEA") */
+  themeBg?: string;
   optionGroups: ProductOptionGroup[];
   available: boolean;
 }
+

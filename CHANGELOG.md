@@ -237,3 +237,15 @@ Every `text-xs` (12px) and `text-sm` (14px) instance across the app bumped to `t
 - `components/flow/CartSummaryPill.tsx` — new `reserveStaffCallSpace` prop (defaults `true`); when `false`, the pill's left padding drops from `pl-[76px]` (space reserved for `StaffCallButton`'s bottom-left circle) to `pl-4`, matching its right padding. Previously that space stayed empty for takeout since the pill never expanded to claim it.
 - `components/flow/MenuClientView.tsx` — passes `reserveStaffCallSpace={storeInfo?.orderType === "dine-in"}`, so takeout's "주문하기" pill spans the full width now that no staff-call button shares the bottom bar. Chosen over adding a takeout-specific bottom-left affordance (e.g. a repurposed help/pickup-info button) — see conversation for the alternatives considered.
 
+### Added — real menu photography (ADR 0013)
+
+- `docs/decisions/0013-menu-photography.md` — ADR: menu/product imagery moves from flat illustration (`TossIllustrations.tsx`) to real photography for the menu grid card, featured/BEST carousel, and product-detail hero stage, superseding `DESIGN.md`'s prior illustration-only rule for those three surfaces. Empty/celebratory states (empty cart, staff-call) are explicitly out of scope and stay illustrated.
+- `public/images/menu/*.jpg` — 30 photo assets (19 catalog items, several with a refreshed `-v2` pass) backing the new `imageUrl` values in `lib/data/menu.json`.
+- `lib/types/menu.ts` — `Product` gains an optional `themeBg` (solid hex) used as the card's base tint/backdrop-blur color, matched per item to its photo.
+- `docs/component-standards.md` — flagged §1's icon/illustration tile table as stale against the live photo-card implementation, pending a follow-up re-measure once the card redesign below settled (this pass is that follow-up).
+
+### Changed — menu/featured cards move to full-bleed photo (ADR 0013), then a natural blur+fade over a flat tint
+
+- `components/flow/ProductCard.tsx`, `components/flow/FeaturedMenuSection.tsx` — replaced the `Card`-wrapped fixed-height photo tile (illustration-era layout) with a full-bleed photo filling the entire card; the name/price info panel is now an absolutely-positioned overlay at the bottom instead of a separate stacked block.
+- Same two files, this pass: the info panel's tint dropped from a flat `${cardBg}E8` (91% alpha) block with a hard `border-t` seam to `${cardBg}4D` (~30% alpha, liquid-glass level) with `backdrop-blur-sm` (down from `-md`, so the photo stays legible through the glass instead of fogging), both faded out via a shared, deliberately long `mask-image: linear-gradient(to top, black 30%, transparent 100%)` (the same fade technique every sheet's `DrawerFooter` already uses, e.g. `CheckoutSheet`/`CartDrawer`/`ProductDetailSheet`/`StaffCallButton`) — the tint and blur blend gradually into the photo well above the text instead of cutting off at a flat line or fading abruptly.
+

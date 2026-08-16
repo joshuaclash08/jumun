@@ -1,11 +1,10 @@
 "use client";
 
 import * as React from "react";
+import Image from "next/image";
 import { motion } from "motion/react";
 import type { Product } from "@/lib/types";
-import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { getProductIllustration } from "@/components/ui/TossIllustrations";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
 
 interface FeaturedMenuSectionProps {
@@ -28,12 +27,13 @@ export function FeaturedMenuSection({ products, onProductClick }: FeaturedMenuSe
       {/* Horizontal Carousel */}
       <div className="flex gap-3 overflow-x-auto px-4 pb-2 scrollbar-none snap-x snap-mandatory">
         {featuredProducts.map((product) => {
-          const Illustration = getProductIllustration(product.icon);
+          const fallbackBg = "#F4F4F6";
+          const cardBg = product.themeBg || fallbackBg;
 
           return (
             <motion.div
               key={`featured-${product.id}`}
-              whileTap={!product.available || reduceMotion ? undefined : { scale: 0.96 }}
+              whileTap={!product.available || reduceMotion ? undefined : { scale: 0.97 }}
               transition={{ type: "spring", stiffness: 400, damping: 25 }}
               className="shrink-0 snap-start w-38 sm:w-44"
             >
@@ -42,34 +42,41 @@ export function FeaturedMenuSection({ products, onProductClick }: FeaturedMenuSe
                 onClick={() => onProductClick(product)}
                 disabled={!product.available}
                 aria-label={`${product.nameKo}, ${product.price.toLocaleString("ko-KR")}원, 추천 메뉴`}
-                className="group w-full h-full text-left outline-none rounded-[22px] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                style={{ backgroundColor: cardBg }}
+                className="group relative flex w-full aspect-[4/5] sm:aspect-[1/1] min-h-[180px] text-left outline-none rounded-[22px] overflow-hidden border border-black/6 dark:border-white/10 shadow-resting focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-shadow duration-200 hover:shadow-md"
               >
-                <Card className="flex flex-col h-full items-center p-3 gap-2 rounded-[22px] bg-card border-none shadow-none transition-all hover:bg-muted/30">
-                  {/* Illustration Tile */}
-                  <div
-                    className="relative flex h-28 w-full shrink-0 items-center justify-center rounded-[18px] overflow-hidden"
-                    aria-hidden="true"
-                  >
-                    <Illustration size={68} />
-                    <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-card via-card/40 to-transparent" />
-                    <Badge
-                      variant="secondary"
-                      className="absolute top-2 left-2 text-base px-2.5 py-0.5 font-bold rounded-full bg-primary/10 text-primary border-none"
-                    >
-                      BEST
-                    </Badge>
-                  </div>
+                {/* Full-bleed Studio Photo -- the info panel below overlays its bottom
+                    edge so the blur has an actual photo behind it to blur. */}
+                <div className="absolute inset-0" aria-hidden="true">
+                  <Image
+                    src={product.imageUrl}
+                    alt={product.nameKo}
+                    fill
+                    sizes="176px"
+                    className="object-cover transition-transform duration-500 ease-out group-hover:scale-106"
+                  />
+                </div>
+                <Badge
+                  variant="secondary"
+                  className="absolute top-2.5 left-2.5 text-base px-2 py-0.5 font-bold rounded-[8px] bg-[#F04452] text-white border-none shadow-sm z-20"
+                >
+                  BEST
+                </Badge>
 
-                  {/* Info (fluid auto-height for titles) */}
-                  <div className="flex flex-1 flex-col justify-between w-full text-left gap-1 px-0.5" aria-hidden="true">
-                    <span className="text-base font-bold text-foreground break-keep">
-                      {product.nameKo}
-                    </span>
-                    <span className="text-lg font-extrabold text-foreground tabular-nums mt-auto pt-0.5">
-                      {product.price.toLocaleString("ko-KR")}원
-                    </span>
-                  </div>
-                </Card>
+                {/* Bottom: Color-matched glassmorphic info panel -- tint and blur both
+                    fade out via the same mask gradient, blending into the photo. */}
+                <div
+                  style={{ backgroundColor: `${cardBg}4D` }} // ~30% alpha -- liquid-glass level, not a near-solid block
+                  className="absolute inset-x-0 bottom-0 z-10 flex flex-col justify-end px-3 pt-16 pb-3 gap-0.5 backdrop-blur-sm [mask-image:linear-gradient(to_top,black_30%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_top,black_30%,transparent_100%)]"
+                  aria-hidden="true"
+                >
+                  <span className="text-[15px] sm:text-base font-extrabold text-[#191F28] break-keep line-clamp-2">
+                    {product.nameKo}
+                  </span>
+                  <span className="text-base sm:text-lg font-black text-[#191F28] tabular-nums tracking-tight pt-0.5">
+                    {product.price.toLocaleString("ko-KR")}원
+                  </span>
+                </div>
               </button>
             </motion.div>
           );
