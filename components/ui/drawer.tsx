@@ -36,6 +36,7 @@ function DrawerOverlay({
   return (
     <DrawerPrimitive.Overlay
       data-slot="drawer-overlay"
+      data-lenis-prevent=""
       className={cn(
         "fixed inset-0 z-50 bg-black/40 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
         className
@@ -55,12 +56,12 @@ function DrawerContent({
       <DrawerOverlay />
       <DrawerPrimitive.Content
         data-slot="drawer-content"
+        data-lenis-prevent=""
         className={cn(
-          "group/drawer-content fixed z-50 flex h-auto flex-col bg-background text-base text-foreground shadow-floating",
+          "group/drawer-content fixed z-50 flex h-auto max-h-[92vh] min-h-0 flex-col bg-background text-base text-foreground shadow-floating overscroll-contain",
           "data-[vaul-drawer-direction=bottom]:left-1/2 data-[vaul-drawer-direction=bottom]:-translate-x-1/2",
           "data-[vaul-drawer-direction=bottom]:w-full data-[vaul-drawer-direction=bottom]:max-w-[768px]",
           "data-[vaul-drawer-direction=bottom]:bottom-0 data-[vaul-drawer-direction=bottom]:mt-24",
-          "data-[vaul-drawer-direction=bottom]:max-h-[92vh]",
           "data-[vaul-drawer-direction=bottom]:rounded-t-[28px] data-[vaul-drawer-direction=bottom]:border-t data-[vaul-drawer-direction=bottom]:border-border/60",
           "data-[vaul-drawer-direction=left]:inset-y-0 data-[vaul-drawer-direction=left]:left-0 data-[vaul-drawer-direction=left]:w-3/4 data-[vaul-drawer-direction=left]:rounded-r-2xl data-[vaul-drawer-direction=left]:border-r",
           "data-[vaul-drawer-direction=right]:inset-y-0 data-[vaul-drawer-direction=right]:right-0 data-[vaul-drawer-direction=right]:w-3/4 data-[vaul-drawer-direction=right]:rounded-l-2xl data-[vaul-drawer-direction=right]:border-l",
@@ -69,8 +70,11 @@ function DrawerContent({
         )}
         {...props}
       >
-        {/* Drag handle — 40px wide, centered, smooth pill */}
-        <div className="mx-auto mt-3 hidden h-1.5 w-10 shrink-0 rounded-full bg-[#D1D6DB] group-data-[vaul-drawer-direction=bottom]/drawer-content:block" />
+        {/* Drag handle — 40px wide, vertically & horizontally centered, smooth pill */}
+        <DrawerPrimitive.Handle
+          data-slot="drawer-handle"
+          className="mx-auto my-3 hidden h-1.5 w-10 shrink-0 rounded-full bg-[#D1D6DB] cursor-grab active:cursor-grabbing group-data-[vaul-drawer-direction=bottom]/drawer-content:block"
+        />
         {children}
       </DrawerPrimitive.Content>
     </DrawerPortal>

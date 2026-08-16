@@ -53,7 +53,15 @@ export function Providers({ children }: { children: ReactNode }) {
 
   if (enableLenis) {
     return (
-      <ReactLenis root options={{ smoothWheel: true, duration: 1.2 }}>
+      <ReactLenis
+        root
+        options={{
+          smoothWheel: true,
+          duration: 1.2,
+          autoToggle: true,
+          allowNestedScroll: true,
+        }}
+      >
         {children}
       </ReactLenis>
     );
