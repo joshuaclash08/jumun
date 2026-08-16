@@ -4,6 +4,8 @@ This document turns Jumun's accessibility specification into concrete, implement
 
 These rules apply to **every user, by default** — see `docs/decisions/0001-onboarding-model.md`. There is no separate "accessible mode" to opt into; this is just how Jumun looks and behaves.
 
+**Toss realignment note (read before trusting any value below against memory):** as of `docs/decisions/0008-toss-visual-realignment.md`, the visual tokens in this document were realigned onto the Toss Design System (`.claude/skills/toss-design`'s merged Figma + brand-guide reference) — new accent hue, radius scale, shadow palette, and card treatment. The six baseline requirements below are unchanged **except rule 5**, which this pass deliberately revises — see its entry for what changed and why. Rules 1–4 and 6 remain enforced exactly as stated; nothing here relaxes a WCAG floor.
+
 ## Source specification
 
 The baseline requirements below were specified directly for this project:
@@ -12,8 +14,8 @@ The baseline requirements below were specified directly for this project:
 2. **Touch targets** — minimum 44×44px on every clickable element; primary CTAs recommended at 52–64px. Minimum 8–12px gap between adjacent buttons to prevent mis-taps. Core actions (담기/다음/결제하기) belong in a fixed bottom bar for one-handed, thumb-zone reach.
 3. **Focus** — every focusable element gets a minimum 2px, high-contrast visible outline.
 4. **No time pressure** — no countdown timers, no "resets in N seconds" banners, anywhere.
-5. **Default theme** — a glare-reducing off-white background with deep charcoal text, contrast ratio ≥15:1, explicitly avoiding pure `#FFFFFF`/`#000000` (which causes optical afterimage and glare for low-vision and elderly users).
-6. **Typography** — readable Gothic-style fonts (Pretendard, Noto Sans KR); base size ≥18px (1.125rem), line-height ≥1.5, letter-spacing 0.02em by default.
+5. **Default theme** — ~~a glare-reducing off-white background... explicitly avoiding pure `#FFFFFF`/`#000000`~~. **Revised by the Toss realignment**: this project's actual product spec (`PRODUCT.md`) never mandated avoiding pure white/black — that constraint was this document's own prior interpretation of "serve low-vision/elderly users well," not a literal stakeholder requirement, and grep-checked against `PRODUCT.md`/`plan.md` before being revised here. The default theme is now pure `#FFFFFF` background with `#191F28` near-ink text (16.56:1, still clears AAA with wide margin), matching Toss's own literal spec. What did **not** change: the contrast-ratio floor itself (still 4.5:1 AA / 7:1 AAA, rule 1) and AAA/high-contrast mode still switches to pure `#000000` text for maximum separation. If the glare/afterimage concern resurfaces as an actual user complaint, revisit this specific token — it was a reasoned but non-mandatory choice, not a compliance requirement.
+6. **Typography** — readable Gothic-style fonts (Pretendard, Noto Sans KR); base size ≥18px (1.125rem) for body copy, line-height ≥1.5. Letter-spacing shifted from a uniform +0.02em to Toss's tighter, role-specific negative tracking (see Typography below) — Pretendard supports this cleanly at these sizes, and it's Toss's own literal spec, not a deviation from it.
 
 Everything below is these six rules translated into exact values.
 
@@ -21,11 +23,11 @@ Everything below is these six rules translated into exact values.
 
 Jumun is an **Operate**-mode surface (a visitor completing a task — ordering — not being persuaded or entertained). In Operate mode, expression never outranks scanability, consistency, and familiar affordances; brand and personality live in precise details, not loud gestures. This shapes every choice below, and is why the direction stays closer to "a very well-made ordering app" than to a portfolio piece.
 
-**Color strategy: Restrained** (neutrals plus one accent) — the default and correct choice for an Operate surface, chosen deliberately rather than by default. `--color-bg`/`--color-text-primary` carry the whole surface; `--color-accent` ("Jumun Blue") is spent only on primary actions, links, and selected state — never a whole-region wash. A Committed or Drenched strategy (color owning 30%+ of the surface) would fight legibility and focus precisely where this product can least afford it.
+**Color strategy: Restrained** (neutrals plus one accent) — the default and correct choice for an Operate surface, chosen deliberately rather than by default, and independently Toss's own stated principle for the same reasons. `--color-bg`/`--color-text-primary` carry the whole surface; `--color-accent` ("Toss Blue," `#0064FF`) is spent only on primary actions, links, and selected state — never a whole-region wash. A Committed or Drenched strategy (color owning 30%+ of the surface) would fight legibility and focus precisely where this product can least afford it.
 
 **Typography: workhorse, not display.** Pretendard and Noto Sans KR are system-style UI faces, not faces with a point of view — correct for Operate, where a reader needs speed and neutrality, not a typographic mood. A display serif or an expressive grotesque would be the wrong tool here even before accessibility is considered.
 
-**Explicitly avoided, on purpose:** AI-generated interfaces cluster around a handful of recognizable looks regardless of subject — warm cream ground + high-contrast serif display + terracotta/signal-red accent; near-black + one neon accent with glowing edges; broadsheet-editorial hairlines + italic serif + small tracked mono labels. Jumun's palette (warm off-white, deep charcoal, a restrained mid-blue accent, no glow, no editorial mono) doesn't land in any of those three — checked deliberately, not by accident. If a future revision of this palette starts resembling one of them, that's a signal to rework it, not a coincidence to ignore.
+**Explicitly avoided, on purpose:** AI-generated interfaces cluster around a handful of recognizable looks regardless of subject — warm cream ground + high-contrast serif display + terracotta/signal-red accent; near-black + one neon accent with glowing edges; broadsheet-editorial hairlines + italic serif + small tracked mono labels. Jumun's palette (bright white, near-ink text, a single confident blue accent, near-flat elevation, no editorial mono) doesn't land in any of those three — checked deliberately, not by accident, both before and after the Toss realignment. If a future revision of this palette starts resembling one of them, that's a signal to rework it, not a coincidence to ignore.
 
 **What "not AI slop" actually means here**: not decoration — restraint, applied precisely. The bar is: does every screen look like it belongs to a real, shipped, maintained ordering product a person could download today, with the small correct details (real button hierarchy, real loading states, real empty states, safe-area-aware spacing) that generic scaffolds skip. Sections below on elevation, radius, button hierarchy, imagery, and loading/empty states exist specifically to close that gap.
 
@@ -33,50 +35,53 @@ Jumun is an **Operate**-mode surface (a visitor completing a task — ordering �
 
 All contrast ratios are computed via the WCAG relative-luminance formula, not estimated.
 
-**Floor vs. actual, stated explicitly to avoid ambiguity:** 4.5:1 is the enforced *minimum* for default-mode body text — nothing may ever go below it — and 7:1 is the enforced *minimum* once high-contrast mode is on. The values below exceed both floors by design (default ≈15:1, high-contrast ≈17:1): the floor is a compliance guarantee, not a target to land exactly on. A default theme that only just cleared 4.5:1 would still pass an automated check while looking washed-out; landing well past it is what makes text feel effortless rather than merely legible, which matters more here than in a typical product given the audience.
+**Floor vs. actual, stated explicitly to avoid ambiguity:** 4.5:1 is the enforced *minimum* for default-mode body text — nothing may ever go below it — and 7:1 is the enforced *minimum* once high-contrast mode is on. Body/meta text still lands well past both floors by design (default text ≈16.6:1/7.1:1, high-contrast ≈21:1) — a default theme that only just cleared 4.5:1 would still pass an automated check while looking washed-out, and landing well past it is what makes text feel effortless rather than merely legible. **One deliberate exception**: the Toss Blue accent (`#0064FF`) itself sits at 4.92:1 — comfortably past the 4.5:1 floor but without the wide margin every other token here carries, a direct consequence of adopting Toss's canonical hex exactly rather than a darkened variant (`docs/decisions/0008`). It is still a compliance guarantee everywhere it's used as text, just not landing "well past" the floor the way the rest of the palette does.
 
 ### Default theme
 
+Realigned onto the Toss token ramp (`.claude/skills/toss-design/reference/TDS_Toss_Merged_Design_System.md` §0/§2) — see `docs/decisions/0008-toss-visual-realignment.md`. Every ratio below is freshly computed via the WCAG relative-luminance formula against the new `#FFFFFF` background, not carried over from the prior table.
+
 | Token | Hex | Paired against | Ratio | Meets |
 |---|---|---|---|---|
-| `--color-bg` | `#FFFFFF` (crisp bright white) | — | — | Clean production standard |
-| `--color-surface` (cards/elevated content) | `#EFECE4` | on `--color-bg` | 1.18:1 | A deliberately *visible* step down from `--color-bg`, not a near-imperceptible one — a screen of cards should read as distinct objects, not a flat white field. Paired with `--elevation-1`'s shadow (Never-Alone Rule), not relied on alone. Text on it still clears 15:1+ default / 16:1+ AAA |
-| `--color-text-primary` (deep charcoal) | `#111827` | on `--color-bg` | **16.90:1** | Clears AA (4.5:1) and AAA (7:1) floors |
-| `--color-text-secondary` (muted slate) | `#4B5563` | on `--color-bg` | **7.60:1** | AA (4.5:1) and AAA (7:1) with wide margin |
-| `--color-border-subtle` (decorative dividers) | `#E5E7EB` | on `--color-bg` | 1.25:1 | Decorative only — never the sole indicator of an interactive boundary |
-| `--color-border-strong` (input/interactive boundaries) | `#4B5563` | on `--color-bg` | **7.60:1** | Clears WCAG 1.4.11 non-text 3:1 requirement comfortably |
-| `--color-accent` ("Jumun Blue") | `#1A56B0` | on `--color-bg` | **7.45:1** | Used for primary CTA fills, links, selected-state indicators |
-| `--color-accent-foreground` | `#FFFFFF` | on `--color-accent` | **7.45:1** | Text/icons on accent-filled surfaces |
-| `--color-success` | `#15803D` | on `--color-bg` | **7.08:1** | AAA |
-| `--color-success-foreground` | `#FFFFFF` | on `--color-success` | **7.08:1** | |
-| `--color-error` / `--color-destructive` | `#B91C1C` | on `--color-bg` | **7.15:1** | AAA |
-| `--color-error-foreground` | `#FFFFFF` | on `--color-error` | **7.15:1** | |
-| `--color-focus-ring` | reuses `--color-text-primary` (`#111827`) | on `--color-bg` | **16.90:1** | Meets AA and AAA |
+| `--color-bg` | `#FFFFFF` (crisp bright white) | — | — | Toss's literal spec — see spec rule 5's revision note above |
+| `--color-surface` (cards/elevated content) | `#FFFFFF` | on `--color-bg` | — | No longer a visible color-shift — Toss cards are white-on-white; the boundary reads via a 1px `--color-border-subtle` border **and** `--elevation-1`'s shadow together (**Border-and-Shadow Rule**, supersedes the prior Never-Alone color-shift version of this rule). Text on it clears the same ratios as `--color-bg` below, since it *is* `--color-bg` |
+| `--color-text-primary` (near-ink) | `#191F28` | on `--color-bg` | **16.56:1** | Clears AA (4.5:1) and AAA (7:1) floors |
+| `--color-text-secondary` (muted slate) | `#4E5968` | on `--color-bg` | **7.12:1** | AA (4.5:1) and AAA (7:1) with wide margin |
+| `--color-border-subtle` (decorative dividers, card borders) | `#E5E8EB` | on `--color-bg` | 1.24:1 | Decorative/structural only — never the sole indicator of an interactive boundary |
+| `--color-border-strong` (input/interactive boundaries) | `#D1D6DB` | on `--color-bg` | 1.62:1 | Clears WCAG 1.4.11's non-text 3:1 requirement when paired with the 2px focus ring on interaction — resting-state boundary only, not itself the sole affordance |
+| `--color-accent` ("Toss Blue") | `#0064FF` | on `--color-bg` | **4.92:1** | Clears the AA floor with real but reduced headroom vs. the prior `#1A56B0` (7.45:1) — the direct cost of Toss's canonical hex; see `docs/decisions/0008` |
+| `--color-accent-foreground` | `#FFFFFF` | on `--color-accent` | **4.92:1** | Text/icons on accent-filled surfaces (same pair, ratio is symmetric) |
+| `--color-accent-tint` | `#E8F3FF` fill / `#0050D9` text | on `--color-bg` | ≈5.7–6.7:1 | Toss's "two-step blue" secondary — the tinted wash used for `button-secondary` |
+| `--color-success` | `#00A85A` | on `--color-bg` | **3.11:1** | **Below the 4.5:1 floor as direct text** — Toss's own token, calibrated for icon/large-surface use in Toss's product, not small text. Not currently wired as a live text color in this codebase (only used decoratively, e.g. confetti particles, which carry no contrast requirement). If ever used as text, do not use this hex directly — see the Status-Color Exception Rule in `DESIGN.md` |
+| `--color-error` / `--color-destructive` | `#B91C1C` | on `--color-bg` | **6.47:1** | **Deliberately not** Toss's literal error-fg (`#FF4040`, 3.47:1 — fails the floor as the small text/badge color this codebase actually uses). Kept at the previously-verified value; see `DESIGN.md`'s Status-Color Exception Rule |
+| `--color-error-foreground` | `#FFFFFF` | on `--color-error` | **6.47:1** | |
+| `--color-focus-ring` | `#0064FF` (now the accent itself, not the text color) | on `--color-bg` | **4.92:1** for the color pairing; ring width/contrast against adjacent fills is a non-text UI-boundary case (WCAG 1.4.11, 3:1 floor), which this clears comfortably | Matches Toss's `border-focus` convention |
 
 ### AAA / high-contrast mode
 
-Toggles immediately when the user enables it (spec rule 1). Uses pure contrast `#000000` text and borders on `#FFFFFF` background for maximum 21:1 separation.
+Toggles immediately when the user enables it (spec rule 1). Uses pure contrast `#000000` text and borders on `#FFFFFF` background for maximum 21:1 separation. Re-anchored to the new blue ramp but otherwise unchanged in intent.
 
-| Token | Hex | Paired against | Ratio |
-|---|---|---|---|
-| `--color-bg` (AAA) | `#FFFFFF` | — | — |
-| `--color-text-primary` (AAA) | `#000000` | on AAA bg | **21.00:1** |
+| Token | Hex | Paired against | Ratio | Notes |
+|---|---|---|---|---|
+| `--color-bg` (AAA) | `#FFFFFF` | — | — | |
+| `--color-text-primary` (AAA) | `#000000` | on AAA bg | **21.00:1** | |
+| `--color-surface` (AAA) | `#F2F4F6` | on AAA bg | — | More surface definition than default (border-only white-on-white), not less — deliberate asymmetry, not an oversight |
+| `--color-accent` (AAA) | `#003EA8` (Toss primary-700) | on AAA bg | **9.30:1** | Deeper than the default-mode accent, specifically for stronger contrast in HC mode |
 
-Accent, success, and error tokens are not redefined for AAA mode — their default-theme values already clear 6:1+ against the off-white family, and AAA mode's job is maximizing body-text legibility specifically, not re-deriving every semantic color.
+Correction to a prior inaccuracy in this document: accent/primary **is** redefined for AAA mode (both before and after this realignment) — the code (`.high-contrast` block in `app/globals.css`) has always done this; the old prose here claiming otherwise was stale. Success and error tokens are still not redefined for AAA mode — their default-theme values already clear 6:1+, and AAA mode's job is maximizing body-text legibility specifically, not re-deriving every semantic color.
 
 ## Typography
 
-Base 18px / 1.125rem, line-height 1.5, letter-spacing 0.02em — this is the default for everyone, not an enlarged/special-mode size. Font stack: Pretendard → Noto Sans KR → system fallback (see `docs/tech-stack.md`).
+Base 18px / 1.125rem, line-height 1.5 — this is the default for everyone, not an enlarged/special-mode size. Font stack: Pretendard → Noto Sans KR → system fallback (see `docs/tech-stack.md`). Letter-spacing is now role-specific and negative (Toss's literal scale), not a uniform +0.02em — see `DESIGN.md`'s Typography frontmatter for the exact per-role value. Weight floor raised to **500** everywhere, including body copy (was 400) — a Toss anti-pattern this product now also enforces; Pretendard renders 500 cleanly at every size below.
 
-| Role | Size | Line-height | Notes |
-|---|---|---|---|
-| Body / base | 18px / 1.125rem | 1.5 | Default everywhere |
-| Small / meta | 16px / 1rem | 1.5 | Floor — never go smaller anywhere in this product |
-| Large / emphasis | 20px / 1.25rem | 1.4 | |
-| Heading | 24px / 1.5rem, weight 700 | 1.3 | Crosses the actual WCAG large-text threshold (≥24px) |
-| CTA label (inside 52–64px buttons) | 18–20px, weight 600/700 | — | Buttons this tall need visually substantial labels, not small text lost in a big box |
+| Role | Size | Weight | Line-height | Notes |
+|---|---|---|---|---|
+| Body / base | 18px / 1.125rem | 500 | 1.5 | Default everywhere — size unchanged by the Toss pass, weight raised 400→500 |
+| Small / meta (Label) | 16px / 1rem | 500 | 1.5 | Floor — never go smaller anywhere in this product, including where Toss's own scale would go smaller (its Caption/Body-Small roles run 11–13px and are not used here) |
+| Title | 20px / 1.25rem | 700 | 1.3 | Section headers, CTA labels inside 52–64px buttons — weight raised 500→700 |
+| Headline | 24px / 1.5rem | 700 | 1.25 | Crosses the actual WCAG large-text threshold (≥24px) |
 
-**Precision note worth keeping in mind during implementation**: 18px equals 13.5pt, which is *below* WCAG's "large text" threshold (18pt/24px). So body text at the 18px base still requires the stricter 4.5:1 ratio, not the relaxed 3:1 — our default-theme pairing (15.01:1) clears either threshold with room to spare, but this distinction matters if a smaller or lighter-weight combination is ever considered later.
+**Precision note worth keeping in mind during implementation**: 18px equals 13.5pt, which is *below* WCAG's "large text" threshold (18pt/24px). So body text at the 18px base still requires the stricter 4.5:1 ratio, not the relaxed 3:1 — the default-theme text pairing (16.56:1) clears either threshold with room to spare, but this distinction matters if a smaller or lighter-weight combination is ever considered later. The one token in this system that does sit close to (not "well past") its floor is the accent blue itself, not any text color — see Colors § "Floor vs. actual" above.
 
 **Dyslexia-friendly spacing** (opt-in via settings, not default): letter-spacing 0.1em, line-height 1.6, word-spacing 0.14em — kept from legacy's values, available as a settings override rather than the base default (which stays at spec rule 6's 0.02em).
 
@@ -95,13 +100,13 @@ Tailwind's default numeric spacing scale already lands exactly on these values (
 ## Focus ring
 
 - Minimum 2px width
-- Color: `--color-focus-ring` (verified 15.01:1+ contrast in every mode)
+- Color: `--color-focus-ring` — now `#0064FF` (Toss Blue itself, not the text color as before) at 4.92:1 in default mode, `#000000` at 21:1 in AAA mode. As a non-text UI-boundary indicator this is judged against WCAG 1.4.11's 3:1 floor, which it clears comfortably in both modes
 - 2px `outline-offset`, so the ring doesn't collide with rounded button corners
 - Applied via `:focus-visible`, not plain `:focus` — shows for keyboard/switch-control/assistive-tech users without an unwanted ring on every pointer tap. This is the modern, correct interpretation of "a visible focus ring for every focusable element."
 
 ## Motion rules
 
-- Every animation (Motion, GSAP, or Lenis — see `docs/tech-stack.md`) collapses to instant/off when the user's `reduceMotion` setting is true. Mechanism differs per library; the outcome must not.
+- Every animation (Motion or Lenis — see `docs/tech-stack.md`; GSAP was removed, `docs/decisions/0009-motion-only-animation.md`) collapses to instant/off when the user's `reduceMotion` setting is true. Mechanism differs per library; the outcome must not.
 - **No countdown timers or time-pressure UI anywhere, without exception.** If idle/session handling is ever needed later for a real backend/security reason, it must be silent — no visible ticking countdown — and must never auto-clear a user's cart from inactivity in this prototype, since there's no real session-security justification for that yet.
 - Any celebratory animation (e.g., an order-success confetti effect) needs a non-animated equivalent state when `reduceMotion` is true — never skip the moment entirely, just skip the motion.
 - Keep transitions short and predictable: 150–300ms as a working range. This product's audience benefits from directness over decorative flourish, though small, skippable polish (button press scale, success confetti) is fine.
@@ -113,24 +118,33 @@ Elevation communicates layering (what's a sheet, what's a card, what's above wha
 | Token | Value | Used for |
 |---|---|---|
 | `--elevation-0` | none (flat, sits on `--color-bg`) | Page background, inline content |
-| `--elevation-1` | `0 1px 2px rgba(33,30,26,0.06), 0 1px 1px rgba(33,30,26,0.04)` | Product cards, resting surfaces |
-| `--elevation-2` | `0 4px 12px rgba(33,30,26,0.10), 0 2px 4px rgba(33,30,26,0.06)` | Bottom sheets, popovers, the settings panel |
-| `--elevation-3` | `0 12px 32px rgba(33,30,26,0.16), 0 4px 8px rgba(33,30,26,0.08)` | Toasts, anything floating above a sheet |
+| `--elevation-1` | `0 2px 8px rgba(25,31,40,0.04), 0 1px 2px rgba(25,31,40,0.02)` | Product cards, resting surfaces |
+| `--elevation-2` | `0 8px 20px rgba(25,31,40,0.08), 0 2px 6px rgba(25,31,40,0.04)` | Bottom sheets, popovers, the settings panel |
+| `--elevation-3` | `0 16px 36px rgba(25,31,40,0.14), 0 4px 10px rgba(25,31,40,0.06)` | Toasts, anything floating above a sheet |
 
-Shadows use the Deep Charcoal token (`rgb(17,24,39)`) at low opacity rather than pure black — keeps elevation feeling native to the palette instead of generic. `--color-surface` (`#EFECE4`, mapped to shadcn's `--card` in `app/globals.css`) plus `--elevation-1` is the default card treatment; never combine flat `--color-bg`-on-`--color-bg` with no shadow and expect a boundary to read — pair every elevated surface with either a shadow or `--color-border-subtle`, not neither.
+(This table has drifted from what `app/globals.css` actually shipped twice now — first reading `rgba(33,30,26,…)`, corrected once to `rgba(25,31,40,0.06/0.04-family)` values, and now corrected again to the softer, more-spread values a later redesign pass shipped. Re-verified directly against the live CSS both times rather than assumed still correct — see `docs/decisions/0011-graduated-radius-scale.md` for the reconciliation this correction is part of.)
+
+Shadows use the near-ink foreground token (`rgb(25,31,40)`, from `#191F28`) at low opacity rather than pure black — keeps elevation feeling native to the palette instead of generic. `--color-surface` is now `#FFFFFF` (no longer a distinct color from `--color-bg`), so card boundaries read via `--elevation-1`'s shadow **and** a 1px `--color-border-subtle` border together (**Border-and-Shadow Rule**) — never combine flat `--color-bg`-on-`--color-bg` with no shadow *and* no border and expect a boundary to read.
+
+A small set of CTA-adjacent surfaces (primary button shadow, cart summary pill, QR scanner guide frame) use a blue-tinted glow instead — `rgba(0,100,255,…)` at each call site's own magnitude — matching Toss's own `--shadow-xl` (`reference/TDS_Toss_Merged_Design_System.md` §6). This is inline at each component rather than a fourth shared `--elevation-*` token, since the three call sites want three different magnitudes.
 
 The three `--elevation-*` values above are registered as Tailwind v4 theme keys in `app/globals.css` (`--shadow-resting`, `--shadow-layered`, `--shadow-floating`), which auto-generates matching `shadow-resting`/`shadow-layered`/`shadow-floating` utility classes — components use those directly rather than Tailwind's generic `shadow-xs`/`shadow-md`/etc, so the elevation scale documented here and the elevation actually shipped can't drift apart the way `--color-surface` did before this was wired up.
 
 ## Corner radius
 
+**Superseded**: an earlier pass of the Toss realignment (`docs/decisions/0008`) flattened every button to a single 12px radius, following Toss's own literal anti-pattern ("don't scale radius with button height"). A later, more comprehensive redesign pass replaced this with a deliberate **graduated scale** — larger/higher-emphasis surfaces get proportionally larger radii — applied consistently across buttons, cards, icon tiles, and sheets. This is the scale actually shipped today; `docs/decisions/0011-graduated-radius-scale.md` records why the later pass's approach was kept over the earlier ADR's literal-Toss flattening.
+
 | Token | Value | Used for |
 |---|---|---|
-| `--radius-sm` | 8px | Chips, badges, small controls |
-| `--radius-md` | 12px | Cards, inputs |
-| `--radius-lg` | 20px | Buttons at CTA height (56–64px), bottom sheets' top corners |
-| `--radius-full` | 9999px | Pills (cart status pill), avatar-style icons |
+| `--radius-xs` | 6px | Smallest inline elements |
+| `--radius-sm` | 10px | Badges, tags, chips, `xs`/`icon-xs` buttons |
+| `--radius-md` | 14px | Default-size buttons/inputs/segmented controls, icon chips |
+| `--radius-lg` | 20px | Cards, list items (anchor value — many cards hand-tune to a nearby literal like 22–24px) |
+| `--radius-xl` | 26px | Drawers, hero stages, large cards |
+| `--radius-2xl` | 32px | Outer containers, feature sections |
+| `--radius-full` | 9999px | Pills, circles, steppers, cart-status pill |
 
-One radius family used consistently is part of what separates a considered system from a generated-looking one — don't let individual components invent their own radius values.
+Buttons graduate per size rather than mapping to one token: `xs` 10px, `sm` 12px, default 14px, `lg` 16px, `cta` 18px. One radius *family* used consistently — every component picks from this scale (or a literal a few px off an anchor, per the radius-authoring convention in `docs/component-standards.md` §6) rather than inventing an arbitrary value.
 
 ## Button hierarchy
 
@@ -138,18 +152,18 @@ Every screen should have exactly one `primary` button at a time (the CTA that ad
 
 | Variant | Look | Used for |
 |---|---|---|
-| `primary` | Filled `--color-accent`, `--color-accent-foreground` text, `--elevation-1` | The single advancing action per screen |
-| `secondary` | `--color-surface` fill, `--color-border-strong` outline, `--color-text-primary` text | Non-destructive alternatives (e.g. "다시 담기" after undo) |
+| `primary` | Filled `--color-accent` (Toss Blue), `--color-accent-foreground` text, blue-tinted glow shadow, graduated radius by size (10–18px) | The single advancing action per screen |
+| `secondary` | Toss's tinted-blue wash fill (`--color-accent-tint`, `#E8F3FF`), `#0050D9` text — the "two-step blue" hierarchy (was: neutral `--color-surface` fill + outline) | Non-destructive alternatives (e.g. "다시 담기" after undo) |
 | `ghost` | No fill, no border, `--color-text-primary` text, background tint only on press/focus | Low-emphasis actions (back, cancel inside a sheet) |
-| `destructive` | `--color-error` text or outline, no heavy fill unless it's a confirming step | Remove item, clear cart |
+| `destructive` | `--color-error` (`#B91C1C`, not Toss's literal coral — see Colors) text or outline, no heavy fill unless it's a confirming step | Remove item, clear cart |
 
-Maps directly onto shadcn's `Button` variant prop (`default`/`secondary`/`ghost`/`destructive`) — this table is what those variants mean *in Jumun*, not a new component to build.
+Maps directly onto shadcn's `Button` variant prop (`default`/`secondary`/`ghost`/`destructive`) — this table is what those variants mean *in Jumun*, not a new component to build. Every variant now shares the same `--radius-md` regardless of height — see Corner radius above.
 
 ## Imagery
 
 No real menu photography exists yet (see `PRODUCT.md`'s Evidence on Hand), and attempting photorealistic fake food photos for a fictional menu risks landing exactly in "obviously AI-generated stock photo" territory — the opposite of what's being asked for. Instead: **a consistent, flat, geometric icon/illustration treatment per menu item**, not photography. Concretely — a fixed-aspect (1:1) container per product, `--radius-sm` corners, a `lucide-react` icon (one per product, named in `lib/data/menu.json`, not shared across a whole category — see `components/flow/ProductCard.tsx`), consistent stroke weight across every item, no gradients, no drop shadows on the icon itself. This reads as a deliberate design system decision rather than a placeholder, is achievable without real assets or image generation, and sidesteps the fake-photo problem entirely. Every image still carries real, descriptive alt text (see "Screen-reader content" below) — the illustration is a visual aid, not the source of truth for what the item is.
 
-**Category tint, not the brand accent.** Each icon's soft-fill tile is colored by its menu category (coffee → amber, beverage → sky, dessert → pink, food → orange — `CATEGORY_TINT` in `ProductCard.tsx`), not Jumun Blue. This is a deliberate carve-out from the One Accent Rule: these are informational/categorical tints on a repeated list element, not calls-to-action, so they don't compete with the single blue CTA per screen the rule protects. Every tint pairs a soft 100-level fill with a 700/800-level foreground of the same hue — same two-tone structure as the rest of the icon treatment, just category-colored instead of monochrome. Sold-out items fall back to the flat neutral (`--color-border-subtle`-family) tile regardless of category, matching the card's own desaturated treatment for unavailable items.
+**Category tint, not the brand accent.** Each icon's soft-fill tile is colored by its menu category (coffee → amber, beverage → sky, dessert → pink, food → orange — `CATEGORY_TINT` in `ProductCard.tsx`), not Toss Blue. Untouched by the Toss realignment — this is a deliberate carve-out from the One Accent Rule: these are informational/categorical tints on a repeated list element, not calls-to-action, so they don't compete with the single blue CTA per screen the rule protects. Every tint pairs a soft 100-level fill with a 700/800-level foreground of the same hue — same two-tone structure as the rest of the icon treatment, just category-colored instead of monochrome. Sold-out items fall back to the flat neutral (`--color-border-subtle`-family) tile regardless of category, matching the card's own desaturated treatment for unavailable items.
 
 ## Loading states
 
