@@ -36,7 +36,29 @@ This file is a history — entries are appended, never rewritten. For current-st
 - `public/manifest.json` — installable PWA metadata; `icons` deliberately left empty, no real assets exist yet.
 - `.claude/launch.json` — dev server config for browser-preview tooling.
 
+### Added
+
+- `components/flow/LandingClientView.tsx` & `components/flow/LandingHeroVisual.tsx` — Interactive landing experience with animated floating phone NFC/QR scanning visual, 3-step usage cards, and accessibility/privacy badges.
+- `components/flow/QrScannerModal.tsx` — In-browser camera QR code scanner with video stream overlay and direct sample store launcher fallback.
+- `docs/animation-guide.md` — Animation and interaction standards specification for Motion, GSAP, and Lenis.
+- `components/flow/ProductDetailSheet.tsx` — Quantity Stepper (`-` / `+` buttons) with accessible min/max bounds and live option summary pricing computation.
+- `components/flow/CheckoutSheet.tsx` — Order summary item list, payment method selection (`card` / `easy-pay`), and robust error state banner with preserved cart state and retry CTA.
+- `components/flow/MenuClientView.tsx` — Bidirectional category sync via `IntersectionObserver`, and a Staff Call ("직원 호출") escape hatch modal.
+- `components/flow/SettingsSheet.tsx` — Added Timeout Extension ("안내 메시지 표시 시간 2배 연장") switch.
+- `app/page.tsx` & `app/order/[storeId]/page.tsx` — Added direct link to sample cafe store for direct/invalid visits.
+- `tests/unit/components.test.tsx` — Unit and accessibility tests for `CartDrawer` and `ConfirmationStep` with real item names and options.
+
 ### Changed
+
+- `lib/types/cart.ts` — Added `nameKo` and `optionsSummary` properties to `CartItem` interface to snapshot readable names at add-time.
+- `components/flow/CartDrawer.tsx` — Replaced raw product ID with readable `item.nameKo`, rendered `optionsSummary`, added accessible quantity adjust buttons and an interactive empty state action.
+- `components/flow/ConfirmationStep.tsx` — Rendered receipt with itemized product names, options summary, store/table metadata, and formatted timestamp.
+- `components/flow/ProductCard.tsx` — Added category-specific icon illustrations (☕, 🥤, 🍰, 🥪) with accessible color pairings and sold-out aria label handling.
+- `vitest.setup.ts` — Mocked `canvas-confetti` for headless test environments.
+- `app/globals.css`, `DESIGN.md`, `docs/design-system.md`, `public/manifest.json` — Switched background palette from warm linen `#F7F3EC` to crisp bright production white `#FFFFFF`, maintaining full AA (16.9:1 body, 7.6:1 meta) and AAA (21:1 pure black) contrast compliance.
+- `app/layout.tsx`, `components/ui/drawer.tsx`, `components/flow/CartSummaryPill.tsx`, `components/flow/A11yToastContainer.tsx` — Adjusted container viewport max width to Galaxy Z Fold 5 unfolded resolution (`max-w-[768px]`, ~736px inner pill/toasts) so Fold 5 screens fill naturally without side cuts, while desktop browsers center the mobile frame.
+- `store/useCartStore.ts` — Fixed `clearCart` to only clear item lines while preserving `orderStatus: "confirmed"` and `lastReceipt`, and introduced `resetOrder` for clean session resets.
+- `mcp_config.json` — Configured Playwright MCP to use Brave Browser (`/Applications/Brave Browser.app/Contents/MacOS/Brave Browser`) in headed mode.
 
 - `plan.md` — corrected the Phase 4 framing: the web experience is a permanent, fully-supported channel once the native app ships, not a fallback for people who haven't installed yet. Added the combined QR+NFC physical tag detail and a note on the longer-term multi-vertical platform vision (food ordering is the first proof of concept, not the ceiling). Updated "Current status" from documentation-stage to foundation-stage. Updated the documentation-set table to include `PRODUCT.md`, `DESIGN.md`, and `docs/testing-strategy.md`.
 - `docs/design-system.md` — substantially expanded via the impeccable skill's design-calibration principles: a "Visual direction" section stating and justifying the Restrained color strategy and workhorse typography choice for this Operate-mode surface, and explicitly naming which common AI-generated-interface clichés were deliberately avoided; an explicit floor-vs-actual reconciliation for the contrast values (4.5:1/7:1 are enforced floors, ~15:1/~17:1 are where the defaults actually land); new elevation, corner-radius, and button-hierarchy token scales; an imagery-treatment decision (flat illustration, not fake photography, given no real photos exist); loading-state and empty-state patterns; a screen-reader content-authoring section with concrete per-component-type examples; and safe-area-inset handling for the fixed bottom bar.
@@ -59,3 +81,36 @@ Nothing yet.
 - `tsconfig.json`'s and `eslint.config.mjs`'s `exclude`/`globalIgnores` only listed build artifacts, not `legacy-reference/` — since it uses the same `@/*` import alias as this project, `tsc --noEmit` and `eslint` were both silently type-checking and linting all of legacy's code as if it were this project's own, producing dozens of unrelated errors. Both configs now exclude `legacy-reference/`.
 - `vitest-axe@0.1.0` ships its TypeScript augmentation against Vitest's older global `Vi` namespace, which doesn't connect to Vitest 4's actual `Assertion` type (a real version-compatibility gap in the library's own types, not a mistake on this project's end — the runtime matcher already worked correctly via `expect.extend`). Added `vitest-axe.d.ts` with the modern `declare module "vitest"` augmentation, the same pattern `@testing-library/jest-dom`'s own types already use.
 - Removed `@emotion/react`, `@toss/tds-mobile`, and `@toss/tds-mobile-ait` from `package.json`/`bun.lock`. These appeared between one `bun add` call (which installed exactly 9 named packages, none of them these three) and the next commit, without ever being intentionally added in this session. Regardless of origin, they directly contradict `docs/decisions/0005-toss-tds-vs-shadcn.md`'s already-settled rejection of TDS Mobile for React 19/RSC incompatibility, so removed on that basis.
+
+### Added
+
+- `docs/ux-audit.md` — full UI/UX, structure, logic, and system audit of the app as it stood at the start of this round: data hardcoding, the category-scroll flicker bug and its root cause, IA problems (buried staff-call button, oversized settings sheet), layout/space-usage issues, a full evidence-based accounting of shadcn/design-token fragmentation, and per-item decisions for each requested change.
+- `lib/data/menu.json`, `lib/data/stores.json` — menu and store catalog moved out of hardcoded TS into JSON (per-product `icon`, price, and option groups all inline; option groups deduplicated via a shared `optionGroups` dict + `optionGroupIds` reference so the three coffee items don't each repeat the same temperature/size/milk definitions). `lib/data/menu.ts` deleted.
+- `lib/types/store.ts` (`StoreListing`) — the store-listing shape now lives in `lib/types` alongside the rest of the data model instead of being defined ad hoc inside `StoreService.ts`.
+- `docs/decisions/0007-settings-as-dedicated-route.md` — ADR: settings moves from `SettingsSheet` (a bottom sheet) to a dedicated `/settings` route, explicitly departing from ADR 0003's "sheet, not route change" default for the specific reasons settings doesn't fit that pattern (not flow-scoped, not venue-scoped, big enough to want its own IA).
+- `app/settings/page.tsx`, `app/settings/accessibility/page.tsx`, `app/settings/payment/page.tsx` — the settings screen, split into a grouped list (테마/화면, 접근성, 결제, 언어) with two drill-down sub-screens, replacing the single 7-card `SettingsSheet` drawer.
+- `components/settings/{SettingsHeader,SettingsRow}.tsx` — shared back+title header and list-row/group primitives for the settings screens.
+- `store/usePaymentStore.ts` — persists which of the two mocked payment methods (card / easy-pay) `CheckoutSheet` preselects; no real payment credential is ever collected, consistent with Phase 1 having no real payment processing.
+- `components/flow/StaffCallButton.tsx` — the 직원 호출 (staff call) trigger, now a persistent icon button in `HeaderBar` next to settings, with its own Drawer confirmation (previously a `Dialog`, buried as a card at the bottom of the scrollable menu in `MenuClientView`).
+- Landing page: wired up the previously-built-but-unused `QrScannerModal` behind a "카메라로 QR 스캔해보기" link — `app/page.tsx`'s own comment already promised a "live QR camera scanner modal" that nothing actually triggered.
+
+### Changed
+
+- `components/flow/MenuClientView.tsx` — fixed the category-header scroll flicker: the `IntersectionObserver` callback picked whichever intersecting entry came last in `entries.forEach`, so two adjacent short sections intersecting the detection band in the same callback batch would flip the active tab back and forth. Now picks the single topmost intersecting entry and only commits a state update when it actually changes.
+- `components/flow/MenuCategoryHeader.tsx` — replaced `role="tablist"`/`role="tab"`/`aria-selected` (a scrollspy has no `tabpanel` to pair with, so this promised screen-reader users keyboard-tab behavior that didn't exist) with plain buttons and `aria-current`.
+- `components/flow/LandingHeroVisual.tsx` — the NFC/QR shape-swap `setInterval` now stops entirely when `reduceMotion` is on, instead of continuing to swap shapes every 3s with only the cross-fade duration zeroed out (a resulting strobe the reduced-motion setting was supposed to eliminate, not soften).
+- `components/flow/LandingClientView.tsx` — cut the redundant explainer sentence under the hero copy down to a single reassurance line ("앱 설치 없이 바로 연결돼요"); the mechanism it used to describe is already carried by the heading and the animated visual. Store-selector section dropped its arbitrary `max-w-sm` (narrower than the app's actual `max-w-[768px]` shell) in favor of the full shell width, and each store row is now a proper `Card` matching the rest of the app's list-row treatment instead of a bespoke divided-list pattern.
+- `components/layout/HeaderBar.tsx` — settings icon is now a `Link` to `/settings` instead of a Drawer-opening state toggle; gained `StaffCallButton` beside it.
+- `components/flow/ProductCard.tsx` — one icon per product (from `lib/data/menu.json`, named-imported per icon actually used so unused `lucide-react` icons stay tree-shaken) instead of one icon per category, so items in the same category are visually distinguishable. Icon container shrunk (80px → 64px) and padding tightened so the card reads less empty; corner radius and boundary now use the shared design tokens instead of the previous double `Card`-ring-plus-manual-border.
+- `components/flow/QrScannerModal.tsx` — converted from a centered `Dialog` to a `Drawer` to match the rest of the app's one sheet pattern; camera-error emoji (📷) replaced with a `Camera` icon.
+- Design-token consistency pass across `ProductCard`, `CartDrawer`, `CheckoutSheet`, `ConfirmationStep`, `ProductDetailSheet`, `A11yToastContainer`, `LandingClientView`, and `app/order/[storeId]/page.tsx`: removed the redundant `border-border/60` stacked on top of `Card`'s own `ring-1 ring-foreground/10` (DESIGN.md's Cards section already specifies "no border by default"); replaced ad hoc `rounded-2xl`/`rounded-3xl`/`rounded-xl`/`rounded-lg` with the four documented radius tokens (`rounded-[--radius-sm|md|lg|xl]`); replaced the remaining raw emoji (🛒 empty-cart, ⚠️ checkout error) with `lucide-react` icons to match the rest of the app's icon system.
+- `DESIGN.md`, `docs/design-system.md` — reconciled a three-way color-token drift: `DESIGN.md`'s frontmatter said `surface: "#FFFFFF"`, `docs/design-system.md`'s Elevation section said `--color-surface (#FBF9F5)`, and the actual shipped value in `app/globals.css` was `--card: #f9f8f6`. Both docs now read `#F9F8F6`, matching the code. Also renamed the retired "Lifted Linen / Warm Linen / Warm Slate / Faint Linen Line" palette names (left over from an earlier, since-abandoned color scheme) to the names actually in current use (Card Surface / Bright White / Muted Slate / Subtle Divider) throughout the Cards, Bottom Sheets, Inputs, and Named Rules sections.
+- `docs/features.md`, `docs/architecture.md` — updated the Settings section and folder-structure listing for the new `/settings` route, `components/settings/`, `store/usePaymentStore.ts`, and the JSON data files.
+- `lib/services/MenuService.ts`, `lib/services/StoreService.ts` — now read from `lib/data/*.json` instead of hardcoded TS arrays; `Promise`-based signatures unchanged.
+- `components/flow/CheckoutSheet.tsx` — default payment method now seeded from `usePaymentStore` instead of hardcoded to `"card"`.
+- `tests/unit/components.test.tsx` — added the now-required `icon` field to the sample `Product` fixture.
+
+### Removed
+
+- `components/flow/SettingsSheet.tsx` — replaced by the `/settings` route; nothing referenced it once `HeaderBar` switched to the link.
+- `lib/data/menu.ts` — replaced by `lib/data/menu.json`.

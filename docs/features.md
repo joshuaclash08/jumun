@@ -67,18 +67,18 @@ There is no disability-select gate and no mandatory pre-order step beyond arrivi
 
 ## 6. Settings (reachable anytime, never gating)
 
-Opened via the persistent settings icon present on every screen above. Not a route the user is ever forced into.
+A dedicated `/settings` route, opened via the persistent settings icon present on every screen above — not a sheet, and not a route the user is ever forced into. See `docs/decisions/0007-settings-as-dedicated-route.md` for why this is a route rather than the sheet pattern the rest of the app uses.
 
-- High-contrast / AAA toggle (switches instantly per `docs/design-system.md`)
-- Font scale, with a live preview of the change as it's adjusted
-- Reduced motion override (independent of, but seeded from, the OS-level `prefers-reduced-motion`)
-- Haptics on/off
-- Dyslexia-friendly spacing toggle (opt-in letter/line/word spacing from `docs/design-system.md`)
-- Language
+Grouped as a list (icon + label + description, chevron for anything that drills into its own screen — `components/settings/SettingsRow.tsx`):
+
+- **테마 및 화면**: high-contrast/AAA toggle (switches instantly per `docs/design-system.md`), font scale with an inline 3-way picker, reduced motion override (independent of, but seeded from, the OS-level `prefers-reduced-motion`)
+- **접근성** (`/settings/accessibility`): dyslexia-friendly spacing toggle, haptics on/off, alert-toast display-time extension
+- **결제 수단 관리** (`/settings/payment`): which of the two mocked payment methods (card / easy-pay) `CheckoutSheet` preselects — no real card or account data collected, Phase 1 has no real payment processing
+- **언어**: ko/en
 
 One-tap convenience presets (e.g., a single toggle that bundles several settings for low-vision use) are a reasonable future addition inside this screen — conceptually similar to legacy's `AccessibilityService` preset-merging idea — but not required for the initial Phase 1 build.
 
-- **Motion**: settings panel enters as a full sheet (same spring signature as cart/product sheets); the font-scale live preview updates the sample text with a simple size interpolation, no bounce or overshoot — a settings control demonstrating its own effect should feel precise, not playful.
+- **Motion**: each settings screen is a normal route transition (no sheet spring); the font-scale live preview updates the sample text with a simple size interpolation, no bounce or overshoot — a settings control demonstrating its own effect should feel precise, not playful.
 
 ## Error and failure states
 

@@ -30,6 +30,8 @@ export function MenuClientView({ categories, products, storeInfo }: MenuClientVi
 
   const setStoreInfo = useCartStore((state) => state.setStoreInfo);
   const orderStatus = useCartStore((state) => state.orderStatus);
+  const resetOrder = useCartStore((state) => state.resetOrder);
+  const isProgrammaticScroll = React.useRef(false);
 
   React.useEffect(() => {
     if (storeInfo) {
@@ -37,12 +39,53 @@ export function MenuClientView({ categories, products, storeInfo }: MenuClientVi
     }
   }, [storeInfo, setStoreInfo]);
 
+  // Scroll Sync via IntersectionObserver.
+  // Short sections (e.g. a 2-item dessert category) can intersect the
+  // detection band at the same time as their neighbor, so a single callback
+  // batch may contain multiple isIntersecting entries. Picking "whichever
+  // came last in entries" (the old behavior) flips the active tab back and
+  // forth between the two every frame while scrolling through that boundary
+  // -- the visible flicker. Instead, pick the single entry closest to the
+  // top of the detection band, and only commit a state update when the
+  // winner actually changes.
+  React.useEffect(() => {
+    const handleIntersect: IntersectionObserverCallback = (entries) => {
+      if (isProgrammaticScroll.current) return;
+
+      const intersecting = entries.filter((entry) => entry.isIntersecting);
+      if (intersecting.length === 0) return;
+
+      const topmost = intersecting.reduce((closest, entry) =>
+        entry.boundingClientRect.top < closest.boundingClientRect.top ? entry : closest
+      );
+      const catId = topmost.target.id.replace("category-", "");
+      setActiveCategoryId((prev) => (prev === catId ? prev : catId));
+    };
+
+    const observer = new IntersectionObserver(handleIntersect, {
+      root: null,
+      rootMargin: "-20% 0px -70% 0px",
+      threshold: 0,
+    });
+
+    categories.forEach((cat) => {
+      const el = document.getElementById(`category-${cat.id}`);
+      if (el) observer.observe(el);
+    });
+
+    return () => observer.disconnect();
+  }, [categories]);
+
   const handleCategorySelect = (id: string) => {
     setActiveCategoryId(id);
     const element = document.getElementById(`category-${id}`);
     if (element) {
+      isProgrammaticScroll.current = true;
       const y = element.getBoundingClientRect().top + window.scrollY - 80;
       window.scrollTo({ top: y, behavior: "smooth" });
+      setTimeout(() => {
+        isProgrammaticScroll.current = false;
+      }, 600);
     }
   };
 
@@ -52,11 +95,11 @@ export function MenuClientView({ categories, products, storeInfo }: MenuClientVi
   };
 
   if (orderStatus === "confirmed") {
-    return <ConfirmationStep onReset={() => window.location.reload()} />;
+    return <ConfirmationStep onReset={resetOrder} />;
   }
 
   return (
-    <div className="flex w-full flex-col pb-32 relative">
+    <div className="flex w-full flex-col pb-36 relative">
       <MenuCategoryHeader
         categories={categories}
         activeCategoryId={activeCategoryId}
@@ -75,9 +118,10 @@ export function MenuClientView({ categories, products, storeInfo }: MenuClientVi
             <section
               key={category.id}
               id={`category-${category.id}`}
-              className="flex flex-col gap-4"
+              className="flex flex-col gap-4 scroll-mt-24"
+              aria-labelledby={`heading-${category.id}`}
             >
-              <h2 className="text-xl font-bold text-foreground">
+              <h2 id={`heading-${category.id}`} className="text-xl font-bold text-foreground">
                 {category.labelKo}
               </h2>
               <div className="flex flex-col gap-3">
@@ -115,7 +159,6 @@ export function MenuClientView({ categories, products, storeInfo }: MenuClientVi
         open={isCheckoutSheetOpen}
         onOpenChange={setIsCheckoutSheetOpen}
         onConfirm={() => {
-          // The orderStatus state changes to "confirmed" which triggers the ConfirmationStep view
           window.scrollTo({ top: 0, behavior: "instant" });
         }}
       />

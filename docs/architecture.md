@@ -10,12 +10,17 @@ This document describes the folder structure, core patterns, and platform polici
   page.tsx                 # root fallback — no encoded storeId/table (direct visit, home-screen relaunch, or QR/NFC
                            # read failure); renders straight into the manual store/table entry bottom sheet
   /order/[storeId]/         # the real entry point — every QR/NFC tag encodes this route, e.g. /order/{storeId}?table={n}
+  /settings/                 # dedicated settings route, not a sheet — see docs/decisions/0007-settings-as-dedicated-route.md
+    page.tsx                  # 테마/화면, 접근성 + 결제 (linking out), 언어
+    /accessibility/page.tsx    # dyslexia spacing, haptics, alert display-time
+    /payment/page.tsx           # mocked default payment method (no real card/account data)
   globals.css                # @import "tailwindcss" + @theme tokens sourced from docs/design-system.md
 /components
   /ui                        # shadcn-generated primitives ONLY — never hand-edited beyond shadcn's own codegen
   /a11y                       # skip-link, visually-hidden text helper, live-region announcer
-  /layout                      # fixed bottom action bar, back-button bar, settings-panel trigger
-  /flow                         # one component per wizard screen (menu, cart, checkout, confirmation, settings)
+  /layout                      # HeaderBar (store name/table, staff-call + settings-link icons)
+  /flow                         # one component per wizard screen (menu, cart, checkout, confirmation, staff call, QR scan)
+  /settings                      # SettingsHeader (back+title), SettingsRow/SettingsGroup (list-row primitives)
 /hooks                          # hardware-interface wrappers — see pattern below
   useHaptics.ts
   useReducedMotion.ts
@@ -23,10 +28,12 @@ This document describes the folder structure, core patterns, and platform polici
 /store
   useCartStore.ts                # cart state, toast+undo history
   useAccessibilityStore.ts        # settings only, never a raw disability profile
+  usePaymentStore.ts               # which mocked payment method (card/easy-pay) checkout preselects
 /lib
   /services                       # MenuService, OrderService, StoreService, AccessibilityService, A11yFeedbackService
-  /data                            # fictional cafe menu seed data (docs/decisions/0002-menu-domain.md)
-  /types                            # Product, CartItem, StoreInfo, OrderStatus, OrderReceipt, etc.
+  /data                            # menu.json + stores.json — fictional cafe seed data (docs/decisions/0002-menu-domain.md),
+                                   # not hardcoded TS; services read these, never edit them by hand mid-request
+  /types                            # Product, CartItem, StoreInfo, StoreListing, OrderStatus, OrderReceipt, etc.
   utils.ts                          # shadcn's cn() helper
 /public
   manifest.json                     # installable PWA metadata — never a required install gate
@@ -37,7 +44,7 @@ Compared to legacy's `components/{a11y,kiosk,layout,steps,ui}` split, this colla
 
 ### PWA manifest
 
-`public/manifest.json` makes the app installable for anyone who chooses to (never a requirement — see `PRODUCT.md`'s positioning), and supplies the browser-chrome theming for anyone who doesn't install. Required fields: `name` ("Jumun — 바리어프리 셀프오더"), `short_name` ("Jumun"), `start_url: "/"` (deliberately the root fallback route above, not a specific `/order/[storeId]`, since a stale store/table context baked into a home-screen icon would be wrong the next time it's tapped at a different venue), `display: "standalone"`, `background_color`/`theme_color` set to `--color-bg` (`#F7F3EC`, `docs/design-system.md`) so the OS splash/chrome matches the app instead of defaulting to white, and an icon set (192px/512px minimum, plus a maskable variant for Android's adaptive-icon treatment). No app-install banner or prompt is ever shown proactively — this stays purely opt-in, consistent with `docs/decisions/0001-onboarding-model.md`'s no-gate principle extending to installation, not just onboarding.
+`public/manifest.json` makes the app installable for anyone who chooses to (never a requirement — see `PRODUCT.md`'s positioning), and supplies the browser-chrome theming for anyone who doesn't install. Required fields: `name` ("Jumun — 바리어프리 셀프오더"), `short_name` ("Jumun"), `start_url: "/"` (deliberately the root fallback route above, not a specific `/order/[storeId]`, since a stale store/table context baked into a home-screen icon would be wrong the next time it's tapped at a different venue), `display: "standalone"`, `background_color`/`theme_color` set to `--color-bg` (`#FFFFFF`, `docs/design-system.md`) so the OS splash/chrome matches the app instead of defaulting to white, and an icon set (192px/512px minimum, plus a maskable variant for Android's adaptive-icon treatment). No app-install banner or prompt is ever shown proactively — this stays purely opt-in, consistent with `docs/decisions/0001-onboarding-model.md`'s no-gate principle extending to installation, not just onboarding.
 
 ## Patterns worth keeping from legacy
 
@@ -99,6 +106,7 @@ interface Product {
   descriptionKo: string;
   voiceDescriptionKo: string; // fuller sentence for screen-reader labels, see docs/design-system.md
   price: number; // KRW, base price before options
+  icon: string; // lucide-react export name, one per product -- components/flow/ProductCard.tsx
   optionGroups: ProductOptionGroup[];
   available: boolean;
 }
@@ -115,6 +123,16 @@ interface CartItem {
   quantity: number;
   selections: CartItemSelection[];
   unitPrice: number; // base price + selected option deltas, snapshotted at add-time
+}
+
+// lib/types/store.ts
+interface StoreListing {
+  storeId: string;
+  storeName: string;
+  branchKo: string;
+  addressKo: string;
+  defaultTable: string;
+  distanceKo: string;
 }
 
 // lib/types/order.ts

@@ -3,7 +3,11 @@
 import * as React from "react";
 import { useCartStore } from "@/store/useCartStore";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
+import { CheckCircle2 } from "lucide-react";
 import confetti from "canvas-confetti";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
@@ -26,17 +30,17 @@ export function ConfirmationStep({ onReset }: ConfirmationStepProps) {
         particleCount: 100,
         spread: 70,
         origin: { y: 0.6 },
-        colors: ["#1a56b0", "#146c3b", "#fbf9f5", "#a32118"],
+        colors: ["#1a56b0", "#15803d", "#e5e7eb", "#b91c1c"],
         disableForReducedMotion: true,
       });
 
-      // Animate receipt in
-      gsap.from(".receipt-card", {
-        y: 50,
+      // Animate receipt in with GSAP timeline
+      gsap.from(".receipt-element", {
+        y: 30,
         opacity: 0,
-        duration: 0.5,
+        duration: 0.4,
         ease: "power3.out",
-        stagger: 0.1,
+        stagger: 0.08,
       });
     },
     { scope: containerRef }
@@ -46,46 +50,77 @@ export function ConfirmationStep({ onReset }: ConfirmationStepProps) {
     return null;
   }
 
+  const orderTypeLabel = lastReceipt.orderType === "dine-in" ? "매장 식사" : "포장";
+  const formattedTime = new Date(lastReceipt.placedAt).toLocaleTimeString("ko-KR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
   return (
     <div
       ref={containerRef}
-      className="flex min-h-[80vh] flex-col items-center justify-center p-6 text-center"
+      className="flex min-h-[85vh] flex-col items-center justify-center p-4 py-8 text-center"
     >
-      <div className="receipt-card mb-8 flex flex-col items-center gap-2">
-        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-success/10 text-success">
-          <span className="text-4xl" aria-hidden="true">🎉</span>
+      <div className="receipt-element mb-6 flex flex-col items-center gap-2">
+        {/* Success icon — Jumun primary palette, no emoji */}
+        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10 text-primary">
+          <CheckCircle2 className="h-10 w-10 stroke-[1.5]" aria-hidden="true" />
         </div>
-        <h1 className="text-3xl font-bold text-foreground">주문 완료!</h1>
-        <p className="text-lg text-muted-foreground">
-          주문번호 <span className="font-bold text-foreground">{lastReceipt.orderNumber}</span>
+        <h1 className="text-3xl font-bold text-foreground">주문이 완료되었어요!</h1>
+        <p className="text-base text-muted-foreground">
+          주문번호 <span className="text-2xl font-extrabold text-foreground ml-1">{lastReceipt.orderNumber}</span>
         </p>
       </div>
 
-      <div className="receipt-card w-full max-w-sm rounded-2xl bg-surface p-6 shadow-[0_1px_2px_rgba(33,30,26,0.06),_0_1px_1px_rgba(33,30,26,0.04)] text-left">
-        <h2 className="mb-4 text-lg font-bold border-b pb-2">주문 내역</h2>
-        <div className="flex flex-col gap-3">
+      <Card className="receipt-element w-full max-w-sm p-5 shadow-xs text-left">
+        <div className="flex items-center justify-between pb-3">
+          <div>
+            <h2 className="text-lg font-bold text-foreground">주문 영수증</h2>
+            <p className="text-xs text-muted-foreground">
+              {lastReceipt.store.storeName} · {lastReceipt.store.table}번 테이블 · {formattedTime}
+            </p>
+          </div>
+          <Badge variant="secondary" className="font-bold">
+            {orderTypeLabel}
+          </Badge>
+        </div>
+
+        <Separator className="my-2" />
+
+        <div className="flex flex-col gap-3 py-1">
           {lastReceipt.items.map((item, idx) => (
-            <div key={idx} className="flex justify-between text-sm">
-              <span>
-                상품 {item.productId} <span className="text-muted-foreground">x{item.quantity}</span>
-              </span>
-              <span className="font-semibold">
+            <div key={idx} className="flex justify-between items-start text-sm">
+              <div className="flex flex-col">
+                <span className="font-bold text-foreground">
+                  {item.nameKo || item.productId}{" "}
+                  <span className="text-muted-foreground font-normal">x{item.quantity}</span>
+                </span>
+                {item.optionsSummary && (
+                  <span className="text-xs text-muted-foreground">
+                    {item.optionsSummary}
+                  </span>
+                )}
+              </div>
+              <span className="font-bold text-foreground">
                 {(item.unitPrice * item.quantity).toLocaleString("ko-KR")}원
               </span>
             </div>
           ))}
         </div>
-        <div className="mt-6 border-t pt-4 flex justify-between text-lg font-bold">
-          <span>총 결제 금액</span>
-          <span className="text-primary">
+
+        <Separator className="my-2" />
+
+        <div className="pt-2 flex justify-between text-base font-bold">
+          <span className="text-foreground">총 결제 금액</span>
+          <span className="text-primary text-xl font-extrabold">
             {lastReceipt.total.toLocaleString("ko-KR")}원
           </span>
         </div>
-      </div>
+      </Card>
 
       <Button
-        size="lg"
-        className="receipt-card mt-12 h-16 w-full max-w-sm rounded-2xl text-lg font-bold"
+        size="cta"
+        className="receipt-element mt-8 w-full max-w-sm"
         onClick={onReset}
       >
         새로운 주문하기

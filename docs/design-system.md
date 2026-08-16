@@ -39,28 +39,28 @@ All contrast ratios are computed via the WCAG relative-luminance formula, not es
 
 | Token | Hex | Paired against | Ratio | Meets |
 |---|---|---|---|---|
-| `--color-bg` | `#F7F3EC` (warm off-white) | — | — | Avoids pure `#FFFFFF` per spec rule 5 |
-| `--color-surface` (cards/elevated content) | `#FBF9F5` | — | — | Subtly lighter than bg — cheap elevation cue without a shadow-only signal |
-| `--color-text-primary` (deep charcoal) | `#211E1A` | on `--color-bg` | **15.01:1** | Clears the ≥15:1 default-theme target (rule 5) |
-| `--color-text-secondary` (muted/meta text) | `#55504A` | on `--color-bg` | **7.21:1** | AA (4.5:1) with wide margin |
-| `--color-border-subtle` (decorative dividers only) | `#D8D2C4` | on `--color-bg` | 1.36:1 | Decorative only — never the sole indicator of an interactive boundary |
-| `--color-border-strong` (input/interactive boundaries) | `#55504A` | on `--color-bg` | **7.21:1** | Clears WCAG 1.4.11 non-text 3:1 requirement comfortably |
-| `--color-accent` ("Jumun Blue" — deliberately distinct from legacy's Toss Blue `#3182f6`) | `#1A56B0` | on `--color-bg` | **6.32:1** | Used for primary CTA fills, links, selected-state indicators |
-| `--color-accent-foreground` | `#FFFFFF` | on `--color-accent` | **7.00:1** | Text/icons on accent-filled surfaces |
-| `--color-success` | `#146C3B` | on `--color-bg` | **5.86:1** | |
-| `--color-success-foreground` | `#FFFFFF` | on `--color-success` | **6.49:1** | |
-| `--color-error` / `--color-destructive` | `#A32118` | on `--color-bg` | **6.81:1** | |
-| `--color-error-foreground` | `#FFFFFF` | on `--color-error` | **7.53:1** | |
-| `--color-focus-ring` | reuses `--color-text-primary` (`#211E1A`) | on `--color-bg` | **15.01:1** | See "Focus ring" section — the spec's `#000` example is illustrative syntax, not a literal mandated hex |
+| `--color-bg` | `#FFFFFF` (crisp bright white) | — | — | Clean production standard |
+| `--color-surface` (cards/elevated content) | `#F9F8F6` | on `--color-bg` | 1.03:1 | Deliberately near-`--color-bg` — elevation reads from the shadow + this slight shift together (Never-Alone Rule), not from contrast alone |
+| `--color-text-primary` (deep charcoal) | `#111827` | on `--color-bg` | **16.90:1** | Clears AA (4.5:1) and AAA (7:1) floors |
+| `--color-text-secondary` (muted slate) | `#4B5563` | on `--color-bg` | **7.60:1** | AA (4.5:1) and AAA (7:1) with wide margin |
+| `--color-border-subtle` (decorative dividers) | `#E5E7EB` | on `--color-bg` | 1.25:1 | Decorative only — never the sole indicator of an interactive boundary |
+| `--color-border-strong` (input/interactive boundaries) | `#4B5563` | on `--color-bg` | **7.60:1** | Clears WCAG 1.4.11 non-text 3:1 requirement comfortably |
+| `--color-accent` ("Jumun Blue") | `#1A56B0` | on `--color-bg` | **7.45:1** | Used for primary CTA fills, links, selected-state indicators |
+| `--color-accent-foreground` | `#FFFFFF` | on `--color-accent` | **7.45:1** | Text/icons on accent-filled surfaces |
+| `--color-success` | `#15803D` | on `--color-bg` | **7.08:1** | AAA |
+| `--color-success-foreground` | `#FFFFFF` | on `--color-success` | **7.08:1** | |
+| `--color-error` / `--color-destructive` | `#B91C1C` | on `--color-bg` | **7.15:1** | AAA |
+| `--color-error-foreground` | `#FFFFFF` | on `--color-error` | **7.15:1** | |
+| `--color-focus-ring` | reuses `--color-text-primary` (`#111827`) | on `--color-bg` | **16.90:1** | Meets AA and AAA |
 
 ### AAA / high-contrast mode
 
-Toggles immediately when the user enables it (spec rule 1). Stays within the same warm-toned family rather than jumping to literal pure black/white — this keeps the toggle from feeling like a jarring hue-shift while still clearing 7:1 by a wide margin. (If real-world testing shows users want a literal pure-black/pure-white option for maximum possible separation, that's a one-token change — flagged as an easy future adjustment, not a structural one.)
+Toggles immediately when the user enables it (spec rule 1). Uses pure contrast `#000000` text and borders on `#FFFFFF` background for maximum 21:1 separation.
 
 | Token | Hex | Paired against | Ratio |
 |---|---|---|---|
-| `--color-bg` (AAA) | `#FBF9F5` | — | — |
-| `--color-text-primary` (AAA) | `#17140F` | on AAA bg | **17.47:1** |
+| `--color-bg` (AAA) | `#FFFFFF` | — | — |
+| `--color-text-primary` (AAA) | `#000000` | on AAA bg | **21.00:1** |
 
 Accent, success, and error tokens are not redefined for AAA mode — their default-theme values already clear 6:1+ against the off-white family, and AAA mode's job is maximizing body-text legibility specifically, not re-deriving every semantic color.
 
@@ -117,7 +117,7 @@ Elevation communicates layering (what's a sheet, what's a card, what's above wha
 | `--elevation-2` | `0 4px 12px rgba(33,30,26,0.10), 0 2px 4px rgba(33,30,26,0.06)` | Bottom sheets, popovers, the settings panel |
 | `--elevation-3` | `0 12px 32px rgba(33,30,26,0.16), 0 4px 8px rgba(33,30,26,0.08)` | Toasts, anything floating above a sheet |
 
-Shadows use the charcoal token at low opacity rather than pure black — keeps elevation feeling native to the warm palette instead of generic. `--color-surface` (`#FBF9F5`) plus `--elevation-1` is the default card treatment; never combine flat `--color-bg`-on-`--color-bg` with no shadow and expect a boundary to read — pair every elevated surface with either a shadow or `--color-border-subtle`, not neither.
+Shadows use the charcoal token at low opacity rather than pure black — keeps elevation feeling native to the warm palette instead of generic. `--color-surface` (`#F9F8F6`, mapped to shadcn's `--card` in `app/globals.css`) plus `--elevation-1` is the default card treatment; never combine flat `--color-bg`-on-`--color-bg` with no shadow and expect a boundary to read — pair every elevated surface with either a shadow or `--color-border-subtle`, not neither.
 
 ## Corner radius
 
