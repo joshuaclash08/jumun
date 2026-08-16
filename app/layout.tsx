@@ -6,12 +6,14 @@ import { LiveRegionAnnouncer } from "@/components/a11y/LiveRegionAnnouncer";
 import { SkipLink } from "@/components/a11y/SkipLink";
 import "./globals.css";
 
-// Sourced from the `pretendard` npm package, not a manual download -- see
-// docs/tech-stack.md. weight is required: omitting it renders the wrong
-// weight specifically in WebKit/Safari, and iOS Safari is an explicit
-// target browser for this product.
+// Self-hosted from public/fonts/ (the official Pretendard 1.3.9 release
+// distribution, not the npm package) -- see docs/tech-stack.md. weight is
+// required: omitting it renders the wrong weight specifically in
+// WebKit/Safari, and iOS Safari is an explicit target browser for this
+// product. Byte-identical to the npm package's copy (verified via md5),
+// hosted directly so the font source isn't tied to a node_modules path.
 const pretendard = localFont({
-  src: "../node_modules/pretendard/dist/web/variable/woff2/PretendardVariable.woff2",
+  src: "../public/fonts/PretendardVariable.woff2",
   variable: "--font-pretendard",
   weight: "45 920",
   display: "swap",
@@ -37,13 +39,14 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
+  themeColor: "#ffffff",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ko" className={`${pretendard.variable} ${notoSansKR.variable}`} suppressHydrationWarning>
-      <body className="min-h-screen bg-[#EEECEA] font-sans text-foreground antialiased selection:bg-primary/20 flex justify-center">
-        <div className="w-full max-w-[768px] min-h-screen bg-background text-foreground shadow-2xl relative flex flex-col">
+    <html lang="ko" className={`${pretendard.variable} ${notoSansKR.variable} bg-background`} suppressHydrationWarning>
+      <body className="min-h-[100dvh] bg-background font-sans text-foreground antialiased selection:bg-primary/20 flex justify-center">
+        <div className="w-full max-w-[768px] min-h-[100dvh] bg-background text-foreground relative flex flex-col">
           <Providers>
             <SkipLink targetId="main-content">본문으로 바로가기</SkipLink>
             {children}
