@@ -13,14 +13,13 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, CreditCard, Smartphone, TriangleAlert, Utensils, ShoppingBag, Check, ChevronLeft } from "lucide-react";
+import { Loader2, CreditCard, Smartphone, TriangleAlert, Utensils, ShoppingBag, ChevronLeft } from "lucide-react";
 import { OrderService } from "@/lib/services";
 import { useCartStore } from "@/store/useCartStore";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
 import { usePaymentStore } from "@/store/usePaymentStore";
 import { RollingPrice } from "@/components/ui/RollingPrice";
-import type { OrderType } from "@/lib/types";
-import { cn } from "@/lib/utils";
+import { SelectionCard } from "./SelectionCard";
 
 interface CheckoutSheetProps {
   open: boolean;
@@ -28,69 +27,10 @@ interface CheckoutSheetProps {
   onConfirm: () => void;
 }
 
-interface SelectionCardProps {
-  isSelected: boolean;
-  onClick: () => void;
-  label: string;
-  sublabel?: string;
-  icon?: React.ReactNode;
-  reduceMotion: boolean;
-}
-
-/** Reusable accessible selection card — semantic <button> with Toss style press indicator */
-function SelectionCard({
-  isSelected,
-  onClick,
-  label,
-  sublabel,
-  icon,
-  reduceMotion,
-}: SelectionCardProps) {
-  const fullLabel = sublabel ? `${label}, ${sublabel}` : label;
-
-  return (
-    <motion.button
-      type="button"
-      whileTap={reduceMotion ? undefined : { scale: 0.96 }}
-      transition={{ type: "spring", stiffness: 400, damping: 25 }}
-      onClick={onClick}
-      aria-pressed={isSelected}
-      aria-label={fullLabel}
-      className={cn(
-        "relative flex min-h-[80px] w-full cursor-pointer flex-col items-center justify-center gap-1 rounded-[18px] border-2 p-3.5 font-bold transition-all outline-none focus-visible:ring-2 focus-visible:ring-ring",
-        isSelected
-          ? "border-primary bg-primary/5 text-primary shadow-2xs"
-          : "border-border bg-card text-foreground hover:bg-muted/30"
-      )}
-    >
-      <div className="flex flex-col items-center justify-center gap-1 pointer-events-none" aria-hidden="true">
-        {isSelected && (
-          <motion.div
-            initial={reduceMotion ? undefined : { scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: "spring", stiffness: 500, damping: 25 }}
-            className="absolute top-2.5 right-2.5 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-white"
-          >
-            <Check className="h-3 w-3 stroke-[3]" />
-          </motion.div>
-        )}
-        {icon && <span className="mb-0.5">{icon}</span>}
-        <span className="text-base font-bold leading-tight">{label}</span>
-        {sublabel && (
-          <span className={cn("text-base font-medium", isSelected ? "text-primary/80" : "text-muted-foreground")}>
-            {sublabel}
-          </span>
-        )}
-      </div>
-    </motion.button>
-  );
-}
-
 export function CheckoutSheet({ open, onOpenChange, onConfirm }: CheckoutSheetProps) {
   const { items, storeInfo, setOrderStatus, setLastReceipt, clearCart } = useCartStore();
   const reduceMotion = useAccessibilityStore((state) => state.reducedMotion);
   const defaultPaymentMethod = usePaymentStore((state) => state.defaultMethod);
-  const [orderType, setOrderType] = React.useState<OrderType>("dine-in");
   const [paymentMethod, setPaymentMethod] = React.useState<string>(defaultPaymentMethod);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
@@ -119,7 +59,7 @@ export function CheckoutSheet({ open, onOpenChange, onConfirm }: CheckoutSheetPr
     setOrderStatus("submitting");
 
     try {
-      const receipt = await OrderService.submitOrder(storeInfo, items, orderType);
+      const receipt = await OrderService.submitOrder(storeInfo, items);
       setLastReceipt(receipt);
       setOrderStatus("confirmed");
       clearCart();
@@ -137,8 +77,8 @@ export function CheckoutSheet({ open, onOpenChange, onConfirm }: CheckoutSheetPr
   return (
     <Drawer open={open} onOpenChange={handleOpenChange}>
       <DrawerContent>
-        <DrawerHeader className="relative border-b border-border/40 px-4 py-3">
-          <div className="flex items-center gap-3">
+        <DrawerHeader className="relative px-4 py-3">
+          <div className="flex items-center gap-2.5">
             <motion.div
               whileTap={reduceMotion ? undefined : { scale: 0.90 }}
               transition={{ type: "spring", stiffness: 400, damping: 25 }}
@@ -149,9 +89,9 @@ export function CheckoutSheet({ open, onOpenChange, onConfirm }: CheckoutSheetPr
                 size="icon"
                 onClick={() => handleOpenChange(false)}
                 aria-label="주문 및 결제 닫기"
-                className="h-12 w-12 rounded-full text-foreground hover:bg-muted -ml-1.5"
+                className="h-11 w-11 rounded-full text-foreground hover:bg-muted -ml-1.5"
               >
-                <ChevronLeft className="h-7 w-7 stroke-[2.8]" aria-hidden="true" />
+                <ChevronLeft className="size-7 stroke-[2.8]" aria-hidden="true" />
               </Button>
             </motion.div>
             <DrawerTitle className="text-xl font-extrabold text-foreground">주문 및 결제</DrawerTitle>
@@ -177,26 +117,25 @@ export function CheckoutSheet({ open, onOpenChange, onConfirm }: CheckoutSheetPr
               </div>
             )}
 
-            {/* 1. Dining Place */}
+            {/* 1. Dining Place — decided at entry (OrderTypeSelectView), read-only here */}
             <div className="flex flex-col gap-2.5">
               <h3 className="text-base font-bold text-foreground">식사 장소</h3>
-              <div className="grid grid-cols-2 gap-2.5">
-                <SelectionCard
-                  isSelected={orderType === "dine-in"}
-                  onClick={() => setOrderType("dine-in")}
-                  label="매장 식사"
-                  sublabel={`테이블 ${storeInfo?.table || "-"}번`}
-                  icon={<Utensils className="h-5 w-5" />}
-                  reduceMotion={reduceMotion}
-                />
-                <SelectionCard
-                  isSelected={orderType === "takeout"}
-                  onClick={() => setOrderType("takeout")}
-                  label="포장하기"
-                  sublabel="픽업대 수령"
-                  icon={<ShoppingBag className="h-5 w-5" />}
-                  reduceMotion={reduceMotion}
-                />
+              <div className="flex items-center gap-3 rounded-[18px] border-2 border-border bg-card p-3.5">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                  {storeInfo?.orderType === "dine-in" ? (
+                    <Utensils className="h-5 w-5" aria-hidden="true" />
+                  ) : (
+                    <ShoppingBag className="h-5 w-5" aria-hidden="true" />
+                  )}
+                </span>
+                <span className="flex flex-col">
+                  <span className="text-base font-bold text-foreground">
+                    {storeInfo?.orderType === "dine-in" ? "매장 식사" : "포장하기"}
+                  </span>
+                  <span className="text-base font-medium text-muted-foreground">
+                    {storeInfo?.orderType === "dine-in" ? `테이블 ${storeInfo.table}번` : "픽업대 수령"}
+                  </span>
+                </span>
               </div>
             </div>
 
@@ -267,11 +206,11 @@ export function CheckoutSheet({ open, onOpenChange, onConfirm }: CheckoutSheetPr
           </div>
         </div>
 
-        <DrawerFooter className="p-4 pt-3 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))] border-t border-border bg-background">
+        <DrawerFooter className="p-4 pt-5 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] bg-gradient-to-t from-background via-background/95 to-transparent backdrop-blur-[6px] [mask-image:linear-gradient(to_top,black_80%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_top,black_80%,transparent_100%)]">
           <Button
-            size="cta"
+            size="lg"
             disabled={isSubmitting || items.length === 0}
-            className="w-full font-bold text-base rounded-[16px]"
+            className="w-full h-14 min-h-[56px] font-bold text-base rounded-[16px]"
             onClick={handleCheckout}
             aria-busy={isSubmitting}
           >

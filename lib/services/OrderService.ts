@@ -1,4 +1,4 @@
-import type { CartItem, OrderReceipt, OrderType, StoreInfo } from "@/lib/types";
+import type { CartItem, OrderReceipt, StoreInfo } from "@/lib/types";
 
 const MOCK_LATENCY_MS = 600;
 
@@ -27,7 +27,6 @@ const MOCK_FAILURE_RATE = 0.1;
 export async function submitOrder(
   storeInfo: StoreInfo,
   items: CartItem[],
-  orderType: OrderType,
   options: SubmitOrderOptions = {},
 ): Promise<OrderReceipt> {
   await delay(MOCK_LATENCY_MS);
@@ -44,7 +43,7 @@ export async function submitOrder(
     items,
     subtotal,
     total: subtotal,
-    orderType,
+    orderType: storeInfo.orderType,
     store: storeInfo,
     placedAt: new Date().toISOString(),
   };

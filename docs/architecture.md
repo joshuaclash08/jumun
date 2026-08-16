@@ -8,8 +8,11 @@ This document describes the folder structure, core patterns, and platform polici
 /app
   layout.tsx              # <html lang="ko">, next/font (Pretendard + Noto Sans KR), theme/a11y sync provider
   page.tsx                 # root fallback — no encoded storeId/table (direct visit, home-screen relaunch, or QR/NFC
-                           # read failure); renders straight into the manual store/table entry bottom sheet
-  /order/[storeId]/         # the real entry point — every QR/NFC tag encodes this route, e.g. /order/{storeId}?table={n}
+                           # read failure); renders the hero + QR-scan CTA + "직접 매장 선택하기" store list
+  /order/[storeId]/         # the real entry point. Every QR/NFC tag encodes /order/{storeId}?table={n} directly.
+                           # Manually-selected stores land here with no query params, which renders the dine-in/
+                           # takeout choice (OrderTypeSelectView) instead -- see docs/decisions/0014.
+    /table/                  # dine-in only: table-number grid (TableSelectView), then on to ?table={n} above
   /settings/                 # dedicated settings route, not a sheet — see docs/decisions/0007-settings-as-dedicated-route.md
     page.tsx                  # 테마/화면, 접근성 + 결제 (linking out), 언어
     /accessibility/page.tsx    # dyslexia spacing, haptics, alert display-time
@@ -74,7 +77,7 @@ This is deliberate, not incidental — `plan.md`'s Phase 2 (Expo/React Native po
 
 Two Zustand stores, following legacy's shape:
 
-- **`useCartStore`** — `storeInfo` (`{id, name, table}`, parsed from the `/order/[storeId]?table=` URL), `items[]`, order status, last receipt, a toast queue with undo callbacks, and a capped undo history stack (legacy capped at 5 — a reasonable starting point). Every mutation pushes to the undo stack first, then triggers `A11yFeedbackService` as described above.
+- **`useCartStore`** — `storeInfo` (a `StoreInfo` discriminated union on `orderType`: dine-in carries `table`, takeout doesn't — resolved server-side from `/order/[storeId]`'s `?table=` or `?type=takeout` query, see `docs/decisions/0014-entry-order-type-and-table-selection.md`), `items[]`, order status, last receipt, a toast queue with undo callbacks, and a capped undo history stack (legacy capped at 5 — a reasonable starting point). Every mutation pushes to the undo stack first, then triggers `A11yFeedbackService` as described above.
 - **`useAccessibilityStore`** — language, high-contrast/AAA flag, font scale, reduced-motion override, haptics on/off, dyslexia-mode spacing, timeout-extension (kept as a settings concept even though Phase 1 has no timeouts to extend — see below). Persists via cookie/localStorage only, and only the merged boolean/numeric settings — **never** a raw disability category or profile. This is a privacy-conscious pattern worth keeping exactly: legacy already made the right call here.
 
 **Difference from legacy worth calling out explicitly**: legacy branched storage between cookies (personal phone) and `sessionStorage` (detected shared/kiosk device via `?table=`/`?store=` URL params), anticipating that a physical kiosk might also exist alongside BYOD phones. This project confirmed there is no shared-kiosk hardware case at all — every session is BYOD. So Jumun's settings storage is simply cookie/localStorage, unconditionally. No device-type branch needed.
@@ -131,16 +134,16 @@ interface StoreListing {
   storeName: string;
   branchKo: string;
   addressKo: string;
-  defaultTable: string;
+  tableCount: number; // for TableSelectView's table-number grid, not a real per-table roster
   distanceKo: string;
 }
 
 // lib/types/order.ts
-interface StoreInfo {
-  storeId: string;
-  storeName: string;
-  table: string;
-}
+// Discriminated on orderType, not an optional `table` -- a takeout order
+// can't type-check with a leftover/fabricated table value.
+type StoreInfo =
+  | { storeId: string; storeName: string; orderType: "dine-in"; table: string }
+  | { storeId: string; storeName: string; orderType: "takeout" };
 
 type OrderType = 'dine-in' | 'takeout';
 type OrderStatus = 'idle' | 'submitting' | 'failed' | 'confirmed';
@@ -177,13 +180,18 @@ getProductsByCategory(categoryId: string): Promise<Product[]>
 getProduct(productId: string): Promise<Product | null>
 
 // OrderService
-submitOrder(storeInfo: StoreInfo, items: CartItem[], orderType: OrderType): Promise<OrderReceipt>
+submitOrder(storeInfo: StoreInfo, items: CartItem[], options?: { forceFailure?: boolean }): Promise<OrderReceipt>
+// orderType on the receipt is derived from storeInfo.orderType, not passed separately --
+// checkout no longer re-asks dine-in/takeout, it's decided at entry (docs/decisions/0014)
 // Phase 1: mocked latency + a deliberately reachable simulated-failure path
 // (docs/features.md's "Order submission fails" state) -- not just an always-succeeds stub
 
 // StoreService
-resolveStore(storeId: string, table: string): Promise<StoreInfo | null>
-// null triggers the invalid/expired-link state in docs/features.md, not a thrown error
+resolveStore(storeId: string, orderType: OrderType, table?: string): Promise<StoreInfo | null>
+// table is required (and only meaningful) for orderType "dine-in"; null triggers the
+// invalid/expired-link state in docs/features.md, not a thrown error
+getStoreListing(storeId: string): StoreListing | null
+// existence check used by OrderTypeSelectView/TableSelectView before a table is known
 
 // AccessibilityService
 getSettings(): AccessibilitySettings // reads the persisted, cross-venue store

@@ -3,6 +3,6 @@ export interface StoreListing {
   storeName: string;
   branchKo: string;
   addressKo: string;
-  defaultTable: string;
+  tableCount: number;
   distanceKo: string;
 }

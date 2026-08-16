@@ -210,3 +210,25 @@ Every `text-xs` (12px) and `text-sm` (14px) instance across the app bumped to `t
 - An earlier draft of this changelog claimed `public/toss-assets/` (198 extracted Figma assets) was added to this repo. It was not — the illustration work shipped as hand-authored `components/ui/TossIllustrations.tsx` instead. The `toss-design` skill itself does exist, but only at `~/.claude/skills/toss-design`, outside this repo's tracked history.
 - Verified (not a bug): `w-38` (`FeaturedMenuSection.tsx`) and `h-13` (`LandingClientView.tsx`) both resolve correctly (152px/52px via computed style) — Tailwind v4's dynamic spacing scale generates arbitrary steps like these on demand.
 
+### Added — manual-entry order type & table selection (ADR 0014)
+
+- `docs/decisions/0014-entry-order-type-and-table-selection.md` — ADR: manually-selected stores (the home screen's "직접 매장 선택하기" list) no longer inherit a fake `defaultTable`; `/order/[storeId]` with no query params is now a dine-in/takeout choice, and dine-in routes on to a dedicated table-number screen instead of guessing.
+- `components/flow/OrderTypeSelectView.tsx` — the dine-in-vs-takeout screen rendered by `/order/[storeId]` when neither `?table=` nor `?type=takeout` is present; takeout resolves the menu immediately, dine-in continues to the table picker.
+- `app/order/[storeId]/table/page.tsx`, `components/flow/TableSelectView.tsx` — new dedicated route: a grid of every table number up to the store's `tableCount`, reached only from the dine-in choice above.
+- `components/flow/SelectionCard.tsx` — the pressable icon+label+sublabel button extracted from `CheckoutSheet` so `OrderTypeSelectView` can reuse it; `CheckoutSheet` still uses it for payment-method selection.
+- `components/flow/InvalidOrderLinkNotice.tsx` — the "주문 링크를 찾지 못했어요" empty state extracted from `app/order/[storeId]/page.tsx` so the new table-selection route can show the same notice for an unknown `storeId`.
+- `lib/services/StoreService.ts` — `getStoreListing(storeId)`, a synchronous existence lookup used by both new screens before a table is known.
+
+### Changed — manual-entry order type & table selection (ADR 0014)
+
+- `lib/types/store.ts` — `StoreListing.defaultTable: string` replaced with `tableCount: number`; `lib/data/stores.json` updated (12/10/8 tables for the three seed stores) — the old field was one arbitrary sample table, not a real per-store roster.
+- `lib/types/order.ts` — `StoreInfo` changed from `{ storeId, storeName, table }` to a discriminated union on `orderType`: dine-in carries `table`, takeout doesn't. A takeout order can no longer type-check with a stale or fabricated table value.
+- `lib/services/StoreService.ts` — `resolveStore(storeId, table)` became `resolveStore(storeId, orderType, table?)`; `table` is now required only for `orderType: "dine-in"`.
+- `lib/services/OrderService.ts` — `submitOrder` drops its separate `orderType` parameter; the receipt's `orderType` is now derived from `storeInfo.orderType` instead of a second, possibly-inconsistent value.
+- `app/order/[storeId]/page.tsx` — now branches three ways: `?table=` resolves dine-in (QR/NFC and the table picker both produce this), `?type=takeout` resolves takeout, and neither renders `OrderTypeSelectView`; the invalid-link empty state moved into the shared `InvalidOrderLinkNotice` component and its fallback link dropped the hardcoded `?table=1`.
+- `components/flow/LandingClientView.tsx` — the "직접 매장 선택하기" store list links to `/order/{storeId}` with no query params instead of `/order/{storeId}?table={store.defaultTable}`.
+- `components/flow/CheckoutSheet.tsx` — the "식사 장소" dine-in/takeout toggle (a re-askable local `useState`, independent of how the order was actually entered) replaced with a read-only summary row reflecting `storeInfo.orderType`, decided once at entry.
+- `components/layout/HeaderBar.tsx`, `components/flow/ConfirmationStep.tsx` — the table badge/receipt line now shows "포장" for takeout instead of assuming a table always exists.
+- `components/flow/MenuClientView.tsx`, `components/flow/StaffCallButton.tsx` — `StaffCallButton` (call staff to your table) only renders for dine-in orders; its prop type narrows to the dine-in variant of `StoreInfo` so this is enforced at compile time, not just by the render gate.
+- `tests/unit/{components,OrderService,useCartStore}.test.ts(x)` — fixtures updated for the `StoreInfo` discriminated union and `OrderService.submitOrder`'s new signature.
+

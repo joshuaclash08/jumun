@@ -6,6 +6,7 @@ describe("OrderService", () => {
   const mockStore: StoreInfo = {
     storeId: "store-test",
     storeName: "주문 테스트 카페",
+    orderType: "dine-in",
     table: "3",
   };
 
@@ -30,7 +31,6 @@ describe("OrderService", () => {
     const receipt = await OrderService.submitOrder(
       mockStore,
       mockItems,
-      "dine-in",
       { forceFailure: false }
     );
 
@@ -45,7 +45,7 @@ describe("OrderService", () => {
 
   it("throws an error deterministically when forceFailure is true", async () => {
     await expect(
-      OrderService.submitOrder(mockStore, mockItems, "takeout", {
+      OrderService.submitOrder(mockStore, mockItems, {
         forceFailure: true,
       })
     ).rejects.toThrow("결제를 완료하지 못했어요.");

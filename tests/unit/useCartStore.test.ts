@@ -10,6 +10,7 @@ describe("useCartStore", () => {
   const mockStoreInfo: StoreInfo = {
     storeId: "store-001",
     storeName: "카페 주문",
+    orderType: "dine-in",
     table: "5",
   };
 

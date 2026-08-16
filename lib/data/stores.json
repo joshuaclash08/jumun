@@ -5,7 +5,7 @@
       "storeName": "주문 카페 1호점",
       "branchKo": "강남 본점",
       "addressKo": "서울시 강남구 테헤란로 123",
-      "defaultTable": "3",
+      "tableCount": 12,
       "distanceKo": "15m"
     },
     {
@@ -13,7 +13,7 @@
       "storeName": "주문 카페 2호점",
       "branchKo": "신촌점",
       "addressKo": "서울시 서대문구 연세로 45",
-      "defaultTable": "5",
+      "tableCount": 10,
       "distanceKo": "120m"
     },
     {
@@ -21,7 +21,7 @@
       "storeName": "주문 베이커리",
       "branchKo": "성수 플래그십",
       "addressKo": "서울시 성동구 성수이로 88",
-      "defaultTable": "1",
+      "tableCount": 8,
       "distanceKo": "450m"
     }
   ]

@@ -72,7 +72,7 @@ export function ConfirmationStep({ onReset }: ConfirmationStepProps) {
       initial={reduceMotion ? "visible" : "hidden"}
       animate="visible"
       variants={receiptContainer}
-      className="flex min-h-screen w-full flex-col items-center justify-between p-4 pt-8 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))] text-center bg-background"
+      className="flex min-h-screen w-full flex-col items-center justify-between p-4 pt-8 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] text-center bg-background"
     >
       <div className="flex w-full max-w-sm flex-col items-center gap-6">
         <motion.div
@@ -99,7 +99,11 @@ export function ConfirmationStep({ onReset }: ConfirmationStepProps) {
             <div>
               <h2 className="text-base font-bold text-foreground">주문 영수증</h2>
               <p className="text-base font-medium text-muted-foreground mt-0.5">
-                {lastReceipt.store.storeName} · {lastReceipt.store.table}번 테이블 · {formattedTime}
+                {lastReceipt.store.storeName} ·{" "}
+                {lastReceipt.store.orderType === "dine-in"
+                  ? `${lastReceipt.store.table}번 테이블`
+                  : "포장"}{" "}
+                · {formattedTime}
               </p>
             </div>
             <Badge variant="secondary" className="font-bold text-base px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border-none">
@@ -148,7 +152,7 @@ export function ConfirmationStep({ onReset }: ConfirmationStepProps) {
       >
         <Button
           size="lg"
-          className="w-full font-bold"
+          className="w-full h-14 min-h-[56px] font-bold rounded-[16px]"
           onClick={onReset}
         >
           새로운 주문하기

@@ -92,9 +92,6 @@ export function LandingClientView() {
               <span className="text-base font-bold text-foreground">
                 직접 매장 선택하기
               </span>
-              <span className="text-base font-medium text-muted-foreground">
-                샘플 매장으로 테스트해 볼 수 있어요
-              </span>
             </div>
           </div>
           <motion.div
@@ -132,15 +129,12 @@ export function LandingClientView() {
                     transition={{ type: "spring", stiffness: 400, damping: 25 }}
                   >
                     <Link
-                      href={`/order/${store.storeId}?table=${store.defaultTable}`}
+                      href={`/order/${store.storeId}`}
                       className="block outline-none rounded-[20px] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                     >
                       <Card className="flex-row items-center justify-between gap-3 rounded-[20px] p-4 bg-card shadow-resting border-border transition-all hover:border-primary/40 hover:shadow-layered">
                         {/* Left: icon + info */}
                         <div className="flex items-center gap-3.5 min-w-0">
-                          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-primary/10 text-primary">
-                            <MapPin className="h-5 w-5" aria-hidden="true" />
-                          </div>
                           <div className="flex flex-col min-w-0">
                             <div className="flex items-center gap-1.5 flex-wrap">
                               <span className="font-bold text-base text-foreground">
@@ -154,7 +148,7 @@ export function LandingClientView() {
                               </Badge>
                             </div>
                             <span className="text-base font-medium text-muted-foreground mt-1 truncate">
-                              {store.addressKo} · {store.defaultTable}번 테이블
+                              {store.addressKo}
                             </span>
                           </div>
                         </div>

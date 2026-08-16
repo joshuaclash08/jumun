@@ -212,8 +212,11 @@ export function MenuClientView({ categories, products, storeInfo }: MenuClientVi
       )}
     </AnimatePresence>
 
+
+
     {/* Fixed Bottom Action Controls: Staff Call (Bottom-Left) + Cart Summary Pill */}
-    {storeInfo && orderStatus !== "confirmed" && (
+    {/* Takeout has no table to call staff to -- dine-in only. */}
+    {storeInfo && storeInfo.orderType === "dine-in" && orderStatus !== "confirmed" && (
       <StaffCallButton storeInfo={storeInfo} />
     )}
     <CartSummaryPill onClick={() => setIsCartDrawerOpen(true)} />

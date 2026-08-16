@@ -5,6 +5,8 @@ import { ProductCard } from "@/components/flow/ProductCard";
 import { FeaturedMenuSection } from "@/components/flow/FeaturedMenuSection";
 import { CartDrawer } from "@/components/flow/CartDrawer";
 import { ConfirmationStep } from "@/components/flow/ConfirmationStep";
+import { HeaderBar } from "@/components/layout/HeaderBar";
+import { StaffCallButton } from "@/components/flow/StaffCallButton";
 import { useCartStore } from "@/store/useCartStore";
 import type { Product, CartItem, OrderReceipt } from "@/lib/types";
 
@@ -114,6 +116,7 @@ describe("Component Accessibility & Rendering", () => {
       store: {
         storeId: "jumun-cafe-01",
         storeName: "주문 카페 1호점",
+        orderType: "dine-in",
         table: "3",
       },
       placedAt: new Date().toISOString(),
@@ -128,4 +131,41 @@ describe("Component Accessibility & Rendering", () => {
     expect(screen.getByText("매장 식사")).toBeInTheDocument();
     expect(screen.getAllByText("9,000원").length).toBeGreaterThanOrEqual(1);
   });
+
+  it("renders HeaderBar with home button and without settings button", () => {
+    render(
+      <HeaderBar
+        storeInfo={{
+          storeId: "jumun-cafe-01",
+          storeName: "주문 카페 1호점",
+          orderType: "dine-in",
+          table: "3",
+        }}
+      />
+    );
+
+    const homeLink = screen.getByRole("link", { name: "홈으로 이동" });
+    expect(homeLink).toBeInTheDocument();
+    expect(homeLink).toHaveAttribute("href", "/");
+    expect(screen.queryByRole("link", { name: "설정 열기" })).not.toBeInTheDocument();
+    expect(screen.getByText("주문 카페 1호점")).toBeInTheDocument();
+    expect(screen.getByText("3번 테이블")).toBeInTheDocument();
+  });
+
+  it("renders StaffCallButton with accessible trigger", () => {
+    render(
+      <StaffCallButton
+        storeInfo={{
+          storeId: "jumun-cafe-01",
+          storeName: "주문 카페 1호점",
+          orderType: "dine-in",
+          table: "3",
+        }}
+      />
+    );
+
+    const callButton = screen.getByRole("button", { name: "직원 호출하기" });
+    expect(callButton).toBeInTheDocument();
+  });
 });
+

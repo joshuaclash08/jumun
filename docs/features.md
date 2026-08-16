@@ -5,12 +5,16 @@ This document describes the screen-by-screen flow for the Phase 1 prototype, ref
 ## Flow overview
 
 ```
-Entry (QR/NFC scan)
-  └─→ Menu browsing ──→ Product detail (bottom sheet) ──→ back to Menu (item added)
+Entry (QR/NFC scan, table already known)
+  │
+  │  Entry (manual "직접 매장 선택하기"): order-type choice ──→ dine-in only: table picker
+  │                                    └─→ takeout: skip straight to menu ──┘
+  ▼
+Menu browsing ──→ Product detail (bottom sheet) ──→ back to Menu (item added)
         │                                                        │
         │  (cart pill visible throughout, tap to open)           │
         ▼                                                        ▼
-      Cart review (bottom sheet) ──→ Order type + checkout ──→ Confirmation
+      Cart review (bottom sheet) ──→ Checkout (dine-in/takeout shown read-only) ──→ Confirmation
                                                                    │
                                                         ┌──────────┴──────────┐
                                                         view receipt      order again → Menu
@@ -22,10 +26,11 @@ There is no disability-select gate and no mandatory pre-order step beyond arrivi
 
 ## 1. Entry
 
-- Route: `/order/[storeId]?table={n}`, per `docs/architecture.md`. The physical tag at the table carries both a QR code and an NFC chip encoding this same URL — scanning or tapping either lands here identically (`PRODUCT.md`).
+- QR/NFC route: `/order/[storeId]?table={n}`, per `docs/architecture.md`. The physical tag at the table carries both a QR code and an NFC chip encoding this same URL — scanning or tapping either lands here identically (`PRODUCT.md`), skipping straight to menu browsing below.
+- Manual entry route (home screen's "직접 매장 선택하기" list, for visitors who didn't scan a tag): `/order/[storeId]` with no query params. This resolves `storeId` but not table/order-type yet, so it renders a dine-in-vs-takeout choice (`components/flow/OrderTypeSelectView.tsx`) instead of the menu. Choosing 포장 (takeout) resolves the menu immediately (`?type=takeout`, no table involved); choosing 매장 식사 (dine-in) goes to a dedicated table-number screen, `/order/[storeId]/table` (`components/flow/TableSelectView.tsx`), which then resolves the same `?table={n}` URL the QR/NFC path uses. See `docs/decisions/0014-entry-order-type-and-table-selection.md`.
 - Renders usable content immediately — no splash screen, no "loading your accessible experience" theater, no install prompt of any kind.
-- On arrival, accessibility settings from `useAccessibilityStore` apply immediately if this device has used Jumun before, at *any* venue — contrast mode, font scale, reduced motion, language, and haptics all carry over automatically (`PRODUCT.md`'s Operating Context; `docs/architecture.md`'s state shape). Only the store/table context is new each scan; personalization is never re-entered.
-- If `storeId`/`table` are missing or invalid (e.g., someone opened the app directly instead of scanning a code), fall back to a manual store/table entry bottom sheet rather than a hard error — kept as a fallback convenience from legacy's `ManualTableSelectorModal` concept, useful for QA too.
+- On arrival, accessibility settings from `useAccessibilityStore` apply immediately if this device has used Jumun before, at *any* venue — contrast mode, font scale, reduced motion, language, and haptics all carry over automatically (`PRODUCT.md`'s Operating Context; `docs/architecture.md`'s state shape). Only the store/table/order-type context is new each visit; personalization is never re-entered.
+- If `storeId` itself is missing or invalid (e.g., a mistyped or expired link), show the invalid-link empty state (`components/flow/InvalidOrderLinkNotice.tsx`) rather than a hard error — offers a working sample-store link, useful for QA too.
 - The persistent settings-icon affordance (top corner, 44px+ target) is present from this screen onward, everywhere.
 - **Motion**: content fades/settles in on first paint (Motion, ~200ms) — no loading-bar theater, no logo animation gating interaction. Collapses to an instant appearance when `reduceMotion` is on.
 
@@ -50,11 +55,11 @@ There is no disability-select gate and no mandatory pre-order step beyond arrivi
 
 ## 4. Order type + checkout
 
-- Simple binary choice first: dine-in (매장) vs. takeout (포장) — kept minimal, one decision at a time per the single-focus wizard pattern.
-- Then a **mocked** payment step. No real PG/Stripe integration in Phase 1 (`plan.md`'s Phase 1 scope — real payment is explicitly out of scope for this round). The screen still needs to feel complete: a plausible payment-method selector UI, order summary, total.
+- Dine-in (매장) vs. takeout (포장) is decided during Entry above (`OrderTypeSelectView`), not here — checkout shows it as a read-only summary row (icon + label + table number or "픽업대 수령"), so the visitor isn't asked the same binary choice twice with two chances for it to disagree (`docs/decisions/0014-entry-order-type-and-table-selection.md`).
+- Then a **mocked** payment step, still an active choice on this screen. No real PG/Stripe integration in Phase 1 (`plan.md`'s Phase 1 scope — real payment is explicitly out of scope for this round). The screen still needs to feel complete: a plausible payment-method selector UI, order summary, total.
 - 결제하기 (Pay) is the single highest-emphasis CTA on the whole flow — 64px, the one screen that uses the max-emphasis touch target size from `docs/design-system.md`.
 - **States**: mocked processing state after tapping 결제하기 (brief, Motion–driven, collapses to an instant state change when `reduceMotion` is on) before moving to confirmation. No countdown, no artificial time pressure at any point in this screen. **Mocked failure state**: the mock `OrderService.submitOrder` should be able to simulate a failure path (not just always succeed) so the failure UI actually gets exercised — a clear, specific error ("결제를 완료하지 못했어요"), the cart and selections fully preserved (never silently cleared on failure), and 다시 시도 (Try again) as the primary action. This is a real production affordance, not an edge case to skip because Phase 1 has no real payment backend.
-- **Motion**: step-to-step (dine-in/takeout → payment) uses the same wizard slide/fade used for top-level screen transitions, not a new pattern; the processing state is a static, calm indicator (skeleton-style pulse, not a spinner — see `docs/design-system.md`) rather than an urgent-feeling animation, since urgency here would reintroduce the time-pressure feeling the no-countdown rule exists to avoid.
+- **Motion**: the processing state is a static, calm indicator (skeleton-style pulse, not a spinner — see `docs/design-system.md`) rather than an urgent-feeling animation, since urgency here would reintroduce the time-pressure feeling the no-countdown rule exists to avoid.
 
 ## 5. Confirmation
 
@@ -86,7 +91,7 @@ A production-feeling prototype needs its failure paths actually built, not assum
 
 - **Menu fails to load** (simulated — Phase 1 data is static/bundled, but the UI path should exist for when it isn't): a calm full-screen message with a single 다시 시도 (retry) action — never a raw error string, never a blank screen.
 - **Order submission fails** (see Order type + checkout above): cart state is always preserved; the user is never asked to rebuild their order because of a failure that wasn't their fault.
-- **Invalid or expired store/table link**: distinguished from a network failure — the message says the link itself is the problem ("이 주문 링크가 유효하지 않아요") and offers the manual store/table entry fallback from the Entry screen, not a generic retry that will fail identically every time.
+- **Invalid or expired store link** (unknown `storeId`, reachable from `/order/[storeId]` or `/order/[storeId]/table`): distinguished from a network failure — `InvalidOrderLinkNotice` says the link itself is the problem ("주문 링크를 찾지 못했어요") and offers a working sample-store link, not a generic retry that will fail identically every time.
 - **Every failure state gets the same accessibility treatment as every success state**: an `aria-live="assertive"` announcement (failures are time-sensitive in a way routine state changes aren't — see `docs/design-system.md`'s screen-reader content section), 4.5:1+ contrast on the error text, and a real, sized touch target on the recovery action — a failure screen is not the place to let quality slip.
 
 ## Cross-cutting, not a screen

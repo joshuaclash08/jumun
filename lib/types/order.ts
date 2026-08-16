@@ -1,12 +1,14 @@
 import type { CartItem } from "./cart";
 
-export interface StoreInfo {
-  storeId: string;
-  storeName: string;
-  table: string;
-}
-
 export type OrderType = "dine-in" | "takeout";
+
+// Discriminated on orderType: a dine-in order always has a table, a takeout
+// order never does -- modeling this as one optional field instead let a
+// takeout order carry a stale/meaningless table value with no type error.
+export type StoreInfo =
+  | { storeId: string; storeName: string; orderType: "dine-in"; table: string }
+  | { storeId: string; storeName: string; orderType: "takeout" };
+
 export type OrderStatus = "idle" | "submitting" | "failed" | "confirmed";
 
 export interface OrderReceipt {
