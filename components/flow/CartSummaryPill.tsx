@@ -5,8 +5,9 @@ import { useCartStore } from "@/store/useCartStore";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "motion/react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
+import { ShoppingBag } from "lucide-react";
+import { RollingPrice } from "@/components/ui/RollingPrice";
 
 interface CartSummaryPillProps {
   onClick: () => void;
@@ -35,7 +36,7 @@ export function CartSummaryPill({ onClick, className }: CartSummaryPillProps) {
         initial={{ y: 50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 50, opacity: 0 }}
-        whileTap={reduceMotion ? undefined : { scale: 0.98 }}
+        whileTap={reduceMotion ? undefined : { scale: 0.96 }}
         transition={{
           type: "spring",
           stiffness: 400,
@@ -43,28 +44,30 @@ export function CartSummaryPill({ onClick, className }: CartSummaryPillProps) {
           duration: reduceMotion ? 0 : undefined,
         }}
         className={cn(
-          "fixed bottom-[env(safe-area-inset-bottom)] left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-[736px] z-50 mb-4",
+          "fixed bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] left-22 right-4 max-w-[656px] z-50",
           className
         )}
       >
         <Button
-          size="lg"
+          size="cta"
           onClick={onClick}
           aria-label={ariaLabel}
-          className="flex h-16 w-full items-center justify-between rounded-full bg-primary px-6 text-primary-foreground shadow-[0_12px_32px_rgba(26,86,176,0.3)] hover:bg-primary/90"
+          className="flex h-16 w-full items-center justify-between rounded-full bg-primary px-6 text-primary-foreground shadow-floating hover:bg-primary/95 transition-all border-none"
         >
-          <div className="flex items-center gap-2.5">
-            <Badge
-              variant="secondary"
-              className="flex h-8 min-w-8 items-center justify-center rounded-full bg-white/20 text-white font-extrabold px-2 text-sm border-none"
-            >
-              {totalQuantity}
-            </Badge>
-            <span className="font-bold text-base">결제하기</span>
+          <div className="flex w-full items-center justify-between pointer-events-none" aria-hidden="true">
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-8 min-w-8 items-center justify-center rounded-full bg-white/20 text-white font-black px-2 text-base">
+                <ShoppingBag className="h-3.5 w-3.5 mr-1" />
+                {totalQuantity}
+              </div>
+              <span className="font-extrabold text-base">주문하기</span>
+            </div>
+            <RollingPrice
+              value={totalPrice}
+              suffix="원"
+              className="text-xl font-black"
+            />
           </div>
-          <span className="text-xl font-extrabold">
-            {totalPrice.toLocaleString("ko-KR")}원
-          </span>
         </Button>
       </motion.div>
     </AnimatePresence>
