@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { motion, type Variants } from "motion/react";
 import { useCartStore } from "@/store/useCartStore";
 import { Button } from "@/components/ui/button";
@@ -8,37 +9,82 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
-import { SuccessCheckIllustration } from "@/components/ui/TossIllustrations";
 import confetti from "canvas-confetti";
 
 interface ConfirmationStepProps {
   onReset: () => void;
 }
 
-// Receipt content staggers in as one group (Motion variant propagation --
-// see docs/decisions/0009-motion-only-animation.md for why this replaced a
-// GSAP timeline: this stagger+the icon's spring-pop below are both fully
-// expressible in Motion's own variant system, so a second animation library
-// bought nothing but bundle weight for a single call site).
+// Receipt content staggers in with smooth Toss spring easing
 const receiptContainer: Variants = {
   hidden: {},
-  visible: { transition: { staggerChildren: 0.08, delayChildren: 0.15 } },
-};
-const receiptItem: Variants = {
-  hidden: { opacity: 0, y: 24 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] } },
-};
-// The success icon gets its own, more celebratory entrance -- a springy
-// pop rather than the receipt's plain fade+rise -- because this is the one
-// moment in the product that's meant to feel like a small celebration, not
-// a neutral state change (content-appropriate motion, not one animation
-// recipe reused everywhere regardless of what it's attached to).
-const successPop: Variants = {
-  hidden: { opacity: 0, scale: 0.5 },
-  visible: { opacity: 1, scale: 1, transition: { type: "spring", stiffness: 300, damping: 15 } },
+  visible: { transition: { staggerChildren: 0.08, delayChildren: 0.08 } },
 };
 
+const receiptItem: Variants = {
+  hidden: { opacity: 0, y: 16 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.22, 1, 0.36, 1] } },
+};
+
+function FluidSuccessCheck({ size = 76 }: { size?: number }) {
+  const reduceMotion = useAccessibilityStore((state) => state.reducedMotion);
+
+  return (
+    <div
+      className="relative flex items-center justify-center select-none shrink-0"
+      style={{ width: size, height: size }}
+      aria-hidden="true"
+    >
+      {/* Outer soft blue aura ring */}
+      <motion.div
+        initial={reduceMotion ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.7 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+        className="absolute inset-0 rounded-full bg-primary/10"
+      />
+
+      {/* Main vibrant Toss Blue circle with spring pop */}
+      <motion.div
+        initial={reduceMotion ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.6 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{
+          type: "spring",
+          stiffness: 400,
+          damping: 22,
+          delay: reduceMotion ? 0 : 0.05,
+        }}
+        className="relative flex items-center justify-center rounded-full bg-primary shadow-sm"
+        style={{ width: size * 0.78, height: size * 0.78 }}
+      >
+        <svg
+          width={size * 0.42}
+          height={size * 0.42}
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <motion.path
+            d="M4.5 12.5L9.5 17.5L19.5 6.5"
+            stroke="#FFFFFF"
+            strokeWidth="3.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            initial={reduceMotion ? { pathLength: 1 } : { pathLength: 0 }}
+            animate={{ pathLength: 1 }}
+            transition={{
+              duration: reduceMotion ? 0 : 0.45,
+              ease: [0.22, 1, 0.36, 1],
+              delay: reduceMotion ? 0 : 0.15,
+            }}
+          />
+        </svg>
+      </motion.div>
+    </div>
+  );
+}
+
 export function ConfirmationStep({ onReset }: ConfirmationStepProps) {
+  const router = useRouter();
   const lastReceipt = useCartStore((state) => state.lastReceipt);
   const reduceMotion = useAccessibilityStore((state) => state.reducedMotion);
 
@@ -49,9 +95,9 @@ export function ConfirmationStep({ onReset }: ConfirmationStepProps) {
   React.useEffect(() => {
     if (reduceMotion || !lastReceipt) return;
     confetti({
-      particleCount: 90,
+      particleCount: 80,
       spread: 70,
-      origin: { y: 0.6 },
+      origin: { y: 0.45 },
       colors: ["#0064ff", "#00a85a", "#ff9500", "#e8f3ff"],
       disableForReducedMotion: true,
     });
@@ -60,6 +106,16 @@ export function ConfirmationStep({ onReset }: ConfirmationStepProps) {
   if (!lastReceipt) {
     return null;
   }
+
+  const handleNewOrder = () => {
+    const storeId = lastReceipt.store.storeId;
+    onReset();
+    if (storeId) {
+      router.push(`/order/${storeId}`);
+    } else {
+      router.push("/");
+    }
+  };
 
   const orderTypeLabel = lastReceipt.orderType === "dine-in" ? "매장 식사" : "포장하기";
   const formattedTime = new Date(lastReceipt.placedAt).toLocaleTimeString("ko-KR", {
@@ -72,88 +128,100 @@ export function ConfirmationStep({ onReset }: ConfirmationStepProps) {
       initial={reduceMotion ? "visible" : "hidden"}
       animate="visible"
       variants={receiptContainer}
-      className="flex min-h-screen w-full flex-col items-center justify-between p-4 pt-8 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] text-center bg-background"
+      className="flex min-h-[calc(100dvh-56px)] w-full flex-col justify-between px-4 pt-3 pb-0 text-center bg-background"
     >
-      <div className="flex w-full max-w-sm flex-col items-center gap-6">
+      {/* Centered Main Content Area */}
+      <div className="flex-1 flex flex-col items-center justify-center gap-3.5 sm:gap-4 w-full max-w-sm mx-auto py-1">
+        {/* Top Celebration Section */}
         <motion.div
-          variants={reduceMotion ? undefined : successPop}
-          className="flex flex-col items-center gap-1.5"
+          variants={receiptItem}
+          className="flex flex-col items-center gap-1"
         >
-          {/* Success icon — Toss signature celebration check graphic */}
-          <SuccessCheckIllustration size={84} />
+          <FluidSuccessCheck size={72} />
 
-          <h1 className="text-2xl font-extrabold text-foreground mt-1">
+          <h1 className="text-2xl sm:text-[26px] font-black text-foreground tracking-tight mt-0.5">
             주문이 완료되었어요!
           </h1>
-          <div className="flex items-center gap-1.5 text-base font-semibold text-muted-foreground">
-            <span>주문번호</span>
-            <span className="text-2xl font-black text-primary ml-1 tabular-nums">
+
+          {/* Large Hero Order Number Display */}
+          <div className="flex flex-col items-center gap-0.5 mt-1">
+            <span className="text-xs sm:text-sm font-bold text-muted-foreground">
+              주문번호
+            </span>
+            <span className="text-4xl sm:text-5xl font-black text-primary tabular-nums tracking-tight">
               {lastReceipt.orderNumber}
             </span>
           </div>
         </motion.div>
 
-        <motion.div variants={reduceMotion ? undefined : receiptItem} className="w-full">
-        <Card className="w-full p-5 rounded-[22px] shadow-resting border-border text-left">
-          <div className="flex items-center justify-between pb-2.5">
-            <div>
-              <h2 className="text-base font-bold text-foreground">주문 영수증</h2>
-              <p className="text-base font-medium text-muted-foreground mt-0.5">
-                {lastReceipt.store.storeName} ·{" "}
-                {lastReceipt.store.orderType === "dine-in"
-                  ? `${lastReceipt.store.table}번 테이블`
-                  : "포장"}{" "}
-                · {formattedTime}
-              </p>
-            </div>
-            <Badge variant="secondary" className="font-bold text-base px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border-none">
-              {orderTypeLabel}
-            </Badge>
-          </div>
-
-          <Separator className="my-2" />
-
-          <div className="flex flex-col gap-2.5 py-1">
-            {lastReceipt.items.map((item, idx) => (
-              <div key={idx} className="flex justify-between items-start text-base">
-                <div className="flex flex-col">
-                  <span className="font-bold text-foreground">
-                    {item.nameKo || item.productId}{" "}
-                    <span className="text-muted-foreground font-medium">x{item.quantity}</span>
-                  </span>
-                  {item.optionsSummary && (
-                    <span className="text-base text-muted-foreground font-medium">
-                      {item.optionsSummary}
-                    </span>
-                  )}
-                </div>
-                <span className="font-extrabold text-foreground tabular-nums">
-                  {(item.unitPrice * item.quantity).toLocaleString("ko-KR")}원
-                </span>
+        {/* Receipt Card */}
+        <motion.div variants={receiptItem} className="w-full">
+          <Card className="w-full p-4 sm:p-5 rounded-[22px] shadow-resting border-border/80 text-left bg-card">
+            <div className="flex items-center justify-between pb-1">
+              <div>
+                <h2 className="text-base font-extrabold text-foreground">주문 영수증</h2>
+                <p className="text-sm font-medium text-muted-foreground mt-0.5">
+                  {lastReceipt.store.storeName} ·{" "}
+                  {lastReceipt.store.orderType === "dine-in"
+                    ? `${lastReceipt.store.table}번 테이블`
+                    : "포장"}{" "}
+                  · {formattedTime}
+                </p>
               </div>
-            ))}
-          </div>
+              <Badge
+                variant="secondary"
+                className="font-extrabold text-sm px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border-none"
+              >
+                {orderTypeLabel}
+              </Badge>
+            </div>
 
-          <Separator className="my-2" />
+            <Separator className="my-2 bg-border/60" />
 
-          <div className="pt-2 flex justify-between items-center text-base font-bold">
-            <span className="text-foreground">총 결제 금액</span>
-            <span className="text-primary text-xl font-black tabular-nums">
-              {lastReceipt.total.toLocaleString("ko-KR")}원
-            </span>
-          </div>
-        </Card>
+            <div className="flex flex-col gap-2 py-0.5">
+              {lastReceipt.items.map((item, idx) => (
+                <div key={idx} className="flex justify-between items-start text-base">
+                  <div className="flex flex-col">
+                    <span className="font-bold text-foreground">
+                      {item.nameKo || item.productId}{" "}
+                      <span className="text-muted-foreground font-medium text-sm">
+                        x{item.quantity}
+                      </span>
+                    </span>
+                    {item.optionsSummary && (
+                      <span className="text-sm text-muted-foreground font-medium">
+                        {item.optionsSummary}
+                      </span>
+                    )}
+                  </div>
+                  <span className="font-extrabold text-foreground tabular-nums text-base">
+                    {(item.unitPrice * item.quantity).toLocaleString("ko-KR")}원
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            <Separator className="my-2 bg-border/60" />
+
+            <div className="pt-1 flex justify-between items-center text-base font-bold">
+              <span className="text-foreground">총 결제 금액</span>
+              <span className="text-primary text-xl sm:text-2xl font-black tabular-nums tracking-tight">
+                {lastReceipt.total.toLocaleString("ko-KR")}원
+              </span>
+            </div>
+          </Card>
         </motion.div>
       </div>
 
+      {/* Fixed/Sticky Bottom Action Bar — Always visible without scrolling */}
       <motion.div
-        variants={reduceMotion ? undefined : receiptItem}
-        className="w-full max-w-sm pt-6"
+        variants={receiptItem}
+        className="sticky bottom-0 left-0 right-0 w-full pt-3 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] bg-gradient-to-t from-background via-background/95 to-transparent backdrop-blur-[6px] [mask-image:linear-gradient(to_top,black_80%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_top,black_80%,transparent_100%)] z-20 flex justify-center"
       >
         <Button
           size="lg"
-          className="w-full h-14 min-h-[56px] font-bold rounded-[16px]"
-          onClick={onReset}
+          className="w-full max-w-sm h-14 min-h-[56px] font-extrabold text-base rounded-[16px] bg-primary text-white shadow-none hover:bg-primary/95"
+          onClick={handleNewOrder}
         >
           새로운 주문하기
         </Button>

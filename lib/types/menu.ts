@@ -26,6 +26,7 @@ export interface ProductOptionGroup {
   labelKo: string;
   required: boolean;
   selectionType: "single" | "multiple";
+  maxSelections?: number;
   options: ProductOption[];
 }
 

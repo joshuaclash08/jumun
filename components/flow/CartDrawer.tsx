@@ -7,7 +7,6 @@ import {
   DrawerContent,
   DrawerHeader,
   DrawerTitle,
-  DrawerFooter,
 } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -38,8 +37,8 @@ export function CartDrawer({ open, onOpenChange, onCheckout }: CartDrawerProps) 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent>
-        <DrawerHeader className="relative border-b border-border/40 px-4 py-3">
-          <div className="flex items-center gap-3">
+        <div className="relative flex flex-col max-h-[90vh] min-h-0 overflow-hidden">
+          <DrawerHeader className="relative grid grid-cols-[40px_1fr_40px] items-center px-4 py-3">
             <motion.div
               whileTap={reduceMotion ? undefined : { scale: 0.90 }}
               transition={{ type: "spring", stiffness: 400, damping: 25 }}
@@ -50,133 +49,141 @@ export function CartDrawer({ open, onOpenChange, onCheckout }: CartDrawerProps) 
                 size="icon"
                 onClick={() => onOpenChange(false)}
                 aria-label="장바구니 닫기"
-                className="h-12 w-12 rounded-full text-foreground hover:bg-muted -ml-1.5"
+                className="h-10 w-10 rounded-full bg-background/85 hover:bg-background text-foreground backdrop-blur-md shadow-sm border border-border/50 flex items-center justify-center -ml-1"
               >
-                <ChevronLeft className="h-7 w-7 stroke-[2.8]" aria-hidden="true" />
+                <ChevronLeft className="size-6 stroke-[2.5]" aria-hidden="true" />
               </Button>
             </motion.div>
-            <DrawerTitle className="text-xl font-extrabold text-foreground">장바구니</DrawerTitle>
-          </div>
-        </DrawerHeader>
+            <DrawerTitle className="text-lg sm:text-xl font-extrabold text-foreground text-center">장바구니</DrawerTitle>
+            <div className="w-10" aria-hidden="true" />
+          </DrawerHeader>
 
-        <div className="flex-1 overflow-y-auto px-4 py-4 scrollbar-none">
-          {items.length === 0 ? (
-            <div className="flex min-h-[260px] flex-col items-center justify-center gap-3 text-center py-6">
-              <div className="flex h-28 w-28 items-center justify-center rounded-[24px] bg-[#F9FAFB]">
-                <EmptyCartIllustration size={96} />
+          <div
+            data-lenis-prevent=""
+            className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 py-4 pb-28 scrollbar-none"
+          >
+            {items.length === 0 ? (
+              <div className="flex min-h-[260px] flex-col items-center justify-center gap-3 text-center py-6">
+                <div className="flex h-28 w-28 items-center justify-center rounded-[24px] bg-[#F9FAFB]">
+                  <EmptyCartIllustration size={96} />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <p className="text-lg font-bold text-foreground">장바구니가 비어 있어요</p>
+                  <p className="text-base font-medium text-muted-foreground">맛있는 메뉴를 골라 담아보세요</p>
+                </div>
+                <Button
+                  variant="secondary"
+                  className="mt-2 px-6 font-bold text-base rounded-[14px]"
+                  onClick={() => onOpenChange(false)}
+                >
+                  메뉴 둘러보기
+                </Button>
               </div>
-              <div className="flex flex-col gap-1">
-                <p className="text-lg font-bold text-foreground">장바구니가 비어 있어요</p>
-                <p className="text-base font-medium text-muted-foreground">맛있는 메뉴를 골라 담아보세요</p>
-              </div>
-              <Button
-                variant="secondary"
-                className="mt-2 px-6 font-bold text-base rounded-[14px]"
-                onClick={() => onOpenChange(false)}
-              >
-                메뉴 둘러보기
-              </Button>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-3">
-              <AnimatePresence initial={false}>
-                {items.map((item) => (
-                  <motion.div
-                    key={item.id}
-                    layout={!reduceMotion}
-                    initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={reduceMotion ? { opacity: 0 } : { opacity: 0, x: -20, height: 0 }}
-                    transition={{ duration: reduceMotion ? 0 : 0.2 }}
-                  >
-                    <Card className="flex flex-col gap-2.5 p-4 rounded-[20px] shadow-resting border-border">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex flex-col">
-                          <span className="text-base font-bold text-card-foreground">
-                            {item.nameKo || item.productId}
-                          </span>
-                          {item.optionsSummary && (
-                            <span className="text-base font-medium text-muted-foreground mt-0.5">
-                              {item.optionsSummary}
+            ) : (
+              <div className="flex flex-col gap-3">
+                <AnimatePresence initial={false}>
+                  {items.map((item) => (
+                    <motion.div
+                      key={item.id}
+                      layout={!reduceMotion}
+                      initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={reduceMotion ? { opacity: 0 } : { opacity: 0, x: -20, height: 0 }}
+                      transition={{ duration: reduceMotion ? 0 : 0.2 }}
+                    >
+                      <Card className="flex flex-col gap-2.5 p-4 rounded-[20px] shadow-resting border-border">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex flex-col">
+                            <span className="text-base font-bold text-card-foreground">
+                              {item.nameKo || item.productId}
                             </span>
-                          )}
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="xs"
-                          onClick={() => removeItem(item.id)}
-                          className="shrink-0 text-base font-bold text-destructive hover:bg-destructive/10 hover:text-destructive gap-1 px-2.5 h-8 rounded-full"
-                          aria-label={`${item.nameKo || '상품'} 장바구니에서 삭제`}
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                          삭제
-                        </Button>
-                      </div>
-
-                      <div className="text-base font-medium text-muted-foreground">
-                        단가 {item.unitPrice.toLocaleString("ko-KR")}원
-                      </div>
-
-                      <Separator className="my-0.5" />
-
-                      <div className="flex items-center justify-between pt-1">
-                        {/* Stepper */}
-                        <div className="flex items-center rounded-full border border-border bg-muted/40 p-0.5">
-                          <motion.button
-                            type="button"
-                            whileTap={reduceMotion ? undefined : { scale: 0.9 }}
-                            onClick={() => updateQuantity(item.id, -1)}
-                            className="flex h-8 w-8 items-center justify-center text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-full hover:bg-background"
-                            aria-label={`${item.nameKo || '상품'} 수량 1개 줄이기`}
+                            {item.optionsSummary && (
+                              <span className="text-base font-medium text-muted-foreground mt-0.5">
+                                {item.optionsSummary}
+                              </span>
+                            )}
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="xs"
+                            onClick={() => removeItem(item.id)}
+                            className="shrink-0 text-base font-bold text-destructive hover:bg-destructive/10 hover:text-destructive gap-1 px-2.5 h-8 rounded-full"
+                            aria-label={`${item.nameKo || '상품'} 장바구니에서 삭제`}
                           >
-                            <Minus className="h-3.5 w-3.5 stroke-[2.5]" />
-                          </motion.button>
-                          <span
-                            className="flex w-7 justify-center font-extrabold text-base text-foreground tabular-nums"
-                            aria-live="polite"
-                            aria-label={`현재 수량 ${item.quantity}개`}
-                          >
-                            {item.quantity}
-                          </span>
-                          <motion.button
-                            type="button"
-                            whileTap={reduceMotion ? undefined : { scale: 0.9 }}
-                            onClick={() => updateQuantity(item.id, 1)}
-                            className="flex h-8 w-8 items-center justify-center text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-full hover:bg-background"
-                            aria-label={`${item.nameKo || '상품'} 수량 1개 늘리기`}
-                          >
-                            <Plus className="h-3.5 w-3.5 stroke-[2.5]" />
-                          </motion.button>
+                            <Trash2 className="h-3.5 w-3.5" />
+                            삭제
+                          </Button>
                         </div>
 
-                        <RollingPrice
-                          value={item.unitPrice * item.quantity}
-                          suffix="원"
-                          className="font-extrabold text-base text-foreground"
-                        />
-                      </div>
-                    </Card>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
+                        <div className="text-base font-medium text-muted-foreground">
+                          단가 {item.unitPrice.toLocaleString("ko-KR")}원
+                        </div>
+
+                        <Separator className="my-0.5" />
+
+                        <div className="flex items-center justify-between pt-1">
+                          {/* Stepper */}
+                          <div className="flex items-center rounded-full border border-border bg-muted/40 p-0.5">
+                            <motion.button
+                              type="button"
+                              whileTap={reduceMotion ? undefined : { scale: 0.9 }}
+                              onClick={() => updateQuantity(item.id, -1)}
+                              className="flex h-8 w-8 items-center justify-center text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-full hover:bg-background"
+                              aria-label={`${item.nameKo || '상품'} 수량 1개 줄이기`}
+                            >
+                              <Minus className="h-3.5 w-3.5 stroke-[2.5]" />
+                            </motion.button>
+                            <span
+                              className="flex w-7 justify-center font-extrabold text-base text-foreground tabular-nums tracking-[0.6px]"
+                              aria-live="polite"
+                              aria-label={`현재 수량 ${item.quantity}개`}
+                            >
+                              {item.quantity}
+                            </span>
+                            <motion.button
+                              type="button"
+                              whileTap={reduceMotion ? undefined : { scale: 0.9 }}
+                              onClick={() => updateQuantity(item.id, 1)}
+                              className="flex h-8 w-8 items-center justify-center text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-full hover:bg-background"
+                              aria-label={`${item.nameKo || '상품'} 수량 1개 늘리기`}
+                            >
+                              <Plus className="h-3.5 w-3.5 stroke-[2.5]" />
+                            </motion.button>
+                          </div>
+
+                          <RollingPrice
+                            value={item.unitPrice * item.quantity}
+                            suffix="원"
+                            className="font-extrabold text-base text-foreground"
+                          />
+                        </div>
+                      </Card>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </div>
+            )}
+          </div>
+
+          {items.length > 0 && (
+            <div className="absolute bottom-0 left-0 right-0 z-30 pointer-events-none flex justify-center">
+              <div className="w-full pointer-events-auto flex flex-col pt-7 px-4 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] bg-gradient-to-t from-background via-background/95 to-transparent backdrop-blur-[6px] [mask-image:linear-gradient(to_top,black_80%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_top,black_80%,transparent_100%)]">
+                <Button
+                  size="lg"
+                  disabled={items.length === 0}
+                  className="w-full h-14 min-h-[56px] font-extrabold text-base rounded-[16px] bg-primary text-white shadow-none hover:bg-primary/95"
+                  onClick={onCheckout}
+                >
+                  <RollingPrice
+                    value={totalPrice}
+                    suffix="원 주문하기"
+                    className="font-extrabold text-base text-primary-foreground"
+                  />
+                </Button>
+              </div>
             </div>
           )}
         </div>
-
-        <DrawerFooter className="p-4 pt-3 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))] border-t border-border bg-background">
-          <Button
-            size="cta"
-            disabled={items.length === 0}
-            className="w-full font-bold text-base rounded-[16px]"
-            onClick={onCheckout}
-          >
-            <RollingPrice
-              value={totalPrice}
-              suffix="원 주문하기"
-              className="font-bold text-base text-primary-foreground"
-            />
-          </Button>
-        </DrawerFooter>
       </DrawerContent>
     </Drawer>
   );

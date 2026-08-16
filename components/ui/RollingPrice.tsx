@@ -15,7 +15,7 @@ const DIGITS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 
 function DigitColumn({ digit, placeIndex, reduceMotion }: DigitColumnProps) {
   return (
-    <span className="relative inline-flex h-[1.25em] w-[0.6em] overflow-hidden justify-center items-start leading-[1.25em] align-baseline">
+    <span className="relative inline-flex h-[1.25em] w-[0.6em] mx-[0.5px] overflow-hidden justify-center items-start leading-[1.25em] align-baseline">
       <motion.span
         className="flex flex-col items-center select-none will-change-transform"
         initial={false}
@@ -72,7 +72,7 @@ export function RollingPrice({
   return (
     <span
       className={cn(
-        "inline-flex items-baseline tabular-nums font-inherit tracking-normal",
+        "inline-flex items-baseline tabular-nums font-inherit tracking-[0.5px]",
         className
       )}
       aria-label={ariaLabel || fullLabel}
@@ -99,13 +99,13 @@ export function RollingPrice({
               );
             }
             return (
-              <span key={`char-${i}`} className="inline-block">
+              <span key={`char-${i}`} className="inline-block mx-[0.5px]">
                 {char}
               </span>
             );
           })}
         </span>
-        {suffix && <span className="ml-0.5">{suffix}</span>}
+        {suffix && <span className="ml-1">{suffix}</span>}
       </span>
     </span>
   );

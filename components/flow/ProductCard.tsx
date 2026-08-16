@@ -82,7 +82,7 @@ export function ProductCard({ product, onClick, className }: ProductCardProps) {
           </h3>
 
           <div className="flex items-baseline justify-between pt-0.5">
-            <span className="text-base sm:text-lg font-black text-[#191F28] tabular-nums tracking-tight">
+            <span className="text-base sm:text-lg font-black text-[#191F28] tabular-nums tracking-[0.6px]">
               {product.price.toLocaleString("ko-KR")}원
             </span>
           </div>

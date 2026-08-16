@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach } from "vitest";
+import { describe, expect, it, beforeEach, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { axe } from "vitest-axe";
 import { ProductCard } from "@/components/flow/ProductCard";
@@ -7,8 +7,21 @@ import { CartDrawer } from "@/components/flow/CartDrawer";
 import { ConfirmationStep } from "@/components/flow/ConfirmationStep";
 import { HeaderBar } from "@/components/layout/HeaderBar";
 import { StaffCallButton } from "@/components/flow/StaffCallButton";
+import { ProductDetailSheet } from "@/components/flow/ProductDetailSheet";
+import { OrderTypeSelectView } from "@/components/flow/OrderTypeSelectView";
+import { TableSelectView } from "@/components/flow/TableSelectView";
 import { useCartStore } from "@/store/useCartStore";
-import type { Product, CartItem, OrderReceipt } from "@/lib/types";
+import type { Product, CartItem, OrderReceipt, StoreListing } from "@/lib/types";
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    back: vi.fn(),
+    forward: vi.fn(),
+    refresh: vi.fn(),
+  }),
+  usePathname: () => "/order/jumun-cafe-01",
+}));
 
 describe("Component Accessibility & Rendering", () => {
   beforeEach(() => {
@@ -77,10 +90,11 @@ describe("Component Accessibility & Rendering", () => {
       />
     );
 
-    expect(screen.getByText("BEST")).toBeInTheDocument();
+    expect(screen.getByText("인기 메뉴")).toBeInTheDocument();
+    expect(screen.getByText("1")).toBeInTheDocument();
 
     const itemButton = screen.getByRole("button", {
-      name: /아메리카노, 4,500원, 추천 메뉴/i,
+      name: /아메리카노, 4,500원, 인기 1위 메뉴/i,
     });
     fireEvent.click(itemButton);
     expect(clickedProduct).toEqual(sampleProduct);
@@ -132,7 +146,7 @@ describe("Component Accessibility & Rendering", () => {
     expect(screen.getAllByText("9,000원").length).toBeGreaterThanOrEqual(1);
   });
 
-  it("renders HeaderBar with home button and without settings button", () => {
+  it("renders HeaderBar with back button and without settings button", () => {
     render(
       <HeaderBar
         storeInfo={{
@@ -144,15 +158,15 @@ describe("Component Accessibility & Rendering", () => {
       />
     );
 
-    const homeLink = screen.getByRole("link", { name: "홈으로 이동" });
-    expect(homeLink).toBeInTheDocument();
-    expect(homeLink).toHaveAttribute("href", "/");
+    const backLink = screen.getByRole("link", { name: "뒤로 이동" });
+    expect(backLink).toBeInTheDocument();
+    expect(backLink).toHaveAttribute("href", "/order/jumun-cafe-01");
     expect(screen.queryByRole("link", { name: "설정 열기" })).not.toBeInTheDocument();
     expect(screen.getByText("주문 카페 1호점")).toBeInTheDocument();
     expect(screen.getByText("3번 테이블")).toBeInTheDocument();
   });
 
-  it("renders StaffCallButton with accessible trigger", () => {
+  it("renders StaffCallButton with accessible trigger and handles call flow", async () => {
     render(
       <StaffCallButton
         storeInfo={{
@@ -166,6 +180,131 @@ describe("Component Accessibility & Rendering", () => {
 
     const callButton = screen.getByRole("button", { name: "직원 호출하기" });
     expect(callButton).toBeInTheDocument();
+
+    // Open staff call drawer
+    fireEvent.click(callButton);
+
+    // Initial idle state in drawer
+    expect(screen.getByText("직원을 호출할까요?")).toBeInTheDocument();
+    expect(screen.getByText("3번 테이블")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "취소" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "호출하기" })).toBeInTheDocument();
+
+    // Confirm call
+    fireEvent.click(screen.getByRole("button", { name: "호출하기" }));
+
+    // Success state in drawer
+    expect(await screen.findByText("호출이 완료되었어요!")).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "확인" })).toBeInTheDocument();
+  });
+
+  it("renders ProductDetailSheet with overlaid back button, required badge, and no '추가금 없음' text", () => {
+    render(
+      <ProductDetailSheet
+        product={sampleProduct}
+        open={true}
+        onOpenChange={() => {}}
+      />
+    );
+
+    // Overlaid back button
+    expect(screen.getByRole("button", { name: "메뉴 상세 닫기" })).toBeInTheDocument();
+
+    // Required badge next to option title
+    expect(screen.getByText("온도")).toBeInTheDocument();
+    expect(screen.getByText("필수")).toBeInTheDocument();
+
+    // No '(1개 선택)' helper text
+    expect(screen.queryByText("(1개 선택)")).not.toBeInTheDocument();
+
+    // No '추가금 없음' text
+    expect(screen.queryByText("추가금 없음")).not.toBeInTheDocument();
+
+    // Price delta is rendered for > 0 options
+    expect(screen.getByText("+500원")).toBeInTheDocument();
+  });
+
+  it("handles option group max selections with toast alert", () => {
+    const multiOptionProduct: Product = {
+      ...sampleProduct,
+      optionGroups: [
+        {
+          id: "syrup",
+          labelKo: "시럽",
+          required: false,
+          selectionType: "multiple",
+          maxSelections: 1,
+          options: [
+            { id: "vanilla", labelKo: "바닐라", priceDelta: 500 },
+            { id: "caramel", labelKo: "카라멜", priceDelta: 500 },
+          ],
+        },
+      ],
+    };
+
+    render(
+      <ProductDetailSheet
+        product={multiOptionProduct}
+        open={true}
+        onOpenChange={() => {}}
+      />
+    );
+
+    const vanillaBtn = screen.getByRole("button", { name: /바닐라/ });
+    const caramelBtn = screen.getByRole("button", { name: /카라멜/ });
+
+    // Select first option
+    fireEvent.click(vanillaBtn);
+    expect(vanillaBtn).toHaveAttribute("aria-pressed", "true");
+
+    // Attempt to select second option exceeding maxSelections (1)
+    fireEvent.click(caramelBtn);
+    expect(caramelBtn).toHaveAttribute("aria-pressed", "false");
+
+    const toasts = useCartStore.getState().toasts;
+    expect(toasts.some((t) => t.messageKo.includes("최대 1개"))).toBe(true);
+  });
+
+  it("renders OrderTypeSelectView with standard back button and settings button", () => {
+    const sampleStore: StoreListing = {
+      storeId: "jumun-cafe-01",
+      storeName: "주문 카페 1호점",
+      branchKo: "강남본점",
+      addressKo: "서울 강남구 역삼로 123",
+      tableCount: 8,
+      distanceKo: "50m",
+    };
+
+    render(<OrderTypeSelectView store={sampleStore} />);
+
+    const backLink = screen.getByRole("link", { name: "홈으로 이동" });
+    expect(backLink).toBeInTheDocument();
+    expect(backLink).toHaveAttribute("href", "/");
+
+    const settingsLink = screen.getByRole("link", { name: "설정 열기" });
+    expect(settingsLink).toBeInTheDocument();
+    expect(settingsLink).toHaveAttribute("href", "/settings");
+  });
+
+  it("renders TableSelectView with standard back button and settings button", () => {
+    const sampleStore: StoreListing = {
+      storeId: "jumun-cafe-01",
+      storeName: "주문 카페 1호점",
+      branchKo: "강남본점",
+      addressKo: "서울 강남구 역삼로 123",
+      tableCount: 8,
+      distanceKo: "50m",
+    };
+
+    render(<TableSelectView store={sampleStore} />);
+
+    const backLink = screen.getByRole("link", { name: "이전 화면으로 돌아가기" });
+    expect(backLink).toBeInTheDocument();
+    expect(backLink).toHaveAttribute("href", "/order/jumun-cafe-01");
+
+    const settingsLink = screen.getByRole("link", { name: "설정 열기" });
+    expect(settingsLink).toBeInTheDocument();
+    expect(settingsLink).toHaveAttribute("href", "/settings");
   });
 });
 

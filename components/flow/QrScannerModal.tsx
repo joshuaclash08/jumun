@@ -104,7 +104,7 @@ export function QrScannerModal({ open, onOpenChange }: QrScannerModalProps) {
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent>
-        <DrawerHeader className="relative items-center border-b border-border/40 pb-4 text-center">
+        <DrawerHeader className="relative items-center pb-2 text-center">
           <motion.div
             whileTap={reduceMotion ? undefined : { scale: 0.90 }}
             transition={{ type: "spring", stiffness: 400, damping: 25 }}
@@ -116,16 +116,16 @@ export function QrScannerModal({ open, onOpenChange }: QrScannerModalProps) {
               size="icon"
               onClick={() => onOpenChange(false)}
               aria-label="QR 스캐너 닫기"
-              className="h-12 w-12 rounded-full text-foreground hover:bg-muted"
+              className="h-10 w-10 rounded-full bg-background/85 hover:bg-background text-foreground backdrop-blur-md shadow-sm border border-border/50 flex items-center justify-center"
             >
-              <ChevronLeft className="h-7 w-7 stroke-[2.8]" aria-hidden="true" />
+              <ChevronLeft className="size-6 stroke-[2.5]" aria-hidden="true" />
             </Button>
           </motion.div>
 
-          <div className="flex h-12 w-12 items-center justify-center rounded-[14px] bg-primary/10 text-primary mb-1 mt-1">
-            <QrCode className="h-6 w-6" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-[12px] bg-primary/10 text-primary mb-1 mt-1">
+            <QrCode className="h-5 w-5" />
           </div>
-          <DrawerTitle className="text-xl font-extrabold text-foreground">테이블 QR 코드 스캔</DrawerTitle>
+          <DrawerTitle className="text-lg font-extrabold text-foreground">테이블 QR 코드 스캔</DrawerTitle>
           <DrawerDescription className="text-base font-medium text-muted-foreground">
             테이블의 QR 코드를 사각형 프레임 안에 비춰주세요
           </DrawerDescription>
@@ -167,7 +167,7 @@ export function QrScannerModal({ open, onOpenChange }: QrScannerModalProps) {
           )}
         </div>
 
-        <DrawerFooter className="pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))]">
+        <DrawerFooter className="flex flex-col gap-2 p-4 pt-5 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] bg-gradient-to-t from-background via-background/95 to-transparent backdrop-blur-[6px] [mask-image:linear-gradient(to_top,black_80%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_top,black_80%,transparent_100%)]">
           <Button
             variant="default"
             size="lg"
@@ -175,14 +175,14 @@ export function QrScannerModal({ open, onOpenChange }: QrScannerModalProps) {
               onOpenChange(false);
               router.push("/order/jumun-cafe-01?table=3");
             }}
-            className="w-full font-bold rounded-[16px]"
+            className="w-full h-14 min-h-[56px] font-extrabold text-base rounded-[16px] bg-primary text-white shadow-none hover:bg-primary/95"
           >
             샘플 매장(3번 테이블)으로 테스트
           </Button>
           <Button
             variant="ghost"
             onClick={() => onOpenChange(false)}
-            className="w-full font-semibold text-muted-foreground rounded-[14px]"
+            className="w-full h-12 min-h-[48px] font-bold text-muted-foreground rounded-[14px]"
           >
             닫기
           </Button>

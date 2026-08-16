@@ -22,6 +22,7 @@ interface CartStore {
   setOrderStatus: (status: OrderStatus) => void;
   setLastReceipt: (receipt: OrderReceipt | null) => void;
   dismissToast: (toastId: string) => void;
+  showToast: (kind: "success" | "error", messageKo: string) => void;
   undoLastAction: () => void;
 }
 
@@ -71,17 +72,24 @@ export const useCartStore = create<CartStore>()((set, get) => ({
 
   updateQuantity: (itemId, delta) => {
     const { items, history } = get();
-    const nextItems = items
-      .map((item) =>
-        item.id === itemId ? { ...item, quantity: Math.max(0, item.quantity + delta) } : item,
-      )
-      .filter((item) => item.quantity > 0);
+    const current = items.find((item) => item.id === itemId);
+    if (!current) return;
+
+    const nextQuantity = current.quantity + delta;
+    if (nextQuantity <= 0) {
+      get().removeItem(itemId);
+      return;
+    }
+
+    const nextItems = items.map((item) =>
+      item.id === itemId ? { ...item, quantity: nextQuantity } : item,
+    );
     set({ items: nextItems, history: pushHistory(history, items) });
   },
 
   clearCart: () => set({ items: [] }),
 
-  resetOrder: () => set({ items: [], orderStatus: "idle", lastReceipt: null }),
+  resetOrder: () => set({ items: [], orderStatus: "idle", lastReceipt: null, storeInfo: null }),
 
   setOrderStatus: (orderStatus) => set({ orderStatus }),
 
@@ -89,6 +97,13 @@ export const useCartStore = create<CartStore>()((set, get) => ({
 
   dismissToast: (toastId) =>
     set((state) => ({ toasts: state.toasts.filter((toast) => toast.id !== toastId) })),
+
+  showToast: (kind, messageKo) => {
+    const toast = notify(kind, messageKo, {
+      hapticsEnabled: hapticsEnabled(),
+    });
+    set((state) => ({ toasts: [...state.toasts, toast] }));
+  },
 
   undoLastAction: () => {
     const { history } = get();

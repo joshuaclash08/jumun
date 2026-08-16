@@ -5,18 +5,15 @@ import { motion } from "motion/react";
 import {
   Drawer,
   DrawerContent,
-  DrawerHeader,
   DrawerTitle,
   DrawerDescription,
-  DrawerFooter,
 } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Check, Plus, Minus, ChevronLeft } from "lucide-react";
 import type { Product, CartItemSelection } from "@/lib/types";
 import { useCartStore } from "@/store/useCartStore";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
-import { ProductIllustration } from "@/components/ui/TossIllustrations";
+import Image from "next/image";
 import { RollingPrice } from "@/components/ui/RollingPrice";
 import { generateUUID } from "@/lib/utils";
 
@@ -43,6 +40,7 @@ function ProductDetailContent({
   onClose,
 }: ProductDetailContentProps) {
   const reduceMotion = useAccessibilityStore((state) => state.reducedMotion);
+  const showToast = useCartStore((state) => state.showToast);
 
   // Initialize options selections
   const [selections, setSelections] = React.useState<Record<string, string[]>>(() => {
@@ -59,16 +57,23 @@ function ProductDetailContent({
 
   const [quantity, setQuantity] = React.useState(1);
 
-  const handleOptionToggle = (groupId: string, optionId: string, isSingle: boolean) => {
+  const handleOptionToggle = (group: Product["optionGroups"][number], optionId: string) => {
+    const isSingle = group.selectionType === "single";
+    const maxSelections = group.maxSelections;
+
     setSelections((prev) => {
-      const current = prev[groupId] || [];
+      const current = prev[group.id] || [];
       if (isSingle) {
-        return { ...prev, [groupId]: [optionId] };
+        return { ...prev, [group.id]: [optionId] };
       } else {
         if (current.includes(optionId)) {
-          return { ...prev, [groupId]: current.filter((id) => id !== optionId) };
+          return { ...prev, [group.id]: current.filter((id) => id !== optionId) };
         } else {
-          return { ...prev, [groupId]: [...current, optionId] };
+          if (maxSelections && current.length >= maxSelections) {
+            showToast("error", `최대 ${maxSelections}개까지 선택할 수 있어요.`);
+            return prev;
+          }
+          return { ...prev, [group.id]: [...current, optionId] };
         }
       }
     });
@@ -124,49 +129,55 @@ function ProductDetailContent({
   };
 
   return (
-    <>
-      {/* Top Header with Consistent Top-Left Back Button */}
-      <DrawerHeader className="relative border-b border-border/40 px-4 py-3 text-left">
-        <div className="flex items-center gap-3">
-          <motion.div
-            whileTap={reduceMotion ? undefined : { scale: 0.90 }}
-            transition={{ type: "spring", stiffness: 400, damping: 25 }}
-          >
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              onClick={onClose}
-              aria-label="메뉴 상세 닫기"
-              className="h-12 w-12 rounded-full text-foreground hover:bg-muted -ml-1.5"
-            >
-              <ChevronLeft className="h-7 w-7 stroke-[2.8]" aria-hidden="true" />
-            </Button>
-          </motion.div>
-          <DrawerTitle className="text-xl font-extrabold text-foreground truncate">
-            {product.nameKo}
-          </DrawerTitle>
-        </div>
-      </DrawerHeader>
+    <div className="relative flex flex-col max-h-[90vh] min-h-0 overflow-hidden">
+      {/* Screen-reader accessible title for Radix/Vaul dialog requirements */}
+      <DrawerTitle className="sr-only">{product.nameKo}</DrawerTitle>
 
-      <div className="flex-1 overflow-y-auto px-4 py-4 scrollbar-none">
+      {/* Top Floating Back Button overlaid on hero stage */}
+      <motion.div
+        whileTap={reduceMotion ? undefined : { scale: 0.90 }}
+        transition={{ type: "spring", stiffness: 400, damping: 25 }}
+        className="absolute top-3.5 left-4 z-30"
+      >
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={onClose}
+          aria-label="메뉴 상세 닫기"
+          className="h-10 w-10 rounded-full bg-background/85 hover:bg-background text-foreground backdrop-blur-md shadow-sm border border-border/50 flex items-center justify-center"
+        >
+          <ChevronLeft className="size-6 stroke-[2.5]" aria-hidden="true" />
+        </Button>
+      </motion.div>
+
+      {/* Scrollable Content Container */}
+      <div
+        data-lenis-prevent=""
+        className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 pt-2.5 pb-28 scrollbar-none"
+      >
         <div className="flex flex-col gap-6">
-          {/* Large Hero Visual Stage matching Image 1 Reference */}
+          {/* Large Hero Visual Stage */}
           <div className="flex flex-col gap-4">
             <div
-              className="relative flex h-52 sm:h-60 w-full items-center justify-center rounded-[24px] overflow-hidden"
+              style={{ backgroundColor: product.themeBg || '#F4F4F6' }}
+              className="relative flex h-56 sm:h-64 w-full items-center justify-center rounded-[24px] overflow-hidden border border-black/5 dark:border-white/10 shadow-resting"
               aria-hidden="true"
             >
-              <ProductIllustration icon={product.icon} size={110} />
-              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-background via-background/40 to-transparent" />
+              <Image
+                src={product.imageUrl}
+                alt={product.nameKo}
+                fill
+                priority
+                sizes="(max-width: 640px) 100vw, 480px"
+                className="object-cover"
+              />
             </div>
 
             <div className="flex flex-col gap-1.5 px-0.5">
-              <div className="flex items-start justify-between gap-3">
-                <h2 className="text-2xl font-extrabold text-foreground leading-tight">
-                  {product.nameKo}
-                </h2>
-              </div>
+              <h2 className="text-2xl font-extrabold text-foreground leading-tight">
+                {product.nameKo}
+              </h2>
               <DrawerDescription className="text-base font-medium text-muted-foreground leading-relaxed">
                 {product.descriptionKo}
               </DrawerDescription>
@@ -175,7 +186,7 @@ function ProductDetailContent({
               <div className="flex items-center justify-between pt-3 border-t border-border/40 mt-2">
                 <div className="flex flex-col">
                   <span className="text-base text-muted-foreground font-semibold">주문 금액</span>
-                  <span className="text-xl font-black text-foreground tabular-nums">
+                  <span className="text-xl font-black text-foreground tabular-nums tracking-[0.6px]">
                     {unitPrice.toLocaleString("ko-KR")}원
                   </span>
                 </div>
@@ -193,7 +204,7 @@ function ProductDetailContent({
                     <Minus className="h-4 w-4 stroke-[2.5]" />
                   </motion.button>
                   <span
-                    className="flex w-9 justify-center text-base font-extrabold text-foreground tabular-nums"
+                    className="flex w-9 justify-center text-base font-extrabold text-foreground tabular-nums tracking-[0.6px]"
                     aria-live="polite"
                     aria-label={`현재 주문 수량 ${quantity}개`}
                   >
@@ -219,35 +230,29 @@ function ProductDetailContent({
             <div className="flex flex-col gap-6 pt-2">
               {product.optionGroups.map((group) => {
                 const selectedIds = selections[group.id] || [];
-                const isSingle = group.selectionType === "single";
 
                 return (
                   <div key={group.id} className="flex flex-col gap-3">
-                    {/* Visual Header */}
-                    <div className="flex items-center justify-between px-0.5" aria-hidden="true">
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-base font-extrabold text-foreground">
-                          {group.labelKo}
-                        </h3>
-                        <span className="text-base text-muted-foreground font-medium">
-                          ({isSingle ? "1개 선택" : "다중 선택 가능"})
-                        </span>
-                      </div>
+                    {/* Visual Header: Title + Required Badge directly beside it */}
+                    <div className="flex items-center gap-2 px-0.5" aria-hidden="true">
+                      <h3 className="text-base font-extrabold text-foreground">
+                        {group.labelKo}
+                      </h3>
                       {group.required && (
-                        <Badge variant="secondary" className="font-bold text-base bg-primary/10 text-primary border-none rounded-full px-2.5 py-0.5">
+                        <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-sm font-extrabold text-primary">
                           필수
-                        </Badge>
+                        </span>
                       )}
                     </div>
                     {/* VoiceOver announcement */}
                     <span className="sr-only">
-                      {`${group.labelKo}, ${group.required ? "필수 선택" : "선택 사항"}, ${isSingle ? "1개만 선택 가능" : "다중 선택 가능"}`}
+                      {`${group.labelKo}, ${group.required ? "필수 선택" : "선택 사항"}`}
                     </span>
 
                     <div className="flex flex-col gap-2">
                       {group.options.map((opt) => {
                         const isSelected = selectedIds.includes(opt.id);
-                        const priceDescription = opt.priceDelta > 0 ? `추가 금액 ${opt.priceDelta.toLocaleString("ko-KR")}원` : "추가금 없음";
+                        const priceDescription = opt.priceDelta > 0 ? `, 추가 금액 ${opt.priceDelta.toLocaleString("ko-KR")}원` : "";
 
                         return (
                           <motion.button
@@ -255,9 +260,9 @@ function ProductDetailContent({
                             type="button"
                             whileTap={reduceMotion ? undefined : { scale: 0.96 }}
                             transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                            onClick={() => handleOptionToggle(group.id, opt.id, isSingle)}
+                            onClick={() => handleOptionToggle(group, opt.id)}
                             aria-pressed={isSelected}
-                            aria-label={`${opt.labelKo}, ${priceDescription}`}
+                            aria-label={`${opt.labelKo}${priceDescription}`}
                             className={`flex min-h-[56px] items-center justify-between rounded-[18px] border-2 p-3.5 transition-all focus-visible:ring-2 focus-visible:ring-ring outline-none ${
                               isSelected
                                 ? "border-primary bg-primary/5 font-bold text-primary shadow-2xs"
@@ -280,12 +285,10 @@ function ProductDetailContent({
                               </div>
 
                               {opt.priceDelta > 0 ? (
-                                <span className="text-base font-extrabold tabular-nums">
+                                <span className="text-base font-extrabold tabular-nums tracking-[0.6px]">
                                   +{opt.priceDelta.toLocaleString("ko-KR")}원
                                 </span>
-                              ) : (
-                                <span className="text-base text-muted-foreground font-medium">추가금 없음</span>
-                              )}
+                              ) : null}
                             </div>
                           </motion.button>
                         );
@@ -299,20 +302,23 @@ function ProductDetailContent({
         </div>
       </div>
 
-      <DrawerFooter className="p-4 pt-3 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))] border-t border-border/40 bg-background">
-        <Button
-          size="cta"
-          className="w-full font-extrabold text-base rounded-[16px] bg-primary text-white shadow-none"
-          onClick={handleSubmit}
-        >
-          <RollingPrice
-            value={totalPrice}
-            suffix="원 담기"
-            className="font-extrabold text-base text-primary-foreground"
-          />
-        </Button>
-      </DrawerFooter>
-    </>
+      {/* ── Fixed Bottom Action Bar with Progressive Blur Fade (matching Settings) ── */}
+      <div className="absolute bottom-0 left-0 right-0 z-30 pointer-events-none flex justify-center">
+        <div className="w-full pointer-events-auto flex flex-col pt-7 px-4 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] bg-gradient-to-t from-background via-background/95 to-transparent backdrop-blur-[6px] [mask-image:linear-gradient(to_top,black_80%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_top,black_80%,transparent_100%)]">
+          <Button
+            size="lg"
+            className="w-full h-14 min-h-[56px] font-extrabold text-base rounded-[16px] bg-primary text-white shadow-none hover:bg-primary/95"
+            onClick={handleSubmit}
+          >
+            <RollingPrice
+              value={totalPrice}
+              suffix="원 담기"
+              className="font-extrabold text-base text-primary-foreground"
+            />
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 }
 

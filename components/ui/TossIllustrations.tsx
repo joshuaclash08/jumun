@@ -469,22 +469,17 @@ export function SuccessCheckIllustration({ className, size = 88, ...props }: Ill
       aria-hidden="true"
       {...props}
     >
-      {/* Glow Aura */}
-      <circle cx="44" cy="44" r="40" fill="#E8F8EE" />
+      {/* Soft Blue Glow Aura */}
+      <circle cx="44" cy="44" r="40" fill="#E8F3FF" />
       <circle cx="44" cy="44" r="32" fill="#0064FF" />
       {/* Crisp White Checkmark */}
       <path
         d="M30 45L39 54L58 35"
         stroke="#FFFFFF"
-        strokeWidth="5"
+        strokeWidth="4.5"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      {/* Confetti specks */}
-      <circle cx="16" cy="30" r="3" fill="#FF9500" />
-      <circle cx="72" cy="26" r="3.5" fill="#00A85A" />
-      <circle cx="76" cy="58" r="2.5" fill="#FF4040" />
-      <circle cx="14" cy="62" r="2.5" fill="#0064FF" />
     </svg>
   );
 }

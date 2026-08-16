@@ -3,26 +3,15 @@
 import * as React from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
-import {
-  ChevronDown,
-  MapPin,
-  ChevronRight,
-  Store,
-  QrCode,
-  Settings,
-} from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
+import { ChevronDown, ChevronRight, Store, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LandingHeroVisual } from "./LandingHeroVisual";
-import { QrScannerModal } from "./QrScannerModal";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
 import { getAvailableStores } from "@/lib/services/StoreService";
 import type { StoreListing } from "@/lib/types";
 
 export function LandingClientView() {
   const [isStoreListOpen, setIsStoreListOpen] = React.useState(false);
-  const [isQrScannerOpen, setIsQrScannerOpen] = React.useState(false);
   const reduceMotion = useAccessibilityStore((state) => state.reducedMotion);
   const stores = React.useMemo<StoreListing[]>(() => getAvailableStores(), []);
 
@@ -33,13 +22,21 @@ export function LandingClientView() {
     >
       {/* ── Top Bar (Clean minimal settings trigger only) ───────── */}
       <div className="w-full max-w-md flex justify-end">
-        <Link
-          href="/settings"
-          className="flex h-10 w-10 items-center justify-center rounded-[12px] bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          aria-label="접근성 및 앱 설정 열기"
+        <motion.div
+          whileTap={reduceMotion ? undefined : { scale: 0.9 }}
+          transition={{ type: "spring", stiffness: 400, damping: 25 }}
         >
-          <Settings className="h-5 w-5" />
-        </Link>
+          <Button
+            asChild
+            variant="ghost"
+            size="icon"
+            className="h-10 w-10 rounded-full bg-background/85 hover:bg-background text-foreground backdrop-blur-md shadow-sm border border-border/50 flex items-center justify-center"
+          >
+            <Link href="/settings" aria-label="접근성 및 앱 설정 열기">
+              <Settings className="size-5.5 stroke-[2.2]" aria-hidden="true" />
+            </Link>
+          </Button>
+        </motion.div>
       </div>
 
       {/* ── Hero Center Section (Ultra Minimalist) ──────────────── */}
@@ -51,30 +48,37 @@ export function LandingClientView() {
 
         {/* Minimalist Headline & Subtitle */}
         <h1 className="text-2xl sm:text-[28px] font-extrabold tracking-tight text-foreground leading-snug">
-          테이블 태그에 폰을 대거나
+          테이블에 폰을 대면
           <br />
-          QR 코드를 스캔하세요
+          바로 주문할 수 있어요
         </h1>
+        <p className="text-sm sm:text-base text-muted-foreground font-medium mt-2">
+          NFC 태그나 QR 코드를 스캔해 보세요
+        </p>
 
-        {/* Main CTA Button */}
+        {/* Prototype Preview CTA Button */}
         <motion.div
           whileTap={reduceMotion ? undefined : { scale: 0.96 }}
           transition={{ type: "spring", stiffness: 400, damping: 25 }}
-          className="w-full max-w-xs mt-4 sm:mt-5"
+          className="mt-4 sm:mt-5"
         >
           <Button
-            type="button"
-            size="lg"
-            onClick={() => setIsQrScannerOpen(true)}
-            className="w-full gap-2.5 font-bold text-base bg-primary text-primary-foreground shadow-none hover:bg-primary/95 rounded-[16px] h-13 sm:h-14"
+            asChild
+            variant="secondary"
+            className="h-10 px-4 gap-1.5 font-semibold text-sm rounded-full bg-secondary/80 hover:bg-secondary text-secondary-foreground border border-border/50 shadow-none transition-all"
           >
-            <QrCode className="h-5 w-5" aria-hidden="true" />
-            카메라로 QR 스캔하기
+            <Link href="/order/jumun-cafe-01">
+              <span>프로토타입 구경하기</span>
+              <ChevronRight
+                className="h-3.5 w-3.5 text-muted-foreground"
+                aria-hidden="true"
+              />
+            </Link>
           </Button>
         </motion.div>
       </div>
 
-      {/* ── Collapsible Store Selector (Previous Clean Minimal Pattern) ─ */}
+      {/* ── Collapsible Store Selector (TDS Redesign) ───────────── */}
       <div className="w-full max-w-md pt-1 pb-2">
         {/* Collapsible Trigger Row */}
         <button
@@ -82,22 +86,25 @@ export function LandingClientView() {
           onClick={() => setIsStoreListOpen((prev) => !prev)}
           aria-expanded={isStoreListOpen}
           aria-controls="available-stores-list"
-          className="w-full flex items-center justify-between py-3.5 px-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-[16px] hover:bg-muted/40 transition-colors"
+          className="w-full flex items-center justify-between py-3 px-3.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-[16px] bg-muted/40 hover:bg-muted/70 border border-border/40 transition-all"
         >
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-[12px] bg-primary/10 text-primary">
-              <Store className="h-4.5 w-4.5" aria-hidden="true" />
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-background text-foreground shadow-xs border border-border/40">
+              <Store className="h-4 w-4" aria-hidden="true" />
             </div>
-            <div className="flex flex-col">
-              <span className="text-base font-bold text-foreground">
+            <div className="flex items-center gap-1.5">
+              <span className="text-[15px] font-bold text-foreground">
                 직접 매장 선택하기
+              </span>
+              <span className="text-xs font-semibold text-muted-foreground">
+                ({stores.length})
               </span>
             </div>
           </div>
           <motion.div
             animate={{ rotate: isStoreListOpen ? 180 : 0 }}
             transition={{ duration: reduceMotion ? 0 : 0.2 }}
-            className="text-muted-foreground pr-1"
+            className="text-muted-foreground pr-0.5"
           >
             <ChevronDown className="h-4 w-4" aria-hidden="true" />
           </motion.div>
@@ -121,49 +128,52 @@ export function LandingClientView() {
               role="region"
               aria-label="주문 가능한 매장 목록"
             >
-              <div className="flex flex-col gap-2.5 pt-2">
+              <div className="flex flex-col gap-2 pt-2.5">
                 {stores.map((store) => (
                   <motion.div
                     key={store.storeId}
-                    whileTap={reduceMotion ? undefined : { scale: 0.96 }}
+                    whileTap={reduceMotion ? undefined : { scale: 0.98 }}
                     transition={{ type: "spring", stiffness: 400, damping: 25 }}
                   >
                     <Link
                       href={`/order/${store.storeId}`}
-                      className="block outline-none rounded-[20px] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      className="block outline-none rounded-[16px] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                     >
-                      <Card className="flex-row items-center justify-between gap-3 rounded-[20px] p-4 bg-card shadow-resting border-border transition-all hover:border-primary/40 hover:shadow-layered">
-                        {/* Left: icon + info */}
-                        <div className="flex items-center gap-3.5 min-w-0">
+                      <div className="flex items-center justify-between gap-3 rounded-[16px] p-3.5 bg-card border border-border/60 hover:border-border hover:bg-muted/30 transition-all">
+                        {/* Left: icon + name/branch + address */}
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-primary/10 text-primary">
+                            <Store
+                              className="h-5 w-5 stroke-[2]"
+                              aria-hidden="true"
+                            />
+                          </div>
                           <div className="flex flex-col min-w-0">
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <span className="font-bold text-base text-foreground">
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <span className="font-bold text-[15px] text-foreground truncate leading-tight">
                                 {store.storeName}
                               </span>
-                              <Badge
-                                variant="outline"
-                                className="text-base px-2 py-0.5 font-bold border-none bg-muted text-muted-foreground rounded-full"
-                              >
+                              <span className="shrink-0 text-xs font-semibold text-muted-foreground bg-muted px-1.5 py-0.5 rounded-[6px]">
                                 {store.branchKo}
-                              </Badge>
+                              </span>
                             </div>
-                            <span className="text-base font-medium text-muted-foreground mt-1 truncate">
+                            <span className="text-xs font-medium text-muted-foreground truncate mt-1">
                               {store.addressKo}
                             </span>
                           </div>
                         </div>
 
-                        {/* Right: distance + chevron */}
-                        <div className="flex items-center gap-1 shrink-0 pl-2">
-                          <span className="text-base font-extrabold text-primary">
+                        {/* Right: distance badge + chevron */}
+                        <div className="flex items-center gap-1.5 shrink-0 pl-1">
+                          <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
                             {store.distanceKo}
                           </span>
                           <ChevronRight
-                            className="h-4 w-4 text-muted-foreground"
+                            className="h-4 w-4 text-muted-foreground/70"
                             aria-hidden="true"
                           />
                         </div>
-                      </Card>
+                      </div>
                     </Link>
                   </motion.div>
                 ))}
@@ -172,11 +182,6 @@ export function LandingClientView() {
           )}
         </AnimatePresence>
       </div>
-
-      <QrScannerModal
-        open={isQrScannerOpen}
-        onOpenChange={setIsQrScannerOpen}
-      />
     </main>
   );
 }

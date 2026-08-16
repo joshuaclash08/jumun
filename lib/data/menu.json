@@ -2,7 +2,7 @@
   "categories": [
     { "id": "coffee", "labelKo": "커피" },
     { "id": "decaf", "labelKo": "디카페인" },
-    { "id": "tea", "labelKo": "티/차" },
+    { "id": "tea", "labelKo": "TEA" },
     { "id": "beverage", "labelKo": "에이드/음료" },
     { "id": "dessert", "labelKo": "디저트" },
     { "id": "bakery", "labelKo": "베이커리" },
@@ -41,6 +41,19 @@
         { "id": "oat-milk", "labelKo": "귀리 우유로 변경", "priceDelta": 700 },
         { "id": "soy-milk", "labelKo": "두유로 변경", "priceDelta": 700 }
       ]
+    },
+    "syrup": {
+      "id": "syrup",
+      "labelKo": "시럽/토핑 추가",
+      "required": false,
+      "selectionType": "multiple",
+      "maxSelections": 2,
+      "options": [
+        { "id": "vanilla-syrup", "labelKo": "바닐라 시럽", "priceDelta": 500 },
+        { "id": "caramel-syrup", "labelKo": "카라멜 시럽", "priceDelta": 500 },
+        { "id": "hazelnut-syrup", "labelKo": "헤이즐넛 시럽", "priceDelta": 500 },
+        { "id": "shot-add", "labelKo": "샷 추가", "priceDelta": 500 }
+      ]
     }
   },
   "products": [
@@ -53,7 +66,7 @@
       "price": 4500,
       "imageUrl": "/images/menu/americano-v2.jpg",
       "themeBg": "#F0EFEA",
-      "optionGroupIds": ["temperature", "size"],
+      "optionGroupIds": ["temperature", "size", "syrup"],
       "available": true
     },
     {
@@ -65,7 +78,7 @@
       "price": 5000,
       "imageUrl": "/images/menu/cafe-latte-v2.jpg",
       "themeBg": "#F5EBE1",
-      "optionGroupIds": ["temperature", "size", "milk"],
+      "optionGroupIds": ["temperature", "size", "milk", "syrup"],
       "available": true
     },
     {
@@ -77,7 +90,7 @@
       "price": 5500,
       "imageUrl": "/images/menu/vanilla-latte-v2.jpg",
       "themeBg": "#F8EFE0",
-      "optionGroupIds": ["temperature", "size", "milk"],
+      "optionGroupIds": ["temperature", "size", "milk", "syrup"],
       "available": true
     },
     {
@@ -89,7 +102,7 @@
       "price": 4800,
       "imageUrl": "/images/menu/decaf-americano-v2.jpg",
       "themeBg": "#EAEFEA",
-      "optionGroupIds": ["temperature", "size"],
+      "optionGroupIds": ["temperature", "size", "syrup"],
       "available": true
     },
     {
@@ -101,7 +114,7 @@
       "price": 5300,
       "imageUrl": "/images/menu/decaf-latte-v2.jpg",
       "themeBg": "#F2EBE1",
-      "optionGroupIds": ["temperature", "size", "milk"],
+      "optionGroupIds": ["temperature", "size", "milk", "syrup"],
       "available": true
     },
     {

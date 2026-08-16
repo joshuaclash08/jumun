@@ -7,7 +7,6 @@ import {
   DrawerContent,
   DrawerHeader,
   DrawerTitle,
-  DrawerFooter,
 } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -77,8 +76,8 @@ export function CheckoutSheet({ open, onOpenChange, onConfirm }: CheckoutSheetPr
   return (
     <Drawer open={open} onOpenChange={handleOpenChange}>
       <DrawerContent>
-        <DrawerHeader className="relative px-4 py-3">
-          <div className="flex items-center gap-2.5">
+        <div className="relative flex flex-col max-h-[90vh] min-h-0 overflow-hidden">
+          <DrawerHeader className="relative grid grid-cols-[40px_1fr_40px] items-center px-4 py-3">
             <motion.div
               whileTap={reduceMotion ? undefined : { scale: 0.90 }}
               transition={{ type: "spring", stiffness: 400, damping: 25 }}
@@ -89,151 +88,157 @@ export function CheckoutSheet({ open, onOpenChange, onConfirm }: CheckoutSheetPr
                 size="icon"
                 onClick={() => handleOpenChange(false)}
                 aria-label="주문 및 결제 닫기"
-                className="h-11 w-11 rounded-full text-foreground hover:bg-muted -ml-1.5"
+                className="h-10 w-10 rounded-full bg-background/85 hover:bg-background text-foreground backdrop-blur-md shadow-sm border border-border/50 flex items-center justify-center -ml-1"
               >
-                <ChevronLeft className="size-7 stroke-[2.8]" aria-hidden="true" />
+                <ChevronLeft className="size-6 stroke-[2.5]" aria-hidden="true" />
               </Button>
             </motion.div>
-            <DrawerTitle className="text-xl font-extrabold text-foreground">주문 및 결제</DrawerTitle>
-          </div>
-        </DrawerHeader>
+            <DrawerTitle className="text-lg sm:text-xl font-extrabold text-foreground text-center">주문 및 결제</DrawerTitle>
+            <div className="w-10" aria-hidden="true" />
+          </DrawerHeader>
 
-        <div className="flex-1 overflow-y-auto px-4 py-4 scrollbar-none">
-          <div className="flex flex-col gap-6 pb-4">
-            {/* Error Banner */}
-            {errorMessage && (
-              <div
-                role="alert"
-                aria-live="assertive"
-                className="flex flex-col gap-1 rounded-[18px] bg-destructive/10 border border-destructive/30 p-4 text-destructive"
-              >
-                <div className="flex items-center gap-2 font-bold text-base">
-                  <TriangleAlert className="h-4 w-4 shrink-0" aria-hidden="true" />
-                  <span>{errorMessage}</span>
+          <div
+            data-lenis-prevent=""
+            className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 py-4 pb-28 scrollbar-none"
+          >
+            <div className="flex flex-col gap-6 pb-4">
+              {/* Error Banner */}
+              {errorMessage && (
+                <div
+                  role="alert"
+                  aria-live="assertive"
+                  className="flex flex-col gap-1 rounded-[18px] bg-destructive/10 border border-destructive/30 p-4 text-destructive"
+                >
+                  <div className="flex items-center gap-2 font-bold text-base">
+                    <TriangleAlert className="h-4 w-4 shrink-0" aria-hidden="true" />
+                    <span>{errorMessage}</span>
+                  </div>
+                  <p className="text-base opacity-90 font-medium">
+                    선택하신 장바구니 항목은 안전하게 유지됩니다. 다시 결제를 진행해 주세요.
+                  </p>
                 </div>
-                <p className="text-base opacity-90 font-medium">
-                  선택하신 장바구니 항목은 안전하게 유지됩니다. 다시 결제를 진행해 주세요.
-                </p>
-              </div>
-            )}
+              )}
 
-            {/* 1. Dining Place — decided at entry (OrderTypeSelectView), read-only here */}
-            <div className="flex flex-col gap-2.5">
-              <h3 className="text-base font-bold text-foreground">식사 장소</h3>
-              <div className="flex items-center gap-3 rounded-[18px] border-2 border-border bg-card p-3.5">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-                  {storeInfo?.orderType === "dine-in" ? (
-                    <Utensils className="h-5 w-5" aria-hidden="true" />
-                  ) : (
-                    <ShoppingBag className="h-5 w-5" aria-hidden="true" />
-                  )}
-                </span>
-                <span className="flex flex-col">
-                  <span className="text-base font-bold text-foreground">
-                    {storeInfo?.orderType === "dine-in" ? "매장 식사" : "포장하기"}
+              {/* 1. Dining Place — decided at entry (OrderTypeSelectView), read-only here */}
+              <div className="flex flex-col gap-2.5">
+                <h3 className="text-base font-bold text-foreground">식사 장소</h3>
+                <div className="flex items-center gap-3 rounded-[18px] border-2 border-border bg-card p-3.5">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                    {storeInfo?.orderType === "dine-in" ? (
+                      <Utensils className="h-5 w-5" aria-hidden="true" />
+                    ) : (
+                      <ShoppingBag className="h-5 w-5" aria-hidden="true" />
+                    )}
                   </span>
-                  <span className="text-base font-medium text-muted-foreground">
-                    {storeInfo?.orderType === "dine-in" ? `테이블 ${storeInfo.table}번` : "픽업대 수령"}
+                  <span className="flex flex-col">
+                    <span className="text-base font-bold text-foreground">
+                      {storeInfo?.orderType === "dine-in" ? "매장 식사" : "포장하기"}
+                    </span>
+                    <span className="text-base font-medium text-muted-foreground">
+                      {storeInfo?.orderType === "dine-in" ? `테이블 ${storeInfo.table}번` : "픽업대 수령"}
+                    </span>
                   </span>
-                </span>
+                </div>
+              </div>
+
+              {/* 2. Order Summary */}
+              <Card className="flex flex-col gap-3 p-4.5 rounded-[22px] shadow-resting border-border">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-base font-bold text-foreground">주문 내역 ({items.reduce((s, i) => s + i.quantity, 0)}개)</h3>
+                  <Badge variant="secondary" className="text-base font-bold px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border-none">
+                    {storeInfo?.storeName}
+                  </Badge>
+                </div>
+
+                <Separator />
+
+                <div className="flex flex-col gap-2.5">
+                  {items.map((item) => (
+                    <div key={item.id} className="flex items-start justify-between text-base">
+                      <div className="flex flex-col">
+                        <span className="font-bold text-foreground">
+                          {item.nameKo || item.productId} <span className="text-muted-foreground font-medium">x{item.quantity}</span>
+                        </span>
+                        {item.optionsSummary && (
+                          <span className="text-base text-muted-foreground font-medium">
+                            {item.optionsSummary}
+                          </span>
+                        )}
+                      </div>
+                      <span className="font-extrabold text-foreground tabular-nums tracking-[0.6px]">
+                        {(item.unitPrice * item.quantity).toLocaleString("ko-KR")}원
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                <Separator />
+
+                <div className="flex items-center justify-between pt-1 text-base font-bold">
+                  <span className="text-foreground">결제 예정 금액</span>
+                  <RollingPrice
+                    value={totalPrice}
+                    suffix="원"
+                    className="text-primary text-xl font-black"
+                  />
+                </div>
+              </Card>
+
+              {/* 3. Payment Method */}
+              <div className="flex flex-col gap-2.5">
+                <h3 className="text-base font-bold text-foreground">결제 수단</h3>
+                <div className="grid grid-cols-2 gap-2.5">
+                  <SelectionCard
+                    isSelected={paymentMethod === "card"}
+                    onClick={() => setPaymentMethod("card")}
+                    label="신용 / 체크카드"
+                    icon={<CreditCard className="h-5 w-5" />}
+                    reduceMotion={reduceMotion}
+                  />
+                  <SelectionCard
+                    isSelected={paymentMethod === "easy-pay"}
+                    onClick={() => setPaymentMethod("easy-pay")}
+                    label="간편 결제"
+                    sublabel="Pay"
+                    icon={<Smartphone className="h-5 w-5" />}
+                    reduceMotion={reduceMotion}
+                  />
+                </div>
               </div>
             </div>
+          </div>
 
-            {/* 2. Order Summary */}
-            <Card className="flex flex-col gap-3 p-4.5 rounded-[22px] shadow-resting border-border">
-              <div className="flex items-center justify-between">
-                <h3 className="text-base font-bold text-foreground">주문 내역 ({items.reduce((s, i) => s + i.quantity, 0)}개)</h3>
-                <Badge variant="secondary" className="text-base font-bold px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border-none">
-                  {storeInfo?.storeName}
-                </Badge>
-              </div>
-
-              <Separator />
-
-              <div className="flex flex-col gap-2.5">
-                {items.map((item) => (
-                  <div key={item.id} className="flex items-start justify-between text-base">
-                    <div className="flex flex-col">
-                      <span className="font-bold text-foreground">
-                        {item.nameKo || item.productId} <span className="text-muted-foreground font-medium">x{item.quantity}</span>
-                      </span>
-                      {item.optionsSummary && (
-                        <span className="text-base text-muted-foreground font-medium">
-                          {item.optionsSummary}
-                        </span>
-                      )}
-                    </div>
-                    <span className="font-extrabold text-foreground tabular-nums">
-                      {(item.unitPrice * item.quantity).toLocaleString("ko-KR")}원
-                    </span>
-                  </div>
-                ))}
-              </div>
-
-              <Separator />
-
-              <div className="flex items-center justify-between pt-1 text-base font-bold">
-                <span className="text-foreground">결제 예정 금액</span>
-                <RollingPrice
-                  value={totalPrice}
-                  suffix="원"
-                  className="text-primary text-xl font-black"
-                />
-              </div>
-            </Card>
-
-            {/* 3. Payment Method */}
-            <div className="flex flex-col gap-2.5">
-              <h3 className="text-base font-bold text-foreground">결제 수단</h3>
-              <div className="grid grid-cols-2 gap-2.5">
-                <SelectionCard
-                  isSelected={paymentMethod === "card"}
-                  onClick={() => setPaymentMethod("card")}
-                  label="신용 / 체크카드"
-                  icon={<CreditCard className="h-5 w-5" />}
-                  reduceMotion={reduceMotion}
-                />
-                <SelectionCard
-                  isSelected={paymentMethod === "easy-pay"}
-                  onClick={() => setPaymentMethod("easy-pay")}
-                  label="간편 결제"
-                  sublabel="Pay"
-                  icon={<Smartphone className="h-5 w-5" />}
-                  reduceMotion={reduceMotion}
-                />
-              </div>
+          <div className="absolute bottom-0 left-0 right-0 z-30 pointer-events-none flex justify-center">
+            <div className="w-full pointer-events-auto flex flex-col pt-7 px-4 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] bg-gradient-to-t from-background via-background/95 to-transparent backdrop-blur-[6px] [mask-image:linear-gradient(to_top,black_80%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_top,black_80%,transparent_100%)]">
+              <Button
+                size="lg"
+                disabled={isSubmitting || items.length === 0}
+                className="w-full h-14 min-h-[56px] font-extrabold text-base rounded-[16px] bg-primary text-white shadow-none hover:bg-primary/95"
+                onClick={handleCheckout}
+                aria-busy={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
+                    결제 승인 처리 중...
+                  </>
+                ) : errorMessage ? (
+                  <RollingPrice
+                    value={totalPrice}
+                    suffix="원 다시 결제하기"
+                    className="font-extrabold text-base text-primary-foreground"
+                  />
+                ) : (
+                  <RollingPrice
+                    value={totalPrice}
+                    suffix="원 결제하기"
+                    className="font-extrabold text-base text-primary-foreground"
+                  />
+                )}
+              </Button>
             </div>
           </div>
         </div>
-
-        <DrawerFooter className="p-4 pt-5 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] bg-gradient-to-t from-background via-background/95 to-transparent backdrop-blur-[6px] [mask-image:linear-gradient(to_top,black_80%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_top,black_80%,transparent_100%)]">
-          <Button
-            size="lg"
-            disabled={isSubmitting || items.length === 0}
-            className="w-full h-14 min-h-[56px] font-bold text-base rounded-[16px]"
-            onClick={handleCheckout}
-            aria-busy={isSubmitting}
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
-                결제 승인 처리 중...
-              </>
-            ) : errorMessage ? (
-              <RollingPrice
-                value={totalPrice}
-                suffix="원 다시 결제하기"
-                className="font-bold text-base text-primary-foreground"
-              />
-            ) : (
-              <RollingPrice
-                value={totalPrice}
-                suffix="원 결제하기"
-                className="font-bold text-base text-primary-foreground"
-              />
-            )}
-          </Button>
-        </DrawerFooter>
       </DrawerContent>
     </Drawer>
   );

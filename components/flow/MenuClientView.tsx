@@ -33,8 +33,12 @@ interface MenuClientViewProps {
 }
 
 export function MenuClientView({ categories, products, storeInfo }: MenuClientViewProps) {
+  const allCategories = React.useMemo<MenuCategory[]>(() => {
+    return [{ id: "popular", labelKo: "인기" }, ...categories];
+  }, [categories]);
+
   const [activeCategoryId, setActiveCategoryId] = React.useState<string>(
-    categories[0]?.id || ""
+    allCategories[0]?.id || "popular"
   );
   
   const [selectedProduct, setSelectedProduct] = React.useState<Product | null>(null);
@@ -65,7 +69,7 @@ export function MenuClientView({ categories, products, storeInfo }: MenuClientVi
         document.documentElement.scrollHeight - 70;
 
       if (isNearBottom) {
-        const lastCategory = categories[categories.length - 1];
+        const lastCategory = allCategories[allCategories.length - 1];
         if (lastCategory) {
           setActiveCategoryId(lastCategory.id);
           return;
@@ -74,9 +78,9 @@ export function MenuClientView({ categories, products, storeInfo }: MenuClientVi
 
       // 2. Find the category section currently in view
       const headerThreshold = 100;
-      let matchedCategory = categories[0]?.id || "";
+      let matchedCategory = allCategories[0]?.id || "popular";
 
-      for (const cat of categories) {
+      for (const cat of allCategories) {
         const el = document.getElementById(`category-${cat.id}`);
         if (el) {
           const rect = el.getBoundingClientRect();
@@ -91,10 +95,21 @@ export function MenuClientView({ categories, products, storeInfo }: MenuClientVi
 
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [categories]);
+  }, [allCategories]);
 
   const handleCategorySelect = (id: string) => {
     setActiveCategoryId(id);
+    if (id === "popular") {
+      isProgrammaticScroll.current = true;
+      window.scrollTo({
+        top: 0,
+        behavior: reduceMotion ? "instant" : "smooth",
+      });
+      setTimeout(() => {
+        isProgrammaticScroll.current = false;
+      }, 500);
+      return;
+    }
     const element = document.getElementById(`category-${id}`);
     if (element) {
       isProgrammaticScroll.current = true;
@@ -147,72 +162,73 @@ export function MenuClientView({ categories, products, storeInfo }: MenuClientVi
           transition={{ duration: reduceMotion ? 0 : 0.2, ease: "easeOut" }}
           className="flex w-full flex-col relative"
         >
-          {/* Featured / Popular Carousel Section */}
-          <FeaturedMenuSection
-            products={products}
-            onProductClick={handleProductClick}
-          />
-
           {/* Sticky Category Tabs with Pinned Settings Button */}
           <MenuCategoryHeader
-            categories={categories}
+            categories={allCategories}
             activeCategoryId={activeCategoryId}
             onCategorySelect={handleCategorySelect}
           />
 
-          {/* Categorized Product Sections with Search Section at bottom */}
-          <div className="flex flex-col gap-8 px-4 pt-3.5 pb-36 sm:pb-40">
-            {categories.map((category) => {
-              const categoryProducts = products.filter(
-                (p) => p.category === category.id
-              );
-
-              if (categoryProducts.length === 0) return null;
-
-              return (
-                <section
-                  key={category.id}
-                  id={`category-${category.id}`}
-                  className="flex flex-col gap-3.5 scroll-mt-[64px]"
-                  aria-labelledby={`heading-${category.id}`}
-                >
-                  <div className="flex items-baseline gap-2 pb-1">
-                    <h2
-                      id={`heading-${category.id}`}
-                      className="text-2xl sm:text-[26px] font-black text-foreground tracking-tight"
-                      aria-label={`${category.labelKo}, 총 ${categoryProducts.length}개 메뉴`}
-                    >
-                      {category.labelKo}
-                    </h2>
-                    <span className="text-base font-bold text-muted-foreground tabular-nums" aria-hidden="true">
-                      {categoryProducts.length}개
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                    {categoryProducts.map((product) => (
-                      <ProductCard
-                        key={product.id}
-                        product={product}
-                        onClick={() => handleProductClick(product)}
-                      />
-                    ))}
-                  </div>
-                </section>
-              );
-            })}
-
-            {/* Bottom Search Section for quick menu lookup */}
-            <MenuSearchSection
+          {/* Menu Content Container */}
+          <div className="flex flex-col gap-8 pt-3.5 pb-36 sm:pb-40">
+            {/* Featured / Popular Carousel Section */}
+            <FeaturedMenuSection
               products={products}
               onProductClick={handleProductClick}
             />
+
+            {/* Categorized Product Sections with Search Section at bottom */}
+            <div className="flex flex-col gap-8 px-4">
+              {categories.map((category) => {
+                const categoryProducts = products.filter(
+                  (p) => p.category === category.id
+                );
+
+                if (categoryProducts.length === 0) return null;
+
+                return (
+                  <section
+                    key={category.id}
+                    id={`category-${category.id}`}
+                    className="flex flex-col gap-3.5 scroll-mt-[64px]"
+                    aria-labelledby={`heading-${category.id}`}
+                  >
+                    <div className="flex items-baseline gap-2 pb-1">
+                      <h2
+                        id={`heading-${category.id}`}
+                        className="text-2xl sm:text-[26px] font-black text-foreground tracking-tight"
+                        aria-label={`${category.labelKo}, 총 ${categoryProducts.length}개 메뉴`}
+                      >
+                        {category.labelKo}
+                      </h2>
+                      <span className="text-base font-bold text-muted-foreground tabular-nums" aria-hidden="true">
+                        {categoryProducts.length}개
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                      {categoryProducts.map((product) => (
+                        <ProductCard
+                          key={product.id}
+                          product={product}
+                          onClick={() => handleProductClick(product)}
+                        />
+                      ))}
+                    </div>
+                  </section>
+                );
+              })}
+
+              {/* Bottom Search Section for quick menu lookup */}
+              <MenuSearchSection
+                products={products}
+                onProductClick={handleProductClick}
+              />
+            </div>
           </div>
         </motion.div>
       )}
     </AnimatePresence>
-
-
 
     {/* Fixed Bottom Action Controls: Staff Call (Bottom-Left) + Cart Summary Pill */}
     {/* Takeout has no table to call staff to -- dine-in only. */}
