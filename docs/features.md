@@ -37,7 +37,7 @@ There is no disability-select gate and no mandatory pre-order step beyond arrivi
 - Tapping a card opens a bottom-sheet product detail: full description, option groups where relevant (temperature, size, milk substitution), a quantity stepper, and 담기 (Add to cart) as the primary 56px bottom CTA (`docs/design-system.md` spacing scale).
 - A small cart-status pill (item count + running total) is visible throughout browsing — not a full tab, just a persistent, tappable summary (`docs/decisions/0003-navigation-paradigm.md`).
 - **States**: empty category (rare, given a small fixed menu, but still needs a real empty state per `docs/design-system.md`'s empty-state pattern, not a blank area); a product temporarily unavailable shows unavailability via color *and* text *and* icon together, never color alone (design spec rule 4 equivalent); menu data still loading (first paint only — it's static/bundled in Phase 1, so this is near-instant, but the skeleton pattern from `docs/design-system.md` still applies rather than a spinner, since the grid shape is predictable).
-- **Motion**: category switch cross-fades the grid (Motion, ~150ms, no slide — a slide here fights the grid's own scroll axis); product-detail sheet enters via Lenis-independent spring-in from the bottom (Motion's `AnimatePresence`, not GSAP — this is state-driven, not a timeline); cart-pill count updates with a small scale-pulse on change, not a full re-render flash.
+- **Motion**: category switch cross-fades the grid (Motion, ~150ms, no slide — a slide here fights the grid's own scroll axis); product-detail sheet enters via Lenis-independent spring-in from the bottom (Motion's `AnimatePresence` — this is state-driven, not a timeline); cart-pill count updates with a small scale-pulse on change, not a full re-render flash.
 
 ## 3. Cart review
 
@@ -63,7 +63,7 @@ There is no disability-select gate and no mandatory pre-order step beyond arrivi
 - Receipt (via "영수증 보기"): itemized list with quantities/options/prices, subtotal, total, order number, table/store identity, and timestamp — everything needed to resolve a dispute with staff without re-deriving it from memory.
 - Actions: view receipt, order again (returns to Menu with a fresh cart), and nothing else competing for attention.
 - Legacy's `canvas-confetti` success effect is fine to keep as an optional delight layer — gated behind `reduceMotion`, falling back to a static success checkmark card when that setting is on (`docs/design-system.md` motion rules).
-- **Motion**: this is the one screen GSAP owns rather than Motion (`docs/tech-stack.md`'s animation split) — a short, choreographed reveal (order number scales/settles in, confetti follows) works better as an imperative timeline than a state-driven transition. Still collapses entirely to a static state when `reduceMotion` is on.
+- **Motion**: a short, choreographed reveal — the receipt content staggers in via Motion's `variants`/`staggerChildren` (not a separate timeline library; `docs/decisions/0009-motion-only-animation.md`), with the success icon getting its own more celebratory spring-pop distinct from the receipt's plainer fade+rise — confetti (`canvas-confetti`) fires alongside as an independent, self-contained particle burst. Still collapses entirely to a static state when `reduceMotion` is on.
 
 ## 6. Settings (reachable anytime, never gating)
 
