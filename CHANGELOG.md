@@ -232,3 +232,8 @@ Every `text-xs` (12px) and `text-sm` (14px) instance across the app bumped to `t
 - `components/flow/MenuClientView.tsx`, `components/flow/StaffCallButton.tsx` — `StaffCallButton` (call staff to your table) only renders for dine-in orders; its prop type narrows to the dine-in variant of `StoreInfo` so this is enforced at compile time, not just by the render gate.
 - `tests/unit/{components,OrderService,useCartStore}.test.ts(x)` — fixtures updated for the `StoreInfo` discriminated union and `OrderService.submitOrder`'s new signature.
 
+### Changed — takeout cart pill fills the space `StaffCallButton` left behind
+
+- `components/flow/CartSummaryPill.tsx` — new `reserveStaffCallSpace` prop (defaults `true`); when `false`, the pill's left padding drops from `pl-[76px]` (space reserved for `StaffCallButton`'s bottom-left circle) to `pl-4`, matching its right padding. Previously that space stayed empty for takeout since the pill never expanded to claim it.
+- `components/flow/MenuClientView.tsx` — passes `reserveStaffCallSpace={storeInfo?.orderType === "dine-in"}`, so takeout's "주문하기" pill spans the full width now that no staff-call button shares the bottom bar. Chosen over adding a takeout-specific bottom-left affordance (e.g. a repurposed help/pickup-info button) — see conversation for the alternatives considered.
+

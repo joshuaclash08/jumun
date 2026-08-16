@@ -219,7 +219,10 @@ export function MenuClientView({ categories, products, storeInfo }: MenuClientVi
     {storeInfo && storeInfo.orderType === "dine-in" && orderStatus !== "confirmed" && (
       <StaffCallButton storeInfo={storeInfo} />
     )}
-    <CartSummaryPill onClick={() => setIsCartDrawerOpen(true)} />
+    <CartSummaryPill
+      onClick={() => setIsCartDrawerOpen(true)}
+      reserveStaffCallSpace={storeInfo?.orderType === "dine-in"}
+    />
 
     <ProductDetailSheet
       product={selectedProduct}
