@@ -42,12 +42,14 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ko" className={`${pretendard.variable} ${notoSansKR.variable}`} suppressHydrationWarning>
-      <body className="min-h-full bg-background font-sans text-foreground antialiased">
-        <Providers>
-          <SkipLink targetId="main-content">본문으로 바로가기</SkipLink>
-          {children}
-          <LiveRegionAnnouncer />
-        </Providers>
+      <body className="min-h-screen bg-[#EEECEA] font-sans text-foreground antialiased selection:bg-primary/20 flex justify-center">
+        <div className="w-full max-w-[768px] min-h-screen bg-background text-foreground shadow-2xl relative flex flex-col">
+          <Providers>
+            <SkipLink targetId="main-content">본문으로 바로가기</SkipLink>
+            {children}
+            <LiveRegionAnnouncer />
+          </Providers>
+        </div>
       </body>
     </html>
   );

@@ -6,6 +6,8 @@ export interface CartItemSelection {
 export interface CartItem {
   id: string;
   productId: string;
+  nameKo?: string;
+  optionsSummary?: string;
   quantity: number;
   selections: CartItemSelection[];
   unitPrice: number;

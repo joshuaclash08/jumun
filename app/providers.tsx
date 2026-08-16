@@ -4,6 +4,9 @@ import { useEffect, type ReactNode } from "react";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
 import { useOSReducedMotionPreference } from "@/hooks/useReducedMotion";
 
+import { ReactLenis } from "lenis/react";
+import { useLenisMotionSync } from "@/hooks/useLenisMotionSync";
+
 // Seeds reducedMotion from the OS preference once, on a device's genuinely
 // first visit only -- useAccessibilityStore.hydrateReducedMotionFromSystem
 // is itself a no-op once a value has ever been set (see store/useAccessibilityStore.ts).
@@ -15,6 +18,7 @@ export function Providers({ children }: { children: ReactNode }) {
   const highContrast = useAccessibilityStore((state) => state.highContrast);
   const fontScale = useAccessibilityStore((state) => state.fontScale);
   const dyslexiaSpacing = useAccessibilityStore((state) => state.dyslexiaSpacing);
+  const enableLenis = useLenisMotionSync();
 
   useEffect(() => {
     hydrateReducedMotionFromSystem(osPrefersReducedMotion);
@@ -46,6 +50,14 @@ export function Providers({ children }: { children: ReactNode }) {
       root.style.fontSize = "";
     }
   }, [fontScale]);
+
+  if (enableLenis) {
+    return (
+      <ReactLenis root options={{ smoothWheel: true, duration: 1.2 }}>
+        {children}
+      </ReactLenis>
+    );
+  }
 
   return children;
 }

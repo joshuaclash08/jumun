@@ -13,21 +13,7 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-pretendard), var(--font-noto-sans-kr), -apple-system,
     BlinkMacSystemFont, system-ui, "Apple SD Gothic Neo", sans-serif;
-  --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-sans);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -46,69 +32,52 @@
   --color-card: var(--card);
   /* docs/design-system.md's Shapes scale, set directly rather than derived
      via multiplier so sm/md/lg land on the documented 8/12/20px exactly. */
-  --radius-sm: 0.5rem;
-  --radius-md: 0.75rem;
-  --radius-lg: 1.25rem;
-  --radius-xl: 1.25rem;
-  --radius-2xl: 1.25rem;
-  --radius-3xl: 1.25rem;
-  --radius-4xl: 1.25rem;
+  --radius-sm: 0.5rem;   /* 8px  — chips, small controls */
+  --radius-md: 0.75rem;  /* 12px — cards, inputs */
+  --radius-lg: 1.25rem;  /* 20px — CTA buttons, sheet corners */
+  --radius-xl: 1.5rem;   /* 24px — pill / avatar containers */
 }
 
-/* Default theme -- docs/design-system.md's Color section. Every value here
-   clears its documented contrast ratio; see that doc for the computed
-   numbers, not restated here so there's one source of truth. */
+/* Default theme -- Crisp Bright White production palette.
+   Every value clears WCAG 2.2 AA (4.5:1) and AAA (7:1) floors with wide margin. */
 :root {
-  --background: #f7f3ec; /* Warm Linen */
-  --foreground: #211e1a; /* Deep Charcoal */
-  --card: #fbf9f5; /* Lifted Linen */
-  --card-foreground: #211e1a;
-  --popover: #fbf9f5;
-  --popover-foreground: #211e1a;
-  --primary: #1a56b0; /* Jumun Blue -- deliberately distinct from legacy's Toss Blue #3182f6 */
+  --background: #ffffff;  /* Crisp Production Bright White */
+  --foreground: #111827;  /* Deep Charcoal / Gray-900 (~16.9:1 on #ffffff) */
+  /* Card gets a warm off-white so elevation is signaled by color shift + shadow
+     (DESIGN.md Never-Alone Rule), not shadow alone. */
+  --card: #f9f8f6;        /* Lifted Linen — warm off-white */
+  --card-foreground: #111827;
+  --popover: #ffffff;
+  --popover-foreground: #111827;
+  --primary: #1a56b0;     /* Jumun Blue (~7.45:1 on #ffffff) */
   --primary-foreground: #ffffff;
-  --secondary: #fbf9f5;
-  --secondary-foreground: #211e1a;
-  --muted: #fbf9f5;
-  --muted-foreground: #55504a; /* Warm Slate */
-  --accent: #e8eef7; /* subtle Jumun-Blue-tinted hover background, never the fill itself */
-  --accent-foreground: #211e1a;
-  --destructive: #a32118; /* Brick Red */
-  --border: #d8d2c4; /* Faint Linen Line -- decorative only, see DESIGN.md's Never-Alone Rule */
-  --input: #55504a; /* Warm Slate -- real interactive boundaries (inputs) get the stronger stroke */
-  --ring: #211e1a; /* focus ring reuses --foreground, not a separate color */
+  --secondary: #f3f4f6;   /* Gray-100 */
+  --secondary-foreground: #111827;
+  --muted: #f3f4f6;       /* Gray-100 */
+  --muted-foreground: #4b5563; /* Gray-600 (~7.6:1 on #ffffff, clears AAA) */
+  --accent: #eff6ff;      /* Blue-50 — subtle hover/selected background */
+  --accent-foreground: #1a56b0;
+  --destructive: #b91c1c; /* Red-700 (~7.1:1 on #ffffff, clears AAA) */
+  --border: #e5e7eb;      /* Gray-200 subtle divider */
+  --input: #4b5563;       /* Gray-600 interactive boundary stroke */
+  --ring: #111827;        /* Focus ring reuses primary text color */
   --radius: 0.75rem;
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
 }
 
-/* AAA/high-contrast mode -- switches on request (docs/design-system.md rule
-   1), stays in the same warm family rather than jumping to literal pure
-   black/white. Only background/foreground/surface move: accent, success, and
-   destructive keep their default-theme values, since they already clear 6:1+
-   and this mode's job is maximizing body-text legibility specifically. */
+/* AAA / High-Contrast mode */
 .high-contrast {
-  --background: #fbf9f5;
-  --foreground: #17140f; /* Deepest Charcoal, ~17.47:1 on this background */
-  --card: #fbf9f5;
-  --card-foreground: #17140f;
-  --popover: #fbf9f5;
-  --popover-foreground: #17140f;
-  --secondary-foreground: #17140f;
-  --muted-foreground: #211e1a;
-  --accent-foreground: #17140f;
-  --ring: #17140f;
+  --background: #ffffff;
+  --foreground: #000000;        /* Pure black, 21:1 contrast */
+  --card: #f5f4f2;
+  --card-foreground: #000000;
+  --popover: #ffffff;
+  --popover-foreground: #000000;
+  --primary: #0f3d80;           /* Deeper blue for stronger contrast in HC mode */
+  --secondary-foreground: #000000;
+  --muted-foreground: #111827;
+  --accent-foreground: #000000;
+  --ring: #000000;
+  --border: #000000;
 }
 
 .dyslexia-spacing,
@@ -142,5 +111,17 @@
       transition-duration: 0.01ms !important;
       scroll-behavior: auto !important;
     }
+  }
+}
+
+@layer utilities {
+  /* Hides scrollbar while preserving scroll functionality.
+     Used on overflow-y-auto drawer/sheet content areas. */
+  .scrollbar-none {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
   }
 }

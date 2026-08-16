@@ -4,6 +4,8 @@ import * as React from "react";
 import { useCartStore } from "@/store/useCartStore";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "motion/react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
 
 interface CartSummaryPillProps {
@@ -33,27 +35,37 @@ export function CartSummaryPill({ onClick, className }: CartSummaryPillProps) {
         initial={{ y: 50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 50, opacity: 0 }}
-        transition={{ duration: reduceMotion ? 0 : 0.2 }}
+        whileTap={reduceMotion ? undefined : { scale: 0.98 }}
+        transition={{
+          type: "spring",
+          stiffness: 400,
+          damping: 25,
+          duration: reduceMotion ? 0 : undefined,
+        }}
         className={cn(
-          "fixed bottom-[env(safe-area-inset-bottom)] left-4 right-4 z-50 mb-4",
+          "fixed bottom-[env(safe-area-inset-bottom)] left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-[736px] z-50 mb-4",
           className
         )}
       >
-        <button
+        <Button
+          size="lg"
           onClick={onClick}
           aria-label={ariaLabel}
-          className="flex h-16 w-full items-center justify-between rounded-full bg-primary px-6 text-primary-foreground shadow-[0_12px_32px_rgba(33,30,26,0.16),_0_4px_8px_rgba(33,30,26,0.08)] outline-none transition-transform active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          className="flex h-16 w-full items-center justify-between rounded-full bg-primary px-6 text-primary-foreground shadow-[0_12px_32px_rgba(26,86,176,0.3)] hover:bg-primary/90"
         >
-          <div className="flex items-center gap-2">
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 font-bold">
+          <div className="flex items-center gap-2.5">
+            <Badge
+              variant="secondary"
+              className="flex h-8 min-w-8 items-center justify-center rounded-full bg-white/20 text-white font-extrabold px-2 text-sm border-none"
+            >
               {totalQuantity}
-            </span>
-            <span className="font-semibold">결제하기</span>
+            </Badge>
+            <span className="font-bold text-base">결제하기</span>
           </div>
-          <span className="text-lg font-bold">
+          <span className="text-xl font-extrabold">
             {totalPrice.toLocaleString("ko-KR")}원
           </span>
-        </button>
+        </Button>
       </motion.div>
     </AnimatePresence>
   );

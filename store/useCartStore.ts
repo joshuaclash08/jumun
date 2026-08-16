@@ -18,6 +18,7 @@ interface CartStore {
   removeItem: (itemId: string) => void;
   updateQuantity: (itemId: string, delta: number) => void;
   clearCart: () => void;
+  resetOrder: () => void;
   setOrderStatus: (status: OrderStatus) => void;
   setLastReceipt: (receipt: OrderReceipt | null) => void;
   dismissToast: (toastId: string) => void;
@@ -78,7 +79,9 @@ export const useCartStore = create<CartStore>()((set, get) => ({
     set({ items: nextItems, history: pushHistory(history, items) });
   },
 
-  clearCart: () => set({ items: [], orderStatus: "idle", lastReceipt: null }),
+  clearCart: () => set({ items: [] }),
+
+  resetOrder: () => set({ items: [], orderStatus: "idle", lastReceipt: null }),
 
   setOrderStatus: (orderStatus) => set({ orderStatus }),
 
