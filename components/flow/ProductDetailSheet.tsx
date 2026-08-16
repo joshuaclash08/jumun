@@ -183,7 +183,7 @@ function ProductDetailContent({ product, onAddToCart }: ProductDetailContentProp
           })}
 
           {/* Quantity Stepper */}
-          <Card className="flex items-center justify-between p-4 shadow-xs">
+          <Card className="flex items-center justify-between p-4 shadow-resting">
             <span className="text-lg font-bold text-foreground">주문 수량</span>
             <div className="flex items-center gap-3">
               <motion.button

@@ -114,3 +114,11 @@ Nothing yet.
 
 - `components/flow/SettingsSheet.tsx` — replaced by the `/settings` route; nothing referenced it once `HeaderBar` switched to the link.
 - `lib/data/menu.ts` — replaced by `lib/data/menu.json`.
+
+### Changed
+
+- `app/globals.css` — `--card` bumped from a near-imperceptible `#f9f8f6` (~1.03:1 against `--background`) to `#efece4` (~1.18:1), and the AAA/high-contrast card token similarly darkened, so a screen of cards reads as distinct objects instead of a flat white field. Text contrast on the surface only improves from this (15:1+ default, 16:1+ AAA), so no accessibility floor is at risk. Also registered `--shadow-resting`/`--shadow-layered`/`--shadow-floating` as Tailwind v4 theme tokens (auto-generating matching `shadow-*` utilities) using the Deep Charcoal tint `docs/design-system.md`'s Elevation table specifies — previously every card just used Tailwind's generic `shadow-xs`, so the documented elevation scale and the shipped elevation had silently drifted apart.
+- `components/flow/ProductCard.tsx` — icon tiles are now tinted per category (coffee/amber, beverage/sky, dessert/pink, food/orange) instead of one flat gray for every item, deliberately kept separate from Jumun Blue so it doesn't compete with the One Accent Rule's single CTA color.
+- `components/settings/SettingsRow.tsx`, `app/settings/page.tsx`, `components/flow/CartDrawer.tsx` — icon tiles switched from flat gray to the same `bg-primary/10 text-primary` tint already used for the landing page's store icons, for a less monotone settings/empty-state look.
+- `components/ui/drawer.tsx` — `DrawerContent` now carries `shadow-layered` (previously no shadow at all on sheets beyond the browser-default overlay).
+- `DESIGN.md`, `docs/design-system.md` — updated the Card Surface hex, Shadow Vocabulary rgba values (now the actual Deep Charcoal `rgb(17,24,39)` rather than the retired palette's `rgb(33,30,26)`), and documented the category icon-tint palette as a deliberate carve-out from the One Accent Rule.

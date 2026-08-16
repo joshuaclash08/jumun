@@ -47,7 +47,7 @@ export function A11yToastContainer() {
           exit={{ y: -20, opacity: 0, scale: 0.95 }}
           transition={{ duration: reducedMotion ? 0 : 0.2 }}
           className={cn(
-            "pointer-events-auto flex w-full max-w-sm items-center justify-between gap-3 rounded-[--radius-lg] bg-foreground p-4 text-background shadow-[0_12px_32px_rgba(33,30,26,0.2)]"
+            "pointer-events-auto flex w-full max-w-sm items-center justify-between gap-3 rounded-[--radius-lg] bg-foreground p-4 text-background shadow-floating"
           )}
         >
           <span className="text-base font-semibold">{currentToast.messageKo}</span>

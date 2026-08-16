@@ -109,7 +109,7 @@ export function LandingClientView() {
                       href={`/order/${store.storeId}?table=${store.defaultTable}`}
                       className="block outline-none rounded-[--radius-md] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                     >
-                      <Card className="flex-row items-center justify-between gap-3 rounded-[--radius-md] p-3 shadow-xs transition-colors hover:bg-accent/30">
+                      <Card className="flex-row items-center justify-between gap-3 rounded-[--radius-md] p-3 shadow-resting transition-colors hover:bg-accent/30">
                         {/* Left: icon + info */}
                         <div className="flex items-center gap-3 min-w-0">
                           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[--radius-sm] bg-primary/10 text-primary">

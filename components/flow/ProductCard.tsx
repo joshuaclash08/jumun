@@ -16,7 +16,7 @@ import {
   UtensilsCrossed,
   type LucideIcon,
 } from "lucide-react";
-import type { Product } from "@/lib/types";
+import type { Product, ProductCategory } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -44,6 +44,18 @@ const PRODUCT_ICONS: Record<string, LucideIcon> = {
   Cookie,
   Sandwich,
   EggFried,
+};
+
+// A tint per category, not the brand accent -- keeps Jumun Blue reserved for
+// the One Accent Rule (primary actions / selection) while still giving the
+// menu list some color instead of one flat gray tile repeated on every row.
+// Two-tone (soft fill + a darker foreground of the same hue), no gradients,
+// matching docs/design-system.md's Imagery spec.
+const CATEGORY_TINT: Record<ProductCategory, string> = {
+  coffee: "bg-amber-100 text-amber-800",
+  beverage: "bg-sky-100 text-sky-700",
+  dessert: "bg-pink-100 text-pink-700",
+  food: "bg-orange-100 text-orange-800",
 };
 
 export function ProductCard({ product, onClick, className }: ProductCardProps) {
@@ -74,13 +86,16 @@ export function ProductCard({ product, onClick, className }: ProductCardProps) {
       >
         <Card
           className={cn(
-            "group relative flex w-full min-h-[96px] items-center gap-3 rounded-[--radius-md] bg-card p-3 shadow-xs transition-colors",
+            "group relative flex w-full min-h-[96px] items-center gap-3 rounded-[--radius-md] bg-card p-3 shadow-resting transition-colors",
             !product.available && "opacity-50 bg-muted/40"
           )}
         >
           {/* Per-item icon -- fixed 1:1 container, flat 2-tone illustration treatment */}
           <div
-            className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[--radius-sm] bg-muted text-muted-foreground"
+            className={cn(
+              "flex h-16 w-16 shrink-0 items-center justify-center rounded-[--radius-sm]",
+              product.available ? CATEGORY_TINT[product.category] : "bg-muted text-muted-foreground"
+            )}
             aria-hidden="true"
           >
             <Icon className="h-7 w-7 stroke-[1.5]" />

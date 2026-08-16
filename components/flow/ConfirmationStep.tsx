@@ -72,7 +72,7 @@ export function ConfirmationStep({ onReset }: ConfirmationStepProps) {
         </p>
       </div>
 
-      <Card className="receipt-element w-full max-w-sm p-5 shadow-xs text-left">
+      <Card className="receipt-element w-full max-w-sm p-5 shadow-resting text-left">
         <div className="flex items-center justify-between pb-3">
           <div>
             <h2 className="text-lg font-bold text-foreground">주문 영수증</h2>

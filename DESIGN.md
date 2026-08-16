@@ -3,7 +3,7 @@ name: Jumun
 description: Barrier-free self-order platform — accessible by default, not as a special mode
 colors:
   bg: "#FFFFFF"
-  surface: "#F9F8F6"
+  surface: "#EFECE4"
   text-primary: "#111827"
   text-secondary: "#4B5563"
   border-subtle: "#E5E7EB"
@@ -101,7 +101,7 @@ Crisp production bright white neutral carries the surface; one restrained blue i
 
 ### Neutral
 - **Bright White** (`#FFFFFF`): The default page background. Crisp, clean production standard.
-- **Card Surface** (`#F9F8F6`): A slightly warm off-white for cards and other elevated content — deliberately distinct from Bright White so elevation is signaled by a color shift *and* a shadow together, never a shadow alone (see the Never-Alone Rule below).
+- **Card Surface** (`#EFECE4`): A warm oatmeal off-white for cards and other elevated content — deliberately a *visible* step down from Bright White, not a near-imperceptible one, so a screen of cards reads as distinct objects at a glance rather than an undifferentiated white field. Elevation is signaled by this color shift *and* a shadow together, never a shadow alone (see the Never-Alone Rule below). Text on it still clears 15:1+ (default) / 16:1+ (AAA) — darkening the surface only improves text contrast, never risks it.
 - **Deep Charcoal** (`#111827`): Primary text and the focus ring, on Bright White. Reads at 16.9:1 — well past the 4.5:1 and 7:1 floors.
 - **Muted Slate** (`#4B5563`): Secondary/meta text, and the stroke color for interactive boundaries. Reads at 7.6:1 — clearing both AA and AAA floors.
 - **Subtle Divider** (`#E5E7EB`): Decorative dividers and borders.
@@ -137,9 +137,10 @@ Screens are single-column and single-focus: one task, one or two primary actions
 Flat by default; shallow, charcoal-tinted shadows appear only on things that are genuinely layered above the page — cards resting on the page get the lightest lift, sheets and popovers sit above that, and toasts float above everything. Shadows use the Deep Charcoal token at low opacity rather than pure black, so elevation reads as native to the warm palette instead of a generic drop-shadow bolted on.
 
 ### Shadow Vocabulary
-- **Resting** (`box-shadow: 0 1px 2px rgba(33,30,26,0.06), 0 1px 1px rgba(33,30,26,0.04)`): Product cards and other content sitting directly on the page.
-- **Layered** (`box-shadow: 0 4px 12px rgba(33,30,26,0.10), 0 2px 4px rgba(33,30,26,0.06)`): Bottom sheets and popovers.
-- **Floating** (`box-shadow: 0 12px 32px rgba(33,30,26,0.16), 0 4px 8px rgba(33,30,26,0.08)`): Toasts and anything that appears above an already-open sheet.
+Shipped as Tailwind v4 theme tokens in `app/globals.css` (`--shadow-resting/layered/floating`), which auto-generate `shadow-resting`/`shadow-layered`/`shadow-floating` utility classes — components use those directly, not Tailwind's generic `shadow-xs`/`shadow-md`.
+- **Resting** (`box-shadow: 0 1px 2px rgba(17,24,39,0.06), 0 1px 1px rgba(17,24,39,0.04)`): Product cards and other content sitting directly on the page.
+- **Layered** (`box-shadow: 0 4px 12px rgba(17,24,39,0.10), 0 2px 4px rgba(17,24,39,0.06)`): Bottom sheets and popovers.
+- **Floating** (`box-shadow: 0 12px 32px rgba(17,24,39,0.18), 0 4px 8px rgba(17,24,39,0.10)`): Toasts and anything that appears above an already-open sheet.
 
 ### Named Rules
 **The Never-Alone Rule.** `Card Surface` on `Bright White` is a nearly-imperceptible color shift by itself — every elevated surface pairs its shadow with either that color shift or a `Subtle Divider` border, never relies on one alone to signal a boundary.

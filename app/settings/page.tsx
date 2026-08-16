@@ -67,7 +67,7 @@ export default function SettingsPage() {
             <div className="flex flex-col gap-3 px-4 py-3">
               <div className="flex items-center gap-3">
                 <div
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[--radius-sm] bg-muted text-muted-foreground"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[--radius-sm] bg-primary/10 text-primary"
                   aria-hidden="true"
                 >
                   <Type className="h-4.5 w-4.5" />
@@ -142,7 +142,7 @@ export default function SettingsPage() {
             <div className="flex flex-col gap-3 px-4 py-3">
               <div className="flex items-center gap-3">
                 <div
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[--radius-sm] bg-muted text-muted-foreground"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[--radius-sm] bg-primary/10 text-primary"
                   aria-hidden="true"
                 >
                   <Languages className="h-4.5 w-4.5" />

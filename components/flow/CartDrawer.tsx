@@ -44,7 +44,7 @@ export function CartDrawer({ open, onOpenChange, onCheckout }: CartDrawerProps) 
           {items.length === 0 ? (
             <div className="flex min-h-[220px] flex-col items-center justify-center gap-4 text-center">
               <div
-                className="flex h-16 w-16 items-center justify-center rounded-full bg-muted text-muted-foreground"
+                className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary"
                 aria-hidden="true"
               >
                 <ShoppingCart className="h-7 w-7 stroke-[1.5]" />
@@ -70,7 +70,7 @@ export function CartDrawer({ open, onOpenChange, onCheckout }: CartDrawerProps) 
                     exit={reduceMotion ? { opacity: 0 } : { opacity: 0, x: -20, height: 0 }}
                     transition={{ duration: reduceMotion ? 0 : 0.2 }}
                   >
-                    <Card className="flex flex-col gap-2 p-4 shadow-xs">
+                    <Card className="flex flex-col gap-2 p-4 shadow-resting">
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex flex-col">
                           <span className="text-lg font-bold text-card-foreground">

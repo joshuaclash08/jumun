@@ -40,7 +40,7 @@ All contrast ratios are computed via the WCAG relative-luminance formula, not es
 | Token | Hex | Paired against | Ratio | Meets |
 |---|---|---|---|---|
 | `--color-bg` | `#FFFFFF` (crisp bright white) | — | — | Clean production standard |
-| `--color-surface` (cards/elevated content) | `#F9F8F6` | on `--color-bg` | 1.03:1 | Deliberately near-`--color-bg` — elevation reads from the shadow + this slight shift together (Never-Alone Rule), not from contrast alone |
+| `--color-surface` (cards/elevated content) | `#EFECE4` | on `--color-bg` | 1.18:1 | A deliberately *visible* step down from `--color-bg`, not a near-imperceptible one — a screen of cards should read as distinct objects, not a flat white field. Paired with `--elevation-1`'s shadow (Never-Alone Rule), not relied on alone. Text on it still clears 15:1+ default / 16:1+ AAA |
 | `--color-text-primary` (deep charcoal) | `#111827` | on `--color-bg` | **16.90:1** | Clears AA (4.5:1) and AAA (7:1) floors |
 | `--color-text-secondary` (muted slate) | `#4B5563` | on `--color-bg` | **7.60:1** | AA (4.5:1) and AAA (7:1) with wide margin |
 | `--color-border-subtle` (decorative dividers) | `#E5E7EB` | on `--color-bg` | 1.25:1 | Decorative only — never the sole indicator of an interactive boundary |
@@ -117,7 +117,9 @@ Elevation communicates layering (what's a sheet, what's a card, what's above wha
 | `--elevation-2` | `0 4px 12px rgba(33,30,26,0.10), 0 2px 4px rgba(33,30,26,0.06)` | Bottom sheets, popovers, the settings panel |
 | `--elevation-3` | `0 12px 32px rgba(33,30,26,0.16), 0 4px 8px rgba(33,30,26,0.08)` | Toasts, anything floating above a sheet |
 
-Shadows use the charcoal token at low opacity rather than pure black — keeps elevation feeling native to the warm palette instead of generic. `--color-surface` (`#F9F8F6`, mapped to shadcn's `--card` in `app/globals.css`) plus `--elevation-1` is the default card treatment; never combine flat `--color-bg`-on-`--color-bg` with no shadow and expect a boundary to read — pair every elevated surface with either a shadow or `--color-border-subtle`, not neither.
+Shadows use the Deep Charcoal token (`rgb(17,24,39)`) at low opacity rather than pure black — keeps elevation feeling native to the palette instead of generic. `--color-surface` (`#EFECE4`, mapped to shadcn's `--card` in `app/globals.css`) plus `--elevation-1` is the default card treatment; never combine flat `--color-bg`-on-`--color-bg` with no shadow and expect a boundary to read — pair every elevated surface with either a shadow or `--color-border-subtle`, not neither.
+
+The three `--elevation-*` values above are registered as Tailwind v4 theme keys in `app/globals.css` (`--shadow-resting`, `--shadow-layered`, `--shadow-floating`), which auto-generates matching `shadow-resting`/`shadow-layered`/`shadow-floating` utility classes — components use those directly rather than Tailwind's generic `shadow-xs`/`shadow-md`/etc, so the elevation scale documented here and the elevation actually shipped can't drift apart the way `--color-surface` did before this was wired up.
 
 ## Corner radius
 
@@ -145,7 +147,9 @@ Maps directly onto shadcn's `Button` variant prop (`default`/`secondary`/`ghost`
 
 ## Imagery
 
-No real menu photography exists yet (see `PRODUCT.md`'s Evidence on Hand), and attempting photorealistic fake food photos for a fictional menu risks landing exactly in "obviously AI-generated stock photo" territory — the opposite of what's being asked for. Instead: **a consistent, flat, geometric icon/illustration treatment per menu item**, not photography. Concretely — a fixed-aspect (1:1) container per product, `--radius-md` corners, a limited 2–3 tone illustration style built from the same palette (charcoal linework, accent-blue or warm neutral fills, no gradients, no drop shadows on the illustration itself), consistent stroke weight across every item. This reads as a deliberate design system decision rather than a placeholder, is achievable without real assets or image generation, and sidesteps the fake-photo problem entirely. Every image still carries real, descriptive alt text (see "Screen-reader content" below) — the illustration is a visual aid, not the source of truth for what the item is.
+No real menu photography exists yet (see `PRODUCT.md`'s Evidence on Hand), and attempting photorealistic fake food photos for a fictional menu risks landing exactly in "obviously AI-generated stock photo" territory — the opposite of what's being asked for. Instead: **a consistent, flat, geometric icon/illustration treatment per menu item**, not photography. Concretely — a fixed-aspect (1:1) container per product, `--radius-sm` corners, a `lucide-react` icon (one per product, named in `lib/data/menu.json`, not shared across a whole category — see `components/flow/ProductCard.tsx`), consistent stroke weight across every item, no gradients, no drop shadows on the icon itself. This reads as a deliberate design system decision rather than a placeholder, is achievable without real assets or image generation, and sidesteps the fake-photo problem entirely. Every image still carries real, descriptive alt text (see "Screen-reader content" below) — the illustration is a visual aid, not the source of truth for what the item is.
+
+**Category tint, not the brand accent.** Each icon's soft-fill tile is colored by its menu category (coffee → amber, beverage → sky, dessert → pink, food → orange — `CATEGORY_TINT` in `ProductCard.tsx`), not Jumun Blue. This is a deliberate carve-out from the One Accent Rule: these are informational/categorical tints on a repeated list element, not calls-to-action, so they don't compete with the single blue CTA per screen the rule protects. Every tint pairs a soft 100-level fill with a 700/800-level foreground of the same hue — same two-tone structure as the rest of the icon treatment, just category-colored instead of monochrome. Sold-out items fall back to the flat neutral (`--color-border-subtle`-family) tile regardless of category, matching the card's own desaturated treatment for unavailable items.
 
 ## Loading states
 

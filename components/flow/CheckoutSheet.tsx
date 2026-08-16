@@ -167,7 +167,7 @@ export function CheckoutSheet({ open, onOpenChange, onConfirm }: CheckoutSheetPr
             </div>
 
             {/* 2. Order Summary */}
-            <Card className="flex flex-col gap-3 p-4 shadow-xs">
+            <Card className="flex flex-col gap-3 p-4 shadow-resting">
               <div className="flex items-center justify-between">
                 <h3 className="text-base font-bold text-foreground">주문 내역 ({items.reduce((s, i) => s + i.quantity, 0)}개)</h3>
                 <Badge variant="secondary" className="text-xs font-medium">{storeInfo?.storeName}</Badge>
