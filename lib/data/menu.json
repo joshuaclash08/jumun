@@ -1,9 +1,14 @@
 {
   "categories": [
     { "id": "coffee", "labelKo": "커피" },
-    { "id": "beverage", "labelKo": "음료" },
+    { "id": "decaf", "labelKo": "디카페인" },
+    { "id": "tea", "labelKo": "티/차" },
+    { "id": "beverage", "labelKo": "에이드/음료" },
     { "id": "dessert", "labelKo": "디저트" },
-    { "id": "food", "labelKo": "푸드" }
+    { "id": "bakery", "labelKo": "베이커리" },
+    { "id": "food", "labelKo": "푸드" },
+    { "id": "brunch", "labelKo": "브런치" },
+    { "id": "md", "labelKo": "원두/MD" }
   ],
   "optionGroups": {
     "temperature": {
@@ -46,7 +51,7 @@
       "descriptionKo": "깔끔하고 진한 에스프레소 두 샷에 물을 더했어요.",
       "voiceDescriptionKo": "아메리카노, 4,500원. 깔끔하고 진한 에스프레소 두 샷에 물을 더했어요.",
       "price": 4500,
-      "icon": "Coffee",
+      "imageUrl": "/images/menu/americano.jpg",
       "optionGroupIds": ["temperature", "size"],
       "available": true
     },
@@ -57,7 +62,7 @@
       "descriptionKo": "에스프레소에 부드러운 우유를 더한 기본 라떼예요.",
       "voiceDescriptionKo": "카페라떼, 5,000원. 에스프레소에 부드러운 우유를 더한 기본 라떼예요.",
       "price": 5000,
-      "icon": "CupSoda",
+      "imageUrl": "/images/menu/cafe-latte.jpg",
       "optionGroupIds": ["temperature", "size", "milk"],
       "available": true
     },
@@ -68,8 +73,52 @@
       "descriptionKo": "카페라떼에 바닐라 시럽을 더해 은은하게 달아요.",
       "voiceDescriptionKo": "바닐라 라떼, 5,500원. 카페라떼에 바닐라 시럽을 더해 은은하게 달아요.",
       "price": 5500,
-      "icon": "Candy",
+      "imageUrl": "/images/menu/vanilla-latte.jpg",
       "optionGroupIds": ["temperature", "size", "milk"],
+      "available": true
+    },
+    {
+      "id": "decaf-americano",
+      "category": "decaf",
+      "nameKo": "디카페인 아메리카노",
+      "descriptionKo": "카페인 부담 없이 깔끔하게 즐기는 부드러운 아메리카노예요.",
+      "voiceDescriptionKo": "디카페인 아메리카노, 4,800원. 카페인 부담 없이 즐기는 아메리카노예요.",
+      "price": 4800,
+      "imageUrl": "/images/menu/decaf-americano.jpg",
+      "optionGroupIds": ["temperature", "size"],
+      "available": true
+    },
+    {
+      "id": "decaf-latte",
+      "category": "decaf",
+      "nameKo": "디카페인 카페라떼",
+      "descriptionKo": "속 편한 디카페인 에스프레소에 고소한 우유를 더했어요.",
+      "voiceDescriptionKo": "디카페인 카페라떼, 5,300원. 속 편한 디카페인 카페라떼예요.",
+      "price": 5300,
+      "imageUrl": "/images/menu/decaf-latte.jpg",
+      "optionGroupIds": ["temperature", "size", "milk"],
+      "available": true
+    },
+    {
+      "id": "earl-grey-tea",
+      "category": "tea",
+      "nameKo": "프리미엄 얼그레이 티",
+      "descriptionKo": "천연 베르가못 향이 은은하게 퍼지는 클래식 홍차예요.",
+      "voiceDescriptionKo": "얼그레이 티, 4,500원. 천연 베르가못 향 홍차예요.",
+      "price": 4500,
+      "imageUrl": "/images/menu/earl-grey-tea.jpg",
+      "optionGroupIds": ["temperature"],
+      "available": true
+    },
+    {
+      "id": "chamomile-tea",
+      "category": "tea",
+      "nameKo": "카모마일 허브티",
+      "descriptionKo": "은은한 사과 향이 감도는 편안한 무카페인 허브티예요.",
+      "voiceDescriptionKo": "카모마일 티, 4,500원. 편안한 무카페인 허브티예요.",
+      "price": 4500,
+      "imageUrl": "/images/menu/chamomile-tea.jpg",
+      "optionGroupIds": ["temperature"],
       "available": true
     },
     {
@@ -79,7 +128,7 @@
       "descriptionKo": "상큼한 자몽 과육이 그대로 씹히는 탄산 에이드예요.",
       "voiceDescriptionKo": "자몽 에이드, 5,500원. 상큼한 자몽 과육이 그대로 씹히는 탄산 에이드예요.",
       "price": 5500,
-      "icon": "Citrus",
+      "imageUrl": "/images/menu/grapefruit-ade.jpg",
       "optionGroupIds": ["size"],
       "available": true
     },
@@ -90,7 +139,18 @@
       "descriptionKo": "달콤한 복숭아 향을 더한 차가운 홍차예요.",
       "voiceDescriptionKo": "복숭아 아이스티, 5,000원. 달콤한 복숭아 향을 더한 차가운 홍차예요.",
       "price": 5000,
-      "icon": "Leaf",
+      "imageUrl": "/images/menu/peach-iced-tea.jpg",
+      "optionGroupIds": ["size"],
+      "available": true
+    },
+    {
+      "id": "lemonade",
+      "category": "beverage",
+      "nameKo": "수제 레모네이드",
+      "descriptionKo": "생레몬 즙을 듬뿍 짜 넣어 상큼하고 톡 쏘는 청량 음료예요.",
+      "voiceDescriptionKo": "수제 레모네이드, 5,500원. 생레몬 즙이 들어간 상큼한 에이드예요.",
+      "price": 5500,
+      "imageUrl": "/images/menu/lemonade.jpg",
       "optionGroupIds": ["size"],
       "available": true
     },
@@ -101,18 +161,18 @@
       "descriptionKo": "카페인 없이 편하게 즐길 수 있는 흰 우유예요.",
       "voiceDescriptionKo": "우유, 3,000원. 카페인 없이 편하게 즐길 수 있는 흰 우유예요.",
       "price": 3000,
-      "icon": "Milk",
+      "imageUrl": "/images/menu/milk.jpg",
       "optionGroupIds": ["temperature"],
       "available": true
     },
     {
       "id": "cheesecake",
       "category": "dessert",
-      "nameKo": "치즈케이크",
+      "nameKo": "뉴욕 치즈케이크",
       "descriptionKo": "진한 크림치즈로 만든 부드러운 뉴욕 치즈케이크 한 조각이에요.",
       "voiceDescriptionKo": "치즈케이크, 6,500원. 진한 크림치즈로 만든 부드러운 뉴욕 치즈케이크 한 조각이에요.",
       "price": 6500,
-      "icon": "CakeSlice",
+      "imageUrl": "/images/menu/cheesecake.jpg",
       "optionGroupIds": [],
       "available": true
     },
@@ -123,7 +183,29 @@
       "descriptionKo": "진한 초콜릿이 촉촉하게 씹히는 브라우니 한 조각이에요.",
       "voiceDescriptionKo": "초코 브라우니, 5,000원. 진한 초콜릿이 촉촉하게 씹히는 브라우니 한 조각이에요.",
       "price": 5000,
-      "icon": "Cookie",
+      "imageUrl": "/images/menu/chocolate-brownie.jpg",
+      "optionGroupIds": [],
+      "available": true
+    },
+    {
+      "id": "butter-croissant",
+      "category": "bakery",
+      "nameKo": "프랑스 버터 크루아상",
+      "descriptionKo": "겉은 바삭하고 속은 겹겹이 고소한 프랑스식 버터 크루아상이에요.",
+      "voiceDescriptionKo": "버터 크루아상, 4,200원. 고소하고 바삭한 크루아상이에요.",
+      "price": 4200,
+      "imageUrl": "/images/menu/butter-croissant.jpg",
+      "optionGroupIds": [],
+      "available": true
+    },
+    {
+      "id": "salt-bread",
+      "category": "bakery",
+      "nameKo": "시오 버터 소금빵",
+      "descriptionKo": "버터 풍미 가득한 촉촉한 반죽 위에 굵은 소금을 뿌렸어요.",
+      "voiceDescriptionKo": "소금빵, 3,800원. 버터 풍미 가득한 소금빵이에요.",
+      "price": 3800,
+      "imageUrl": "/images/menu/salt-bread.jpg",
       "optionGroupIds": [],
       "available": true
     },
@@ -134,7 +216,7 @@
       "descriptionKo": "햄과 치즈를 넣고 노릇하게 구운 뒤 치즈를 한 번 더 올렸어요.",
       "voiceDescriptionKo": "크로크무슈, 7,500원. 햄과 치즈를 넣고 노릇하게 구운 뒤 치즈를 한 번 더 올렸어요.",
       "price": 7500,
-      "icon": "Sandwich",
+      "imageUrl": "/images/menu/croque-monsieur.jpg",
       "optionGroupIds": [],
       "available": true
     },
@@ -145,7 +227,29 @@
       "descriptionKo": "부드러운 계란 샐러드를 듬뿍 채운 담백한 샌드위치예요.",
       "voiceDescriptionKo": "에그 샌드위치, 6,000원. 부드러운 계란 샐러드를 듬뿍 채운 담백한 샌드위치예요.",
       "price": 6000,
-      "icon": "EggFried",
+      "imageUrl": "/images/menu/egg-sandwich.jpg",
+      "optionGroupIds": [],
+      "available": true
+    },
+    {
+      "id": "avocado-brunch-plate",
+      "category": "brunch",
+      "nameKo": "아보카도 브런치 플레이트",
+      "descriptionKo": "신선한 아보카도, 수란, 구운 토마토와 토스트로 구성된 든든한 플레이트예요.",
+      "voiceDescriptionKo": "아보카도 브런치 플레이트, 12,000원. 든든한 브런치 플레이트예요.",
+      "price": 12000,
+      "imageUrl": "/images/menu/avocado-brunch-plate.jpg",
+      "optionGroupIds": [],
+      "available": true
+    },
+    {
+      "id": "house-blend-beans",
+      "category": "md",
+      "nameKo": "시그니처 하우스 블렌드 원두 (200g)",
+      "descriptionKo": "다크 초콜릿의 묵직한 바디감과 고소한 견과류 풍미가 조화로운 원두예요.",
+      "voiceDescriptionKo": "시그니처 하우스 블렌드 원두 200g, 15,000원.",
+      "price": 15000,
+      "imageUrl": "/images/menu/house-blend-beans.jpg",
       "optionGroupIds": [],
       "available": true
     }

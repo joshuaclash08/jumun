@@ -1,4 +1,14 @@
-export type ProductCategory = "coffee" | "beverage" | "dessert" | "food";
+export type ProductCategory =
+  | "coffee"
+  | "decaf"
+  | "tea"
+  | "beverage"
+  | "dessert"
+  | "bakery"
+  | "food"
+  | "brunch"
+  | "md"
+  | (string & {});
 
 export interface MenuCategory {
   id: ProductCategory;
@@ -26,8 +36,8 @@ export interface Product {
   descriptionKo: string;
   voiceDescriptionKo: string;
   price: number;
-  /** lucide-react icon export name (e.g. "Coffee"), one per product -- see components/flow/ProductCard.tsx */
-  icon: string;
+  /** Relative URL to menu item photo (e.g. "/images/menu/americano.jpg") */
+  imageUrl: string;
   optionGroups: ProductOptionGroup[];
   available: boolean;
 }

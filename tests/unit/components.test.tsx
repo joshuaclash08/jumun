@@ -1,7 +1,8 @@
 import { describe, expect, it, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { axe } from "vitest-axe";
 import { ProductCard } from "@/components/flow/ProductCard";
+import { FeaturedMenuSection } from "@/components/flow/FeaturedMenuSection";
 import { CartDrawer } from "@/components/flow/CartDrawer";
 import { ConfirmationStep } from "@/components/flow/ConfirmationStep";
 import { useCartStore } from "@/store/useCartStore";
@@ -19,7 +20,7 @@ describe("Component Accessibility & Rendering", () => {
     descriptionKo: "깊고 풍부한 바디감의 에스프레소에 물을 더한 클래식 커피",
     voiceDescriptionKo: "아메리카노, 4500원, 깊고 풍부한 바디감의 클래식 커피",
     price: 4500,
-    icon: "Coffee",
+    imageUrl: "/images/menu/americano.jpg",
     available: true,
     optionGroups: [
       {
@@ -45,10 +46,10 @@ describe("Component Accessibility & Rendering", () => {
     unitPrice: 4500,
   };
 
-  it("renders ProductCard with rich voiceDescription accessible label", () => {
+  it("renders ProductCard with concise accessible label and price", () => {
     render(<ProductCard product={sampleProduct} onClick={() => {}} />);
     const cardButton = screen.getByRole("button", {
-      name: sampleProduct.voiceDescriptionKo,
+      name: "아메리카노, 4,500원",
     });
     expect(cardButton).toBeInTheDocument();
     expect(screen.getByText("아메리카노")).toBeInTheDocument();
@@ -61,6 +62,26 @@ describe("Component Accessibility & Rendering", () => {
     );
     const results = await axe(container);
     expect(results).toHaveNoViolations();
+  });
+
+  it("renders FeaturedMenuSection with top recommended items and responds to clicks", () => {
+    let clickedProduct: Product | null = null;
+    render(
+      <FeaturedMenuSection
+        products={[sampleProduct]}
+        onProductClick={(p) => {
+          clickedProduct = p;
+        }}
+      />
+    );
+
+    expect(screen.getByText("BEST")).toBeInTheDocument();
+
+    const itemButton = screen.getByRole("button", {
+      name: /아메리카노, 4,500원, 추천 메뉴/i,
+    });
+    fireEvent.click(itemButton);
+    expect(clickedProduct).toEqual(sampleProduct);
   });
 
   it("renders sold-out state when product is unavailable", () => {

@@ -1,5 +1,6 @@
 import { vibrate, HAPTIC_PATTERNS } from "@/hooks/useHaptics";
 import type { ToastItem } from "@/lib/types";
+import { generateUUID } from "@/lib/utils";
 
 const LIVE_REGION_ID = "jumun-live-region";
 
@@ -32,9 +33,10 @@ export function notify(
     vibrate(kind === "success" ? HAPTIC_PATTERNS.success : HAPTIC_PATTERNS.error);
   }
   return {
-    id: crypto.randomUUID(),
+    id: generateUUID(),
     messageKo,
     kind,
     onUndo: options.onUndo,
   };
 }
+
