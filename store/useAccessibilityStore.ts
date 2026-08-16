@@ -18,6 +18,8 @@ interface AccessibilityStore extends AccessibilitySettings {
   setDyslexiaSpacing: (dyslexiaSpacing: boolean) => void;
   setHapticsEnabled: (hapticsEnabled: boolean) => void;
   setTimeoutExtension: (timeoutExtension: boolean) => void;
+  applyPreset: (preset: "visual" | "hearing" | "reading" | "senior") => void;
+  resetAll: () => void;
 }
 
 // Settings only, never a raw disability profile (docs/architecture.md).
@@ -45,6 +47,43 @@ export const useAccessibilityStore = create<AccessibilityStore>()(
       setDyslexiaSpacing: (dyslexiaSpacing) => set({ dyslexiaSpacing }),
       setHapticsEnabled: (hapticsEnabled) => set({ hapticsEnabled }),
       setTimeoutExtension: (timeoutExtension) => set({ timeoutExtension }),
+      applyPreset: (preset) => {
+        switch (preset) {
+          case "visual":
+            set({
+              highContrast: true,
+              fontScale: 1.3,
+              hapticsEnabled: true,
+              timeoutExtension: true,
+            });
+            break;
+          case "hearing":
+            set({
+              hapticsEnabled: true,
+              timeoutExtension: true,
+            });
+            break;
+          case "reading":
+            set({
+              dyslexiaSpacing: true,
+              reducedMotion: true,
+              hasSetReducedMotion: true,
+            });
+            break;
+          case "senior":
+            set({
+              fontScale: 1.3,
+              highContrast: false,
+              hapticsEnabled: true,
+              timeoutExtension: true,
+            });
+            break;
+        }
+      },
+      resetAll: () =>
+        set({
+          ...DEFAULT_ACCESSIBILITY_SETTINGS,
+        }),
     }),
     { name: "jumun:accessibility-settings" },
   ),

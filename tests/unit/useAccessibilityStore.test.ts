@@ -51,4 +51,20 @@ describe("useAccessibilityStore", () => {
     useAccessibilityStore.getState().setReducedMotion(false);
     expect(useAccessibilityStore.getState().reducedMotion).toBe(false);
   });
+
+  it("applies accessibility presets and resets all correctly", () => {
+    useAccessibilityStore.getState().applyPreset("visual");
+    expect(useAccessibilityStore.getState().highContrast).toBe(true);
+    expect(useAccessibilityStore.getState().fontScale).toBe(1.3);
+    expect(useAccessibilityStore.getState().timeoutExtension).toBe(true);
+
+    useAccessibilityStore.getState().applyPreset("reading");
+    expect(useAccessibilityStore.getState().dyslexiaSpacing).toBe(true);
+    expect(useAccessibilityStore.getState().reducedMotion).toBe(true);
+
+    useAccessibilityStore.getState().resetAll();
+    expect(useAccessibilityStore.getState().highContrast).toBe(false);
+    expect(useAccessibilityStore.getState().fontScale).toBe(1);
+    expect(useAccessibilityStore.getState().dyslexiaSpacing).toBe(false);
+  });
 });
