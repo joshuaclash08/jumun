@@ -60,23 +60,30 @@ function ProductDetailContent({
   const handleOptionToggle = (group: Product["optionGroups"][number], optionId: string) => {
     const isSingle = group.selectionType === "single";
     const maxSelections = group.maxSelections;
+    const current = selections[group.id] || [];
 
-    setSelections((prev) => {
-      const current = prev[group.id] || [];
-      if (isSingle) {
-        return { ...prev, [group.id]: [optionId] };
-      } else {
-        if (current.includes(optionId)) {
-          return { ...prev, [group.id]: current.filter((id) => id !== optionId) };
-        } else {
-          if (maxSelections && current.length >= maxSelections) {
-            showToast("error", `최대 ${maxSelections}개까지 선택할 수 있어요.`);
-            return prev;
-          }
-          return { ...prev, [group.id]: [...current, optionId] };
-        }
-      }
-    });
+    if (isSingle) {
+      setSelections((prev) => ({ ...prev, [group.id]: [optionId] }));
+      return;
+    }
+
+    if (current.includes(optionId)) {
+      setSelections((prev) => ({
+        ...prev,
+        [group.id]: (prev[group.id] || []).filter((id) => id !== optionId),
+      }));
+      return;
+    }
+
+    if (maxSelections && current.length >= maxSelections) {
+      showToast("error", `최대 ${maxSelections}개까지 선택할 수 있어요.`);
+      return;
+    }
+
+    setSelections((prev) => ({
+      ...prev,
+      [group.id]: [...(prev[group.id] || []), optionId],
+    }));
   };
 
   const calculateUnitPrice = () => {
