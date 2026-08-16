@@ -26,6 +26,8 @@ export interface Product {
   descriptionKo: string;
   voiceDescriptionKo: string;
   price: number;
+  /** lucide-react icon export name (e.g. "Coffee"), one per product -- see components/flow/ProductCard.tsx */
+  icon: string;
   optionGroups: ProductOptionGroup[];
   available: boolean;
 }

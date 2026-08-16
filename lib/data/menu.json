@@ -1,0 +1,153 @@
+{
+  "categories": [
+    { "id": "coffee", "labelKo": "커피" },
+    { "id": "beverage", "labelKo": "음료" },
+    { "id": "dessert", "labelKo": "디저트" },
+    { "id": "food", "labelKo": "푸드" }
+  ],
+  "optionGroups": {
+    "temperature": {
+      "id": "temperature",
+      "labelKo": "온도 선택",
+      "required": true,
+      "selectionType": "single",
+      "options": [
+        { "id": "hot", "labelKo": "따뜻하게", "priceDelta": 0 },
+        { "id": "ice", "labelKo": "차갑게", "priceDelta": 0 }
+      ]
+    },
+    "size": {
+      "id": "size",
+      "labelKo": "사이즈 선택",
+      "required": true,
+      "selectionType": "single",
+      "options": [
+        { "id": "regular", "labelKo": "보통 사이즈", "priceDelta": 0 },
+        { "id": "large", "labelKo": "큰 사이즈", "priceDelta": 500 }
+      ]
+    },
+    "milk": {
+      "id": "milk",
+      "labelKo": "우유 변경",
+      "required": false,
+      "selectionType": "single",
+      "options": [
+        { "id": "regular-milk", "labelKo": "일반 우유", "priceDelta": 0 },
+        { "id": "oat-milk", "labelKo": "귀리 우유로 변경", "priceDelta": 700 },
+        { "id": "soy-milk", "labelKo": "두유로 변경", "priceDelta": 700 }
+      ]
+    }
+  },
+  "products": [
+    {
+      "id": "americano",
+      "category": "coffee",
+      "nameKo": "아메리카노",
+      "descriptionKo": "깔끔하고 진한 에스프레소 두 샷에 물을 더했어요.",
+      "voiceDescriptionKo": "아메리카노, 4,500원. 깔끔하고 진한 에스프레소 두 샷에 물을 더했어요.",
+      "price": 4500,
+      "icon": "Coffee",
+      "optionGroupIds": ["temperature", "size"],
+      "available": true
+    },
+    {
+      "id": "cafe-latte",
+      "category": "coffee",
+      "nameKo": "카페라떼",
+      "descriptionKo": "에스프레소에 부드러운 우유를 더한 기본 라떼예요.",
+      "voiceDescriptionKo": "카페라떼, 5,000원. 에스프레소에 부드러운 우유를 더한 기본 라떼예요.",
+      "price": 5000,
+      "icon": "CupSoda",
+      "optionGroupIds": ["temperature", "size", "milk"],
+      "available": true
+    },
+    {
+      "id": "vanilla-latte",
+      "category": "coffee",
+      "nameKo": "바닐라 라떼",
+      "descriptionKo": "카페라떼에 바닐라 시럽을 더해 은은하게 달아요.",
+      "voiceDescriptionKo": "바닐라 라떼, 5,500원. 카페라떼에 바닐라 시럽을 더해 은은하게 달아요.",
+      "price": 5500,
+      "icon": "Candy",
+      "optionGroupIds": ["temperature", "size", "milk"],
+      "available": true
+    },
+    {
+      "id": "grapefruit-ade",
+      "category": "beverage",
+      "nameKo": "자몽 에이드",
+      "descriptionKo": "상큼한 자몽 과육이 그대로 씹히는 탄산 에이드예요.",
+      "voiceDescriptionKo": "자몽 에이드, 5,500원. 상큼한 자몽 과육이 그대로 씹히는 탄산 에이드예요.",
+      "price": 5500,
+      "icon": "Citrus",
+      "optionGroupIds": ["size"],
+      "available": true
+    },
+    {
+      "id": "peach-iced-tea",
+      "category": "beverage",
+      "nameKo": "복숭아 아이스티",
+      "descriptionKo": "달콤한 복숭아 향을 더한 차가운 홍차예요.",
+      "voiceDescriptionKo": "복숭아 아이스티, 5,000원. 달콤한 복숭아 향을 더한 차가운 홍차예요.",
+      "price": 5000,
+      "icon": "Leaf",
+      "optionGroupIds": ["size"],
+      "available": true
+    },
+    {
+      "id": "milk",
+      "category": "beverage",
+      "nameKo": "우유",
+      "descriptionKo": "카페인 없이 편하게 즐길 수 있는 흰 우유예요.",
+      "voiceDescriptionKo": "우유, 3,000원. 카페인 없이 편하게 즐길 수 있는 흰 우유예요.",
+      "price": 3000,
+      "icon": "Milk",
+      "optionGroupIds": ["temperature"],
+      "available": true
+    },
+    {
+      "id": "cheesecake",
+      "category": "dessert",
+      "nameKo": "치즈케이크",
+      "descriptionKo": "진한 크림치즈로 만든 부드러운 뉴욕 치즈케이크 한 조각이에요.",
+      "voiceDescriptionKo": "치즈케이크, 6,500원. 진한 크림치즈로 만든 부드러운 뉴욕 치즈케이크 한 조각이에요.",
+      "price": 6500,
+      "icon": "CakeSlice",
+      "optionGroupIds": [],
+      "available": true
+    },
+    {
+      "id": "chocolate-brownie",
+      "category": "dessert",
+      "nameKo": "초코 브라우니",
+      "descriptionKo": "진한 초콜릿이 촉촉하게 씹히는 브라우니 한 조각이에요.",
+      "voiceDescriptionKo": "초코 브라우니, 5,000원. 진한 초콜릿이 촉촉하게 씹히는 브라우니 한 조각이에요.",
+      "price": 5000,
+      "icon": "Cookie",
+      "optionGroupIds": [],
+      "available": true
+    },
+    {
+      "id": "croque-monsieur",
+      "category": "food",
+      "nameKo": "크로크무슈",
+      "descriptionKo": "햄과 치즈를 넣고 노릇하게 구운 뒤 치즈를 한 번 더 올렸어요.",
+      "voiceDescriptionKo": "크로크무슈, 7,500원. 햄과 치즈를 넣고 노릇하게 구운 뒤 치즈를 한 번 더 올렸어요.",
+      "price": 7500,
+      "icon": "Sandwich",
+      "optionGroupIds": [],
+      "available": true
+    },
+    {
+      "id": "egg-sandwich",
+      "category": "food",
+      "nameKo": "에그 샌드위치",
+      "descriptionKo": "부드러운 계란 샐러드를 듬뿍 채운 담백한 샌드위치예요.",
+      "voiceDescriptionKo": "에그 샌드위치, 6,000원. 부드러운 계란 샐러드를 듬뿍 채운 담백한 샌드위치예요.",
+      "price": 6000,
+      "icon": "EggFried",
+      "optionGroupIds": [],
+      "available": true
+    }
+  ]
+}

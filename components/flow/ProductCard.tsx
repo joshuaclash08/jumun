@@ -1,6 +1,26 @@
+"use client";
+
 import * as React from "react";
+import { motion } from "motion/react";
+import {
+  Coffee,
+  CupSoda,
+  Candy,
+  Citrus,
+  Leaf,
+  Milk,
+  CakeSlice,
+  Cookie,
+  Sandwich,
+  EggFried,
+  UtensilsCrossed,
+  type LucideIcon,
+} from "lucide-react";
 import type { Product } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { useAccessibilityStore } from "@/store/useAccessibilityStore";
 
 interface ProductCardProps {
   product: Product;
@@ -8,47 +28,86 @@ interface ProductCardProps {
   className?: string;
 }
 
+// product.icon names one of these exports directly (see lib/data/menu.json) --
+// one icon per item, not per category, so items in the same category stay
+// visually distinguishable in the list (docs/design-system.md's Imagery spec).
+// Named imports (not a `* as` namespace lookup) so unused lucide-react icons
+// tree-shake out of the bundle.
+const PRODUCT_ICONS: Record<string, LucideIcon> = {
+  Coffee,
+  CupSoda,
+  Candy,
+  Citrus,
+  Leaf,
+  Milk,
+  CakeSlice,
+  Cookie,
+  Sandwich,
+  EggFried,
+};
+
 export function ProductCard({ product, onClick, className }: ProductCardProps) {
+  const reduceMotion = useAccessibilityStore((state) => state.reducedMotion);
+
   // Use voice description if provided, otherwise fallback to name and price.
-  const ariaLabel = product.voiceDescriptionKo || `${product.nameKo}, ${product.price.toLocaleString("ko-KR")}원`;
+  const baseLabel = product.voiceDescriptionKo || `${product.nameKo}, ${product.price.toLocaleString("ko-KR")}원`;
+  const ariaLabel = product.available ? baseLabel : `${baseLabel}, 품절된 상품입니다`;
+
+  const Icon = PRODUCT_ICONS[product.icon] ?? UtensilsCrossed;
 
   return (
-    <button
-      onClick={onClick}
-      disabled={!product.available}
-      aria-label={ariaLabel}
-      aria-disabled={!product.available}
-      className={cn(
-        "group relative flex w-full items-center gap-4 rounded-2xl bg-card p-4 text-left shadow-[0_1px_2px_rgba(33,30,26,0.06),_0_1px_1px_rgba(33,30,26,0.04)] outline-none transition-transform active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100",
-        "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-        className
-      )}
+    <motion.div
+      whileTap={!product.available || reduceMotion ? undefined : { scale: 0.98 }}
+      transition={{ type: "spring", stiffness: 400, damping: 25 }}
+      className="w-full"
     >
-      {/* Abstract geometric placeholder instead of actual images (per DESIGN.md) */}
-      <div
-        className="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl bg-accent"
-        aria-hidden="true"
+      <button
+        type="button"
+        onClick={onClick}
+        disabled={!product.available}
+        aria-label={ariaLabel}
+        className={cn(
+          "w-full text-left outline-none rounded-[--radius-md] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+          !product.available && "cursor-not-allowed",
+          className
+        )}
       >
-        <span className="text-2xl opacity-20">☕</span>
-      </div>
+        <Card
+          className={cn(
+            "group relative flex w-full min-h-[96px] items-center gap-3 rounded-[--radius-md] bg-card p-3 shadow-xs transition-colors",
+            !product.available && "opacity-50 bg-muted/40"
+          )}
+        >
+          {/* Per-item icon -- fixed 1:1 container, flat 2-tone illustration treatment */}
+          <div
+            className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[--radius-sm] bg-muted text-muted-foreground"
+            aria-hidden="true"
+          >
+            <Icon className="h-7 w-7 stroke-[1.5]" />
+          </div>
 
-      <div className="flex flex-1 flex-col gap-1">
-        <h3 className="text-lg font-bold leading-tight text-card-foreground">
-          {product.nameKo}
-        </h3>
-        <p className="line-clamp-2 text-sm text-muted-foreground">
-          {product.descriptionKo}
-        </p>
-        <div className="mt-1 font-semibold text-card-foreground">
-          {product.price.toLocaleString("ko-KR")}원
-        </div>
-      </div>
-      
-      {!product.available && (
-        <div className="absolute right-4 top-4 rounded-full bg-muted px-2 py-1 text-xs font-bold text-muted-foreground">
-          품절
-        </div>
-      )}
-    </button>
+          <div className="flex flex-1 min-w-0 flex-col gap-0.5 text-left">
+            <h3 className="text-base font-bold leading-tight text-card-foreground">
+              {product.nameKo}
+            </h3>
+            <p className="line-clamp-2 text-sm text-muted-foreground">
+              {product.descriptionKo}
+            </p>
+            <div className="mt-1 font-bold text-base text-foreground">
+              {product.price.toLocaleString("ko-KR")}원
+            </div>
+          </div>
+
+          {!product.available && (
+            <Badge
+              variant="outline"
+              className="absolute right-3 top-3 bg-muted px-2.5 py-0.5 text-xs font-bold text-muted-foreground border-border"
+            >
+              품절
+            </Badge>
+          )}
+        </Card>
+      </button>
+    </motion.div>
   );
 }
