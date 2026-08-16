@@ -99,17 +99,20 @@ interface ProductOptionGroup {
   labelKo: string;
   required: boolean;
   selectionType: 'single' | 'multiple';
+  maxSelections?: number; // optional limit for multiple selection groups
   options: ProductOption[];
 }
 
 interface Product {
   id: string;
-  category: 'coffee' | 'beverage' | 'dessert' | 'food';
+  category: string; // 'coffee' | 'decaf' | 'tea' | 'beverage' | 'dessert' | 'bakery' | 'food' | 'brunch' | 'md'
   nameKo: string;
   descriptionKo: string;
   voiceDescriptionKo: string; // fuller sentence for screen-reader labels, see docs/design-system.md
   price: number; // KRW, base price before options
-  icon: string; // lucide-react export name, one per product -- components/flow/ProductCard.tsx
+  icon: string; // lucide-react export name, one per product
+  imageUrl?: string; // full-bleed photography asset path (/images/menu/*.jpg)
+  themeBg?: string; // backdrop tint color hex matching the product photo
   optionGroups: ProductOptionGroup[];
   available: boolean;
 }
@@ -123,6 +126,8 @@ interface CartItemSelection {
 interface CartItem {
   id: string; // unique per line item, not per product -- same product with different options is a separate line
   productId: string;
+  nameKo: string;
+  optionsSummary?: string;
   quantity: number;
   selections: CartItemSelection[];
   unitPrice: number; // base price + selected option deltas, snapshotted at add-time

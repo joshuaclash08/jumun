@@ -16,10 +16,11 @@ Pure logic, no rendering — these should run in milliseconds and form the bulk 
 
 Query by role and accessible name, not by test-id or CSS class — a test that only passes because of a `data-testid` proves nothing about whether a screen reader user could actually find the element. Priority components:
 
-- Product card / product detail sheet: option selection updates the price shown, `담기` adds the right line item (right product, right options, right quantity).
-- Cart sheet: quantity controls, remove-with-undo (the toast's undo action actually restores the item, not just displays).
-- Settings panel: each toggle actually flips the corresponding store value; font-scale slider updates the live preview.
-- Bottom action bar: always renders the current screen's single primary action at the documented 56/64px height — a regression that silently shrinks a CTA below the 44px floor (`docs/design-system.md`) is exactly the kind of bug unit tests on logic alone won't catch.
+- **Product card / Product detail sheet** (`tests/unit/components.test.tsx`): Option selection updates the price shown, `담기` adds the right line item (right product, right options, right quantity), `maxSelections` limit is enforced with toast notification.
+- **Cart sheet & Confirmation** (`tests/unit/components.test.tsx`): Quantity controls, remove-with-undo, itemized receipt details, hero order number display.
+- **Navigation & Staff Call** (`tests/unit/components.test.tsx`): `HeaderBar` back button, `OrderTypeSelectView` & `TableSelectView` navigation, `StaffCallButton` two-step drawer flow (idle confirm $\to$ animated checkmark success state).
+- **Settings pages & Checkbox system** (`tests/unit/settings.test.tsx`): Checkbox primitive toggle, text-only settings rows, auto-save feedback, default payment method selection, full axe accessibility audit with zero violations.
+- **Bottom action bar**: Always renders the current screen's single primary action at the documented 56/64px height with progressive blur background masks.
 
 ## Automated accessibility checks — axe-core
 

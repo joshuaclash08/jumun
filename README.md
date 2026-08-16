@@ -4,7 +4,7 @@ A barrier-free self-order platform. Scan a QR/NFC code at your table with your o
 
 ## Status
 
-**Phase 1, documentation stage.** This repository currently contains planning documents only — no application code, no dependencies installed yet. See [plan.md](plan.md) for the full roadmap and exactly what "documentation stage" means.
+**Phase 1 Web Prototype MVP — Complete & Polished.** The full barrier-free self-order web application is built, polished with the Toss Design System visual language, and thoroughly verified with automated unit, component, and axe accessibility tests. See [plan.md](plan.md) and [UPDATE.md](UPDATE.md) for detailed progress and future milestones.
 
 ## Documentation
 

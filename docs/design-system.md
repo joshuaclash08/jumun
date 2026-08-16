@@ -161,9 +161,18 @@ Maps directly onto shadcn's `Button` variant prop (`default`/`secondary`/`ghost`
 
 ## Imagery
 
-No real menu photography exists yet (see `PRODUCT.md`'s Evidence on Hand), and attempting photorealistic fake food photos for a fictional menu risks landing exactly in "obviously AI-generated stock photo" territory — the opposite of what's being asked for. Instead: **a consistent, flat, geometric icon/illustration treatment per menu item**, not photography. Concretely — a fixed-aspect (1:1) container per product, `--radius-sm` corners, a `lucide-react` icon (one per product, named in `lib/data/menu.json`, not shared across a whole category — see `components/flow/ProductCard.tsx`), consistent stroke weight across every item, no gradients, no drop shadows on the icon itself. This reads as a deliberate design system decision rather than a placeholder, is achievable without real assets or image generation, and sidesteps the fake-photo problem entirely. Every image still carries real, descriptive alt text (see "Screen-reader content" below) — the illustration is a visual aid, not the source of truth for what the item is.
+Per `docs/decisions/0013-menu-photography.md`, menu/product imagery uses **real food/beverage photography** (`next/image` + `public/images/menu/*.jpg`), while empty and celebratory states remain **flat vector illustration** (`components/ui/TossIllustrations.tsx`).
 
-**Category tint, not the brand accent.** Each icon's soft-fill tile is colored by its menu category (coffee → amber, beverage → sky, dessert → pink, food → orange — `CATEGORY_TINT` in `ProductCard.tsx`), not Toss Blue. Untouched by the Toss realignment — this is a deliberate carve-out from the One Accent Rule: these are informational/categorical tints on a repeated list element, not calls-to-action, so they don't compete with the single blue CTA per screen the rule protects. Every tint pairs a soft 100-level fill with a 700/800-level foreground of the same hue — same two-tone structure as the rest of the icon treatment, just category-colored instead of monochrome. Sold-out items fall back to the flat neutral (`--color-border-subtle`-family) tile regardless of category, matching the card's own desaturated treatment for unavailable items.
+### 1. Product Photography (Menu Cards, Featured Carousel, Detail Hero)
+- **Full-bleed photography**: The product photo fills the entire card container with `object-cover`.
+- **Liquid-glass info overlay**: Rather than a flat, solid info block, the name and price sit in an absolutely-positioned bottom overlay with a subtle theme-matched tint (`themeBg` hex with ~30% alpha), `backdrop-blur-sm`, and a progressive fade-out mask (`mask-image: linear-gradient(to top, black 30%, transparent 100%)`).
+- **Fluid vertical title expansion**: Product cards expand vertically when product titles wrap across multiple lines, preserving legibility without text clamping.
+- **Desaturated sold-out treatment**: Unavailable items apply `grayscale opacity-60` with a prominent "품절" badge.
+
+### 2. Flat Vector Illustration (Empty & Celebratory States)
+- **Empty cart & Staff call**: Rendered with hand-crafted SVG illustrations (`TossIllustrations.tsx`) matching Toss's clean, geometric icon language.
+- **Celebration check**: Rendered with fluid spring animation (`successPop`) in `ConfirmationStep.tsx` and the staff-call success drawer.
+- Every image and illustration carries descriptive `alt` text or accessible `aria-label`s — visual assets serve as aids, not the sole carriers of information.
 
 ## Loading states
 

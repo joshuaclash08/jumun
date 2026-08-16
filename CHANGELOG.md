@@ -249,3 +249,29 @@ Every `text-xs` (12px) and `text-sm` (14px) instance across the app bumped to `t
 - `components/flow/ProductCard.tsx`, `components/flow/FeaturedMenuSection.tsx` — replaced the `Card`-wrapped fixed-height photo tile (illustration-era layout) with a full-bleed photo filling the entire card; the name/price info panel is now an absolutely-positioned overlay at the bottom instead of a separate stacked block.
 - Same two files, this pass: the info panel's tint dropped from a flat `${cardBg}E8` (91% alpha) block with a hard `border-t` seam to `${cardBg}4D` (~30% alpha, liquid-glass level) with `backdrop-blur-sm` (down from `-md`, so the photo stays legible through the glass instead of fogging), both faded out via a shared, deliberately long `mask-image: linear-gradient(to top, black 30%, transparent 100%)` (the same fade technique every sheet's `DrawerFooter` already uses, e.g. `CheckoutSheet`/`CartDrawer`/`ProductDetailSheet`/`StaffCallButton`) — the tint and blur blend gradually into the photo well above the text instead of cutting off at a flat line or fading abruptly.
 
+### Added — accessible checkbox primitive & settings migration
+
+- `components/ui/checkbox.tsx` — new Radix-based Checkbox primitive with Toss-token styling, three sizes (`sm: 20px`, `default: 24px`, `lg: 28px`), and high-contrast check indicators.
+- `tests/unit/settings.test.tsx` — comprehensive unit and axe accessibility test suite covering Checkbox interaction, settings toggles without decorative icons, auto-save feedback, and default payment method selection with zero violations.
+
+### Changed — settings UI & accessibility refinements
+
+- `app/settings/page.tsx`, `app/settings/accessibility/page.tsx`, `app/settings/payment/page.tsx` — removed decorative icons from list rows for a cleaner, text-focused presentation; switched toggle rows to use the new `Checkbox` component with full-row clickability (`htmlFor`/`onClick`); added auto-save feedback banners and bottom "설정 완료" action buttons with progressive blur background masks.
+- `components/settings/SettingsHeader.tsx` — standardized to a 3-column grid (`[40px_1fr_40px]`) with a tactile circular back button and centered title.
+- `components/settings/SettingsRow.tsx` — made `icon` prop optional, added `htmlFor` and `onClick` support for accessible label wrapping, and standardized row hover/active states.
+
+### Changed — navigation, staff call, product detail & confirmation flow
+
+- `components/layout/HeaderBar.tsx` — redesigned to a 3-column grid (`grid-cols-[40px_1fr_40px]`) with a top-left circular back navigation link, centered store title and table/takeout badge, and balanced right spacer (removing redundant top-right settings icon).
+- `components/flow/StaffCallButton.tsx` — redesigned modal into a dedicated two-step bottom drawer: an idle confirmation step ("직원을 호출할까요?", table badge, side-by-side cancel/call buttons) and a success completion step (animated Toss celebration checkmark, green table badge, "호출이 완료되었어요!" title, single "확인" dismiss button).
+- `components/flow/ProductDetailSheet.tsx` — added overlaid circular back button directly over the hero image stage; moved "필수" badges directly beside option group titles; eliminated redundant "(1개 선택)" and "추가금 없음" text; added `maxSelections` limit enforcement with accessible toast notifications; converted bottom action bar to a fixed progressive blur bar with `RollingPrice`.
+- `components/flow/FeaturedMenuSection.tsx` — updated badge copy from "BEST" to "인기 메뉴" with numbered ranking tags (1, 2, 3위) and simplified accessible announcement labels.
+- `components/flow/ConfirmationStep.tsx` — expanded layout to full height, enlarged hero order number display (4xl/5xl font size), polished receipt card, and made the bottom "새로운 주문하기" CTA sticky with session state reset.
+- `components/ui/drawer.tsx` — added `overscroll-contain` and `data-lenis-prevent=""` to drawer overlay and content containers, and wired a grab-friendly `DrawerHandle`.
+- `app/providers.tsx` — configured `ReactLenis` with `allowNestedScroll: true` and `autoToggle: true` to prevent scroll collisions inside drawers.
+- `store/useCartStore.ts` — added `showToast` convenience method; updated `updateQuantity` so reducing quantity to 0 triggers `removeItem`; updated `resetOrder` to clear `storeInfo`.
+- `lib/types/menu.ts`, `lib/data/menu.json` — added `maxSelections?: number` support to `ProductOptionGroup`.
+- `next.config.ts` — added `devIndicators: false`.
+- `tests/unit/components.test.tsx` — added comprehensive tests covering HeaderBar back navigation, StaffCallButton 2-step drawer flow, ProductDetailSheet overlaid back button & maxSelections validation, and OrderTypeSelectView / TableSelectView rendering.
+
+

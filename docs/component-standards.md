@@ -4,55 +4,51 @@ This document is the prescriptive layer on top of `DESIGN.md` (tokens) and `docs
 
 ---
 
-## 1. Product imagery tiles & Card Geometry
+## 1. Product Photography Cards & Card Geometry
 
-> **Stale as of `docs/decisions/0013-menu-photography.md` (2026-08-16)**: menu/product imagery moved from the `TossIllustrations.tsx` illustrations this table describes to real photography (`next/image` + `product.imageUrl`) in `ProductCard.tsx`, `FeaturedMenuSection.tsx`, and `ProductDetailSheet.tsx`. Those three components were under active, fast-moving revision at the time of this note, so the table below (tile sizes, illustration `size` prop, borderless treatment) was not re-measured against the new implementation — treat it as historical until a follow-up pass re-documents the photo-card specs once that work settles. The empty/celebratory-state row is unaffected and still accurate.
+As established in `docs/decisions/0013-menu-photography.md`, the catalog renders in a **2-Column Full-Bleed Photo Card Grid with Fluid Vertical Title Auto-Expansion** (`grid grid-cols-2 gap-3 sm:gap-4`):
 
-Every product/illustration graphic (`components/ui/TossIllustrations.tsx`) sits seamlessly inside a card without separate tinted box containers. As of ADR 0012, the product catalog is rendered in a **2-Column Borderless Card Grid with Fluid Vertical Title Auto-Expansion** (`grid grid-cols-2 gap-3 sm:gap-4`):
-
-| Context | Container / Tile size | Illustration `size` prop | Card Treatment | Where |
+| Context | Container / Aspect | Imagery Source | Card Treatment | Where |
 |---|---|---|---|---|
-| Menu 2-column card | **`h-28 sm:h-34 w-full`**, `rounded-[18px]` | `62` | Borderless, bottom-to-top gradient fade, fluid vertical auto-height for titles | `ProductCard.tsx` |
-| Product detail hero stage | **`h-52 sm:h-60 w-full`**, `rounded-[24px]` | `110` | Borderless, bottom gradient fade | `ProductDetailSheet.tsx` |
-| Featured/carousel card | **`h-28 w-full`**, `rounded-[18px]` | `68` | Borderless, bottom gradient fade, fluid title | `FeaturedMenuSection.tsx` |
-| Empty/celebratory states (empty cart, staff-call) | **96–120px**, `rounded-[22–24px]` | `80–120` | Clean illustration | `CartDrawer.tsx`, `StaffCallButton.tsx` |
+| Menu 2-column card | **`aspect-[4/3] w-full`**, `rounded-[20px]` | Real photo (`next/image`) | Full-bleed photo, liquid-glass info panel, fluid auto-height | `ProductCard.tsx` |
+| Product detail hero stage | **`h-56 sm:h-64 w-full`**, `rounded-[24px]` | Real photo (`next/image`) | Hero photo with overlaid top-left back button | `ProductDetailSheet.tsx` |
+| Featured/carousel card | **`w-40 shrink-0`**, `rounded-[20px]` | Real photo (`next/image`) | Full-bleed photo, numbered ranking badge | `FeaturedMenuSection.tsx` |
+| Empty/celebratory states | **80–120px**, `rounded-[22–24px]` | Vector illustration (`TossIllustrations.tsx`) | Vector art on soft surface | `CartDrawer.tsx`, `StaffCallButton.tsx`, `ConfirmationStep.tsx` |
 
 ### Card Outline & Image Background Standard
-- **No outer card outline**: Cards use `border-none shadow-none` for a clean, seamless surface blending into the canvas.
-- **No tinted box backgrounds**: Rather than enclosing images in a flat `#F9FAFB` box, images render seamlessly.
-- **Fluid Vertical Title Auto-Expansion**: Fixed height clamping is removed (`break-keep`, `line-clamp-none`); when product titles span 2, 3, or more lines, the card smoothly auto-expands vertically.
-- **Bottom-to-top gradient fade**: A progressive gradient (`from-card via-card/40 to-transparent`) spans the bottom section of the photo area, decreasing blur/opacity upwards to smoothly transition text into the crisp image.
+- **Full-bleed photography**: Photos fill their container completely with `object-cover`.
+- **Liquid-glass info panel**: Info panel uses a semi-transparent theme tint (`themeBg` hex with 30% alpha), `backdrop-blur-sm`, and a top fade mask (`mask-image: linear-gradient(to top, black 30%, transparent 100%)`).
+- **Fluid Vertical Title Auto-Expansion**: Product names wrap naturally without truncation (`break-keep`, `line-clamp-none`).
+- **Desaturated sold-out treatment**: Sold-out products use `grayscale opacity-60` with a prominent "품절" badge.
 
 ---
 
 ## 2. Universal Navigation & Buttons
 
-### Universal Top-Left `<` (ChevronLeft) Back Navigation — 48×48px Round
-Every sub-screen, page, and drawer overlay (`SettingsHeader`, `ProductDetailSheet`, `CartDrawer`, `CheckoutSheet`, `StaffCallButton`, `QrScannerModal`) features a standardized **Top-Left `<` Back Button**:
-- Target: **48×48px circular (`h-12 w-12 rounded-full`)**, `variant="ghost" size="icon"`.
-- Icon: **`ChevronLeft` (`h-7 w-7 stroke-[2.8]`)** for strong, prominent legibility.
-- Motion: `motion.div` with `whileTap={{ scale: 0.90 }}` spring physics.
+### Universal Top-Left `<` (ChevronLeft) Back Navigation
+Every sub-screen, page, and drawer overlay (`HeaderBar`, `SettingsHeader`, `ProductDetailSheet`, `CartDrawer`, `CheckoutSheet`, `StaffCallButton`, `QrScannerModal`) features a standardized **Top-Left `<` Back Button**:
+- Target: **40×40px or 44×44px circular**, `variant="ghost" size="icon"`.
+- Icon: **`ChevronLeft` (`stroke-[2.5]` or `stroke-[2.8]`)** for strong, prominent legibility.
+- Motion: `whileTap={{ scale: 0.90 }}` spring physics.
 
-### HeaderBar & Settings Button — Top Header
-`HeaderBar.tsx` renders the store name, table badge, and a top-right **48×48px circular Settings button (`h-12 w-12 rounded-full border border-border shadow-2xs`)** with centered `22px` (`h-5.5 w-5.5`) icon.
+### HeaderBar Standard
+`HeaderBar.tsx` renders a 3-column grid (`grid grid-cols-[40px_1fr_40px]`):
+- Left: 40×40px circular back button with `ChevronLeft`.
+- Center: Store name and table/takeout pill badge.
+- Right: Balanced spacer to preserve perfect center alignment.
 
 ### Category Navigation Bar with CSS Edge Fade Mask
-`MenuCategoryHeader.tsx` is `sticky top-0 z-40 w-full bg-background/95 backdrop-blur-md py-2.5`. It uses a CSS gradient mask (`mask-image: linear-gradient(to right, transparent 0%, black 24px, black calc(100% - 24px), transparent 100%)`) so category pills smoothly dissolve at the left and right edges without abrupt box clipping or card bleed-through.
+`MenuCategoryHeader.tsx` is `sticky top-0 z-40 w-full bg-background/95 backdrop-blur-md py-2.5`. It uses a CSS gradient mask (`mask-image: linear-gradient(to right, transparent 0%, black 24px, black calc(100% - 24px), transparent 100%)`) so category pills smoothly dissolve at both edges.
 
-### Fixed Bottom-Left Staff Call Button
-`StaffCallButton` is fixed at the bottom-left (`fixed bottom-5 left-4 z-50`), providing a 64×64px circular floating action button paired seamlessly with the floating Cart Summary CTA (`left-22 right-4`).
+### Fixed Bottom-Left Staff Call Button (Two-Step Drawer)
+`StaffCallButton` is fixed at the bottom-left (`fixed bottom-5 left-4 z-50`) for dine-in orders:
+- Triggers a dedicated two-step drawer: idle confirmation ("직원을 호출할까요?") → animated checkmark success state ("호출이 완료되었어요!").
+- Fully accessible with live announcements and haptics.
 
-### `size="cta"` (64px) vs `size="lg"` (56px)
-- **`size="cta"` (64px)**: Reserved exclusively for the flow-culminating primary action (`CartDrawer`, `CheckoutSheet`, `ProductDetailSheet`, `CartSummaryPill`).
-- **`size="lg"` (56px)**: Used for general primary actions (`Settings`, `ConfirmationStep`, `StaffCallButton`).
-
-### Quantity stepper — standardize on 32px
-Two different stepper button sizes exist for the identical +/- pattern: **28px** (`ProductDetailSheet.tsx`) and **32px** (`CartDrawer.tsx`). Standardize on **32px** (`h-8 w-8`) — it's a more comfortable repeat-tap target for a control a visitor is likely to tap multiple times in a row (unlike a one-shot close button), and it's already what the higher-frequency-use cart-quantity control uses.
-
-### Toss TDS Tactile Toggle Switch (50×30px)
-`components/ui/switch.tsx` is standardized to Toss Design System's tactile toggle:
-- Container: `h-[30px] w-[50px] rounded-full`, background `data-checked:bg-primary data-unchecked:bg-[#E5E8EB]`.
-- Thumb: `size-[26px] bg-white rounded-full`, smooth spring slide `data-checked:translate-x-[22px] data-unchecked:translate-x-[2px]`.
+### Checkbox Primitive for Settings & Lists
+`components/ui/checkbox.tsx` provides an accessible Radix-based checkbox primitive styled with Toss tokens:
+- Three sizes (`sm: 20px`, `default: 24px`, `lg: 28px`) with high-contrast check indicators.
+- Used in `/settings`, `/settings/accessibility`, and `/settings/payment` for clean, text-only option selection without decorative icon noise.
 
 ---
 

@@ -98,6 +98,8 @@ All interactive cards (`ProductCard`, option selector buttons, action buttons) m
 ### C. Bottom Sheet / Drawer Transitions
 - Driven by Radix + Vaul with CSS hardware-accelerated transforms.
 - Bottom sheet drawer contents animate smoothly with `data-[vaul-drawer-direction=bottom]` translateY transitions.
+- **Nested Scrolling Protection**: All drawer overlays and content containers carry `data-lenis-prevent=""` and `overscroll-contain` to prevent nested scroll wheel/touch collisions with background Lenis smooth scrolling.
+- **Two-Step Modal Transitions**: Multi-state drawers (e.g. `StaffCallButton` idle $\to$ success) utilize `<AnimatePresence mode="wait">` to cross-fade content smoothly (`0.15s` ~ `0.2s`) without collapsing the drawer shell.
 
 ### D. Staggered / Celebratory Sequences (Confirmation Step)
 Replaced the prior GSAP timeline with Motion `variants` — a parent container orchestrates the stagger, each child gets the standard fade-rise, and the success icon gets the §2 celebratory spring-pop instead of the group's default:
