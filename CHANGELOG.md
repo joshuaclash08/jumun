@@ -122,3 +122,91 @@ Nothing yet.
 - `components/settings/SettingsRow.tsx`, `app/settings/page.tsx`, `components/flow/CartDrawer.tsx` — icon tiles switched from flat gray to the same `bg-primary/10 text-primary` tint already used for the landing page's store icons, for a less monotone settings/empty-state look.
 - `components/ui/drawer.tsx` — `DrawerContent` now carries `shadow-layered` (previously no shadow at all on sheets beyond the browser-default overlay).
 - `DESIGN.md`, `docs/design-system.md` — updated the Card Surface hex, Shadow Vocabulary rgba values (now the actual Deep Charcoal `rgb(17,24,39)` rather than the retired palette's `rgb(33,30,26)`), and documented the category icon-tint palette as a deliberate carve-out from the One Accent Rule.
+
+### Added
+
+- `.claude/skills/toss-design` (note: lives at `~/.claude/skills/toss-design`, outside this repo — not tracked here) — a persistent skill packaging a merged Toss Design System reference used to drive the token realignment below.
+- `docs/decisions/0008-toss-visual-realignment.md` — ADR: token-level realignment to the Toss Design System reference (Toss Blue primary, pure-white surfaces, the Border-and-Shadow card rule superseding Never-Alone). Documents exactly which Toss values were adopted literally, which were deliberately kept off-spec for verified accessibility reasons (destructive red, the pure-white background tradeoff), and why.
+- `docs/decisions/0011-graduated-radius-scale.md` — ADR: the shipped radius scale is a 7-step graduated "squircle" system (buttons 10–18px by size, cards/sheets 20–32px), not the flat 12px-everywhere scale ADR 0008 originally specified — a later redesign pass superseded 0008's scale before it was ever committed. This history records the graduated scale as what actually shipped.
+- `docs/component-standards.md` — prescriptive component-level standards from a full-codebase audit: icon/illustration tile sizes per context (list row 56px / detail sheet 64px / carousel 96px), button size/variant usage rules (`cta` vs `lg`, close-button standard, stepper standard), settings row/card usage split, overlay-primitive policy (`Drawer` is the only bottom-sheet primitive in active use; `sheet.tsx`/`dialog.tsx` are dead code), toast model, radius-authoring convention.
+
+### Changed
+
+- `app/globals.css` — full Toss token realignment: `--primary` → Toss Blue `#0064ff` (4.92:1 on white, still clears the 4.5:1 floor), `--background`/`--card` → pure `#ffffff`, `--foreground` → `#191f28`, `--secondary` restyled as a tinted-blue wash (`#e8f3ff` fill / `#0050d9` text), `--ring` now the accent blue itself, radius scale repointed to the graduated 7-step squircle system, elevation shadow rgba recolored onto the new foreground. `--destructive` deliberately **not** changed to Toss's literal `#ff4040` — see `docs/decisions/0008` (computed 3.47:1, fails this codebase's 4.5:1 floor as `text-destructive` actually renders).
+- `components/ui/button.tsx`, `components/ui/card.tsx`, `components/ui/badge.tsx`, `components/ui/tabs.tsx` — radius/shadow tokens repointed to the graduated scale; boundary on `card.tsx` now reads via a literal `border border-border` plus `shadow-resting` instead of a `ring-1 ring-foreground/10` simulation (**Border-and-Shadow Rule**). `badge.tsx` and `button.tsx`'s `xs` size also grew (height/padding/icon) to fit the 16px text-size floor — see that entry below.
+- `DESIGN.md`, `docs/design-system.md` — rewritten to match the shipped tokens: color/typography/radius/elevation/button-hierarchy tables recomputed with fresh contrast ratios, two new Named Rules documented (**Border-and-Shadow**, superseding Never-Alone; **Status-Color Exception**, documenting why destructive red didn't adopt Toss's literal hex).
+
+### Changed — UI primitive cleanup
+
+- `components/ui/drawer.tsx` — bottom-sheet corner radius and shadow (`shadow-layered`) repointed to the new token scale.
+- `components/ui/switch.tsx` — upgraded to a Toss-style tactile 50×30px toggle with a 26px thumb and spring slide.
+
+### Removed
+
+- `components/ui/dialog.tsx`, `components/ui/sheet.tsx` — deleted. Per `docs/component-standards.md`'s overlay-primitive audit, `Drawer` is the only bottom-sheet primitive in active use; both were unreferenced dead code.
+
+### Added — illustration set & featured carousel
+
+- `components/ui/TossIllustrations.tsx` — hand-authored flat-vector illustration suite for every menu item (Americano, Latte, Cold Latte, Matcha, Ade, Lemonade, Cheesecake, Cookie, Sandwich, Brunch) and interactive status graphics (empty cart, staff-call bell, celebration check).
+- `components/flow/FeaturedMenuSection.tsx` — horizontal snap-scrolling "추천 메뉴" carousel with 14px-radius cards, BEST tags, and quick item select.
+- `components/ui/RollingPrice.tsx` — odometer-style animated price counter; each digit column animates independently with spring physics, respects `reducedMotion`, screen-reader accessible via an `ariaLabel` prop. Wired into `CartSummaryPill`, `CheckoutSheet`, `CartDrawer`, and `ProductDetailSheet`.
+- `components/flow/MenuSearchSection.tsx` — "원하는 메뉴를 못 찾으시겠나요?" fallback search section wired into `MenuClientView`, filtering the catalog by name/description/category client-side.
+- `docs/decisions/0012-top-left-navigation-and-large-card-grid.md` — ADR for the navigation/grid changes below.
+
+### Changed — menu & product flow redesign (ADR 0012)
+
+- `components/flow/ProductCard.tsx`, `components/flow/MenuCategoryHeader.tsx` — menu browsing moved from a 1-column list to a **2-column large card grid** (`grid grid-cols-2 gap-3.5`) matching Toss's mobile feed layout (`h-36` squircle visual container, floating status badges, 2-line title, tabular price).
+- `components/flow/{StaffCallButton,CartDrawer,CheckoutSheet,QrScannerModal,ProductDetailSheet}.tsx` — unified onto a standardized top-left `ChevronLeft` back button (44×44px, `rounded-[14px]`), replacing top-right `X` close buttons; close-button and quantity-stepper sizing also unified to the app's 44px/32px touch-target standards (previously 36–40px and 28px in places).
+- `components/flow/ProductDetailSheet.tsx` — added a hero visual stage (`h-52 sm:h-60 rounded-[24px]`), categorized option chips with a selection bounce, tactile quantity stepper, fixed bottom CTA.
+
+### Added — motion & fonts
+
+- `public/fonts/PretendardVariable.woff2` — self-hosted copy of the official Pretendard 1.3.9 release (byte-identical to the removed npm package's copy).
+- `docs/decisions/0009-motion-only-animation.md` — ADR: GSAP and `@gsap/react` removed; the one call site that used them (`ConfirmationStep.tsx`'s receipt-reveal stagger) is fully expressible with Motion's `variants`/`staggerChildren`.
+- `docs/decisions/0010-deeper-press-feedback.md` — ADR: press-feedback scale deepened app-wide on a two-tier standard (content controls `0.96`, icon/chip controls `0.90`), replacing a fuzzy `0.94`–`0.98` range.
+
+### Changed — motion & fonts
+
+- `app/layout.tsx` — Pretendard font source switched from `next/font/local` over the npm package to `public/fonts/PretendardVariable.woff2`; outer desktop-shell background moved off a hardcoded hex onto `bg-muted`.
+- `components/flow/ConfirmationStep.tsx` — GSAP timeline replaced with Motion `variants` (`receiptContainer`/`receiptItem`/`successPop`); confetti trigger moved to a plain `useEffect`; confetti particle palette swapped to the new Toss token family. `receipt-element` CSS-selector class removed as no-longer-meaningful.
+- `components/flow/MenuClientView.tsx` — the menu ↔ confirmation screen swap wrapped in `AnimatePresence`. Fixed a bug caught while verifying the transition: nesting `CheckoutSheet` inside the "menu" `AnimatePresence` branch meant a successful order could leave the checkout drawer stuck open showing a stale cart, because the screen-unmount and the drawer's own close transition fought each other. Fixed by hoisting `CartSummaryPill`/`ProductDetailSheet`/`CartDrawer`/`CheckoutSheet`/`A11yToastContainer` out of both branches into unconditional siblings (each already self-gates via its own `open` prop).
+- `docs/animation-guide.md` — GSAP references removed from the library-role table; press-scale standard rewritten into the two explicit tiers above, with a new "Celebratory / Content-Emphasis Motion" subsection documenting the `successPop` pattern.
+- Press-feedback scale deepened at every `whileTap` call site app-wide (`components/settings/SettingsRow.tsx`, `components/flow/{StaffCallButton,FeaturedMenuSection,ProductDetailSheet,CheckoutSheet,CartSummaryPill,LandingClientView,ProductCard,MenuCategoryHeader}.tsx`, `components/layout/HeaderBar.tsx`, `app/settings/{page,payment/page}.tsx`) plus the two CSS-only `:active` fallbacks (`components/ui/button.tsx`, `app/order/[storeId]/page.tsx`).
+- `DESIGN.md`, `docs/design-system.md`, `PRODUCT.md`, `docs/features.md`, `docs/tech-stack.md` — GSAP references updated to reflect the Motion-only animation layer; Pretendard sourcing note updated to the self-hosted path.
+
+### Removed
+
+- `gsap`, `@gsap/react`, `pretendard` npm dependencies (`bun remove`) — no longer referenced anywhere in source.
+
+### Changed — 16px text-size floor enforcement
+
+Every `text-xs` (12px) and `text-sm` (14px) instance across the app bumped to `text-base` (16px) — this product's own documented, non-negotiable text-size floor. `components/ui/badge.tsx` (`h-5`→`h-7`, `px-2 py-0.5`→`px-2.5 py-1`, `size-3`→`size-3.5`) and `button.tsx`'s `xs` size (`h-7`→`h-8`, `px-2`→`px-2.5`, `size-3`→`size-3.5`) grew to fit the larger text; `button.tsx`'s `default`/`sm` sizes and every shared UI primitive (`card.tsx`, `drawer.tsx`, `tabs.tsx`) lost their `text-sm`; `card.tsx`'s compact title no longer shrinks (`group-data-[size=sm]/card:text-sm` removed, no step below the floor remains). After this pass `text-xs`/`text-sm` are fully absent from the codebase.
+
+### Changed — settings & accessibility
+
+- `components/flow/LandingClientView.tsx` — hero stage, service-guide cards, and store list restyled to the graduated squircle token scale and press-feedback standard.
+- `components/flow/LandingHeroVisual.tsx` — hero visual sized down on narrow viewports (`h-48 w-48` → `h-32 w-32 sm:h-40 sm:w-40`, inner glyphs `h-32 w-32` → `h-24 w-24 sm:h-28 sm:w-28`) to fit the redesigned hero card.
+- `components/layout/HeaderBar.tsx`, `components/settings/{SettingsRow,SettingsHeader}.tsx`, `components/flow/A11yToastContainer.tsx` — restyled to the new token/radius/press-feedback system; `SettingsRow`'s `SettingsCard` gained an `ariaPressed?: boolean` prop, forwarded to its internal button's `aria-pressed` in selectable-card mode.
+- `app/template.tsx` — new page-level slide/fade transition wrapper (zero-duration fallback under `reducedMotion`).
+- `app/settings/page.tsx` — dyslexia-spacing, haptics, and timeout-extension controls consolidated onto the main settings page (previously only on the accessibility sub-page); font-scale selector rebuilt as a segmented pill control wrapped in `SettingsGroup` card containers; `size="cta"` swapped for `size="lg"` (`cta`'s 64px height is now reserved for `CartDrawer`/`CheckoutSheet`/`ProductDetailSheet`/`CartSummaryPill`); added a "초기화" reset flow that clears local/session storage and `resetAll()`s the accessibility store, and a "설정 완료" done button.
+- `app/settings/accessibility/page.tsx` — added an auto-save confirmation banner and a bottom "설정 완료" done button; `size="cta"` swapped for `size="lg"`; timeout-extension copy corrected (was documented as 4s→8s, actually 3s→7s).
+- `app/settings/payment/page.tsx` — payment-method cards now render via the shared `SettingsCard` instead of ~90% hand-duplicated markup; `size="cta"` swapped for `size="lg"`.
+- `app/order/[storeId]/page.tsx` — invalid-link CTA radius and press-feedback aligned to the new tokens.
+- `store/useAccessibilityStore.ts` — added `applyPreset("visual" | "hearing" | "reading" | "senior")` and `resetAll()` actions, covered by new unit tests; `applyPreset` is not yet wired to a preset-picker UI.
+- `docs/ux-planning-2026-08.md` — planning-only UX audit covering every page/popup/setting (close-button size drift, stepper size drift, `cta`-but-actually-56px mislabeling, `SettingsCard`/payment-page markup duplication, the text-size-floor violations above); findings applied this round marked accordingly.
+
+### Changed — data & utilities
+
+- `lib/types/menu.ts` — `ProductCategory` expanded from 4 fixed categories (`coffee`/`beverage`/`dessert`/`food`) to 9 explicit categories (adds `decaf`, `tea`, `bakery`, `brunch`, `md`) plus an open string union for forward compatibility.
+- `lib/data/menu.json` — catalog expanded with items across the new categories.
+- `lib/utils.ts` — added `generateUUID()`, a `crypto.randomUUID` wrapper with a manual fallback for insecure contexts (plain HTTP on a local network IP, where `crypto.randomUUID` is `undefined` on mobile browsers); `lib/services/A11yFeedbackService.ts` switched its toast-ID generation to it.
+- `next.config.ts` — added `allowedDevOrigins` so the dev server can be reached from LAN device IPs during on-device testing.
+- `tests/unit/components.test.tsx` — `ProductCard`'s accessible-label test updated to match the simplified "name, price" label (was the full `voiceDescriptionKo`); added `FeaturedMenuSection` render/click coverage.
+- `tests/unit/useAccessibilityStore.test.ts` — coverage for `applyPreset`/`resetAll`.
+
+### Fixed
+
+- `components/flow/LandingHeroVisual.tsx` — an earlier entry in this changelog recorded this file as "verified, not modified" during the Toss token realignment; it was in fact resized on a later pass (see above). Recorded here rather than editing that entry, per this file's own append-only policy.
+- An earlier draft of this changelog claimed `public/toss-assets/` (198 extracted Figma assets) was added to this repo. It was not — the illustration work shipped as hand-authored `components/ui/TossIllustrations.tsx` instead. The `toss-design` skill itself does exist, but only at `~/.claude/skills/toss-design`, outside this repo's tracked history.
+- Verified (not a bug): `w-38` (`FeaturedMenuSection.tsx`) and `h-13` (`LandingClientView.tsx`) both resolve correctly (152px/52px via computed style) — Tailwind v4's dynamic spacing scale generates arbitrary steps like these on demand.
+
