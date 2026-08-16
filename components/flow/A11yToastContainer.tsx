@@ -4,8 +4,30 @@ import * as React from "react";
 import { useCartStore } from "@/store/useCartStore";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
 import { motion, AnimatePresence } from "motion/react";
-import { Button } from "@/components/ui/button";
+import { Check, Bell, Trash2, TriangleAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { ToastItem } from "@/lib/types";
+
+function getToastVisual(toast: ToastItem) {
+  if (toast.kind === "error") {
+    return {
+      icon: <TriangleAlert className="h-4 w-4 stroke-[2.5] text-[#FF4D4D]" />,
+    };
+  }
+  if (toast.messageKo.includes("직원") || toast.messageKo.includes("호출")) {
+    return {
+      icon: <Bell className="h-4 w-4 stroke-[2.5] text-[#FFB020]" />,
+    };
+  }
+  if (toast.messageKo.includes("삭제")) {
+    return {
+      icon: <Trash2 className="h-4 w-4 stroke-[2.5] text-[#FF6B6B]" />,
+    };
+  }
+  return {
+    icon: <Check className="h-4 w-4 stroke-[3] text-[#3182F6]" />,
+  };
+}
 
 export function A11yToastContainer() {
   const toasts = useCartStore((state) => state.toasts);
@@ -20,7 +42,7 @@ export function A11yToastContainer() {
     if (toasts.length === 0) return;
 
     const currentToast = toasts[toasts.length - 1];
-    const duration = timeoutExtension ? 8000 : 4000;
+    const duration = timeoutExtension ? 7000 : 3200;
 
     const timer = setTimeout(() => {
       dismissToast(currentToast.id);
@@ -32,48 +54,57 @@ export function A11yToastContainer() {
   if (toasts.length === 0) return null;
 
   const currentToast = toasts[toasts.length - 1];
+  const { icon } = getToastVisual(currentToast);
 
   return (
     <div
-      className="fixed bottom-[calc(env(safe-area-inset-bottom)+5.5rem)] left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-[736px] z-50 flex justify-center pointer-events-none"
+      className="fixed top-[calc(env(safe-area-inset-top,0px)+1rem)] left-1/2 -translate-x-1/2 z-50 flex justify-center pointer-events-none px-4 w-full max-w-[768px]"
       role="region"
       aria-label="알림 메시지"
     >
       <AnimatePresence mode="wait">
         <motion.div
           key={currentToast.id}
-          initial={{ y: 20, opacity: 0, scale: 0.95 }}
+          initial={{ y: -20, opacity: 0, scale: 0.94 }}
           animate={{ y: 0, opacity: 1, scale: 1 }}
-          exit={{ y: -20, opacity: 0, scale: 0.95 }}
-          transition={{ duration: reducedMotion ? 0 : 0.2 }}
+          exit={{ y: -16, opacity: 0, scale: 0.94 }}
+          transition={{
+            type: "spring",
+            stiffness: 500,
+            damping: 32,
+            duration: reducedMotion ? 0 : undefined,
+          }}
           className={cn(
-            "pointer-events-auto flex w-full max-w-sm items-center justify-between gap-3 rounded-[--radius-lg] bg-foreground p-4 text-background shadow-floating"
+            "pointer-events-auto flex max-w-md items-center gap-2.5 rounded-full bg-[#191F28]/95 px-4.5 py-2.5 text-white shadow-[0_10px_28px_rgba(25,31,40,0.22)] border border-white/10"
           )}
         >
-          <span className="text-base font-semibold">{currentToast.messageKo}</span>
+          {/* Subtle Accent Icon */}
+          <div className="shrink-0 flex items-center justify-center" aria-hidden="true">
+            {icon}
+          </div>
 
+          {/* Toast Message Text */}
+          <span className="text-base font-semibold text-white/95 leading-none">
+            {currentToast.messageKo}
+          </span>
+
+          {/* Optional Inline Undo Action */}
           {currentToast.onUndo && (
-            <motion.div
-              whileTap={reducedMotion ? undefined : { scale: 0.95 }}
-              transition={{ type: "spring", stiffness: 400, damping: 25 }}
+            <button
+              type="button"
+              onClick={() => {
+                currentToast.onUndo?.();
+                dismissToast(currentToast.id);
+              }}
+              className="ml-1 shrink-0 text-base font-bold text-[#3182F6] hover:text-[#5299FF] transition-colors outline-none focus-visible:underline"
+              aria-label="방금 실행한 작업 취소"
             >
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                onClick={() => {
-                  currentToast.onUndo?.();
-                  dismissToast(currentToast.id);
-                }}
-                className="h-10 shrink-0 rounded-[--radius-md] bg-background/20 font-bold text-background hover:bg-background/30"
-                aria-label="방금 실행한 작업 취소"
-              >
-                실행 취소
-              </Button>
-            </motion.div>
+              취소
+            </button>
           )}
         </motion.div>
       </AnimatePresence>
     </div>
   );
 }
+

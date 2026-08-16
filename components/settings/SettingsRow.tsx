@@ -5,6 +5,9 @@ import Link from "next/link";
 import { ChevronRight, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+import { motion } from "motion/react";
+import { useAccessibilityStore } from "@/store/useAccessibilityStore";
+
 interface SettingsRowProps {
   icon: LucideIcon;
   label: string;
@@ -12,25 +15,40 @@ interface SettingsRowProps {
   href?: string;
   trailing?: React.ReactNode;
   className?: string;
+  iconBgClass?: string;
+  iconColorClass?: string;
 }
 
 /** One row inside a settings list group -- icon, label(+description), trailing control or chevron. */
-export function SettingsRow({ icon: Icon, label, description, href, trailing, className }: SettingsRowProps) {
+export function SettingsRow({
+  icon: Icon,
+  label,
+  description,
+  href,
+  trailing,
+  className,
+  iconBgClass = "bg-primary/10",
+  iconColorClass = "text-primary",
+}: SettingsRowProps) {
   const content = (
-    <div className={cn("flex min-h-[60px] items-center gap-3 px-4 py-3", className)}>
+    <div className={cn("flex min-h-[64px] items-center gap-3.5 px-4.5 py-4", className)}>
       <div
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[--radius-sm] bg-primary/10 text-primary"
+        className={cn(
+          "flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px]",
+          iconBgClass,
+          iconColorClass
+        )}
         aria-hidden="true"
       >
-        <Icon className="h-4.5 w-4.5" />
+        <Icon className="h-5 w-5" />
       </div>
-      <div className="flex flex-1 min-w-0 flex-col">
-        <span className="text-base font-semibold text-foreground">{label}</span>
+      <div className="flex flex-1 min-w-0 flex-col gap-0.5">
+        <span className="text-base font-bold text-foreground">{label}</span>
         {description && (
-          <span className="text-sm text-muted-foreground">{description}</span>
+          <span className="text-base font-medium text-muted-foreground">{description}</span>
         )}
       </div>
-      {trailing ?? (href && <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />)}
+      {trailing ?? (href && <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground/70" aria-hidden="true" />)}
     </div>
   );
 
@@ -38,7 +56,7 @@ export function SettingsRow({ icon: Icon, label, description, href, trailing, cl
     return (
       <Link
         href={href}
-        className="block outline-none transition-colors hover:bg-accent/30 focus-visible:bg-accent/60"
+        className="block outline-none transition-colors hover:bg-muted/30 focus-visible:bg-muted/50"
       >
         {content}
       </Link>
@@ -48,12 +66,97 @@ export function SettingsRow({ icon: Icon, label, description, href, trailing, cl
   return content;
 }
 
+/** Standalone rounded settings card matching Image 1 & Image 3 */
+export function SettingsCard({
+  icon: Icon,
+  label,
+  description,
+  href,
+  onClick,
+  trailing,
+  className,
+  iconBgClass = "bg-[#E8F3FF]",
+  iconColorClass = "text-[#0064FF]",
+  isSelected = false,
+  ariaPressed,
+}: SettingsRowProps & { onClick?: () => void; isSelected?: boolean; ariaPressed?: boolean }) {
+  const reduceMotion = useAccessibilityStore((state) => state.reducedMotion);
+
+  const cardInner = (
+    <div
+      className={cn(
+        "flex w-full items-center gap-4 rounded-[24px] bg-card p-4 sm:p-5 border transition-all shadow-resting text-left",
+        isSelected
+          ? "border-primary bg-primary/5 ring-2 ring-primary/20 shadow-layered"
+          : "border-border hover:border-primary/40 hover:shadow-layered",
+        className
+      )}
+    >
+      <div
+        className={cn(
+          "flex h-12 w-12 shrink-0 items-center justify-center rounded-[18px]",
+          iconBgClass,
+          iconColorClass
+        )}
+        aria-hidden="true"
+      >
+        <Icon className="h-6 w-6 stroke-[2.2]" />
+      </div>
+      <div className="flex flex-1 min-w-0 flex-col gap-0.5">
+        <span className="text-lg font-bold text-foreground leading-snug">{label}</span>
+        {description && (
+          <span className="text-base font-medium text-muted-foreground leading-relaxed">
+            {description}
+          </span>
+        )}
+      </div>
+      {trailing ?? (
+        <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground/70" aria-hidden="true" />
+      )}
+    </div>
+  );
+
+  if (href) {
+    return (
+      <motion.div
+        whileTap={reduceMotion ? undefined : { scale: 0.96 }}
+        transition={{ type: "spring", stiffness: 400, damping: 25 }}
+        className="w-full"
+      >
+        <Link
+          href={href}
+          className="block outline-none rounded-[24px] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        >
+          {cardInner}
+        </Link>
+      </motion.div>
+    );
+  }
+
+  if (onClick) {
+    return (
+      <motion.button
+        type="button"
+        aria-pressed={ariaPressed}
+        whileTap={reduceMotion ? undefined : { scale: 0.96 }}
+        transition={{ type: "spring", stiffness: 400, damping: 25 }}
+        onClick={onClick}
+        className="w-full text-left outline-none rounded-[24px] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+      >
+        {cardInner}
+      </motion.button>
+    );
+  }
+
+  return <div className="w-full">{cardInner}</div>;
+}
+
 /** Rounded card container holding a group of SettingsRows, divided by hairlines. */
 export function SettingsGroup({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
     <div
       className={cn(
-        "overflow-hidden rounded-[--radius-md] bg-card shadow-resting divide-y divide-border",
+        "overflow-hidden rounded-[24px] bg-card border border-border shadow-resting divide-y divide-border/60",
         className
       )}
     >

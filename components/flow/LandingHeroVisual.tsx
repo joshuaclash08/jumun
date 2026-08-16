@@ -27,7 +27,7 @@ export function LandingHeroVisual({ className }: LandingHeroVisualProps) {
   return (
     <div
       className={cn(
-        "relative flex h-48 w-48 items-center justify-center select-none",
+        "relative flex h-32 w-32 sm:h-40 sm:w-40 items-center justify-center select-none",
         className
       )}
       aria-hidden="true"
@@ -43,7 +43,7 @@ export function LandingHeroVisual({ className }: LandingHeroVisualProps) {
             className="flex items-center justify-center"
           >
             <svg
-              className="h-32 w-32 text-foreground"
+              className="h-24 w-24 sm:h-28 sm:w-28 text-foreground"
               viewBox="0 0 48 48"
               fill="none"
               stroke="currentColor"
@@ -97,7 +97,7 @@ export function LandingHeroVisual({ className }: LandingHeroVisualProps) {
             className="flex items-center justify-center"
           >
             <svg
-              className="h-32 w-32 text-foreground"
+              className="h-24 w-24 sm:h-28 sm:w-28 text-foreground"
               viewBox="0 0 48 48"
               fill="none"
               stroke="currentColor"
