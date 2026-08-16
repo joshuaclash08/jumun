@@ -1,16 +1,30 @@
 "use client";
 
 import * as React from "react";
+import { motion, AnimatePresence } from "motion/react";
 import { MenuCategoryHeader } from "./MenuCategoryHeader";
+import { FeaturedMenuSection } from "./FeaturedMenuSection";
 import { ProductCard } from "./ProductCard";
+import { MenuSearchSection } from "./MenuSearchSection";
 import type { MenuCategory, Product, StoreInfo } from "@/lib/types";
 import { CartSummaryPill } from "./CartSummaryPill";
+import { StaffCallButton } from "./StaffCallButton";
 import { ProductDetailSheet } from "./ProductDetailSheet";
 import { CartDrawer } from "./CartDrawer";
 import { CheckoutSheet } from "./CheckoutSheet";
 import { ConfirmationStep } from "./ConfirmationStep";
 import { A11yToastContainer } from "./A11yToastContainer";
 import { useCartStore } from "@/store/useCartStore";
+import { useAccessibilityStore } from "@/store/useAccessibilityStore";
+
+// docs/animation-guide.md §3A's wizard-transition recipe -- menu <-> receipt
+// is the one true "screen change" in this flow (everything else is a sheet
+// over the menu), so it's the one place that recipe actually applies.
+const screenVariants = {
+  initial: { opacity: 0, y: 12 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -12 },
+};
 
 interface MenuClientViewProps {
   categories: MenuCategory[];
@@ -31,6 +45,7 @@ export function MenuClientView({ categories, products, storeInfo }: MenuClientVi
   const setStoreInfo = useCartStore((state) => state.setStoreInfo);
   const orderStatus = useCartStore((state) => state.orderStatus);
   const resetOrder = useCartStore((state) => state.resetOrder);
+  const reduceMotion = useAccessibilityStore((state) => state.reducedMotion);
   const isProgrammaticScroll = React.useRef(false);
 
   React.useEffect(() => {
@@ -39,41 +54,43 @@ export function MenuClientView({ categories, products, storeInfo }: MenuClientVi
     }
   }, [storeInfo, setStoreInfo]);
 
-  // Scroll Sync via IntersectionObserver.
-  // Short sections (e.g. a 2-item dessert category) can intersect the
-  // detection band at the same time as their neighbor, so a single callback
-  // batch may contain multiple isIntersecting entries. Picking "whichever
-  // came last in entries" (the old behavior) flips the active tab back and
-  // forth between the two every frame while scrolling through that boundary
-  // -- the visible flicker. Instead, pick the single entry closest to the
-  // top of the detection band, and only commit a state update when the
-  // winner actually changes.
+  // Precise Scroll Sync via scroll listener with bottom detection
   React.useEffect(() => {
-    const handleIntersect: IntersectionObserverCallback = (entries) => {
+    const handleScroll = () => {
       if (isProgrammaticScroll.current) return;
 
-      const intersecting = entries.filter((entry) => entry.isIntersecting);
-      if (intersecting.length === 0) return;
+      // 1. Detect if scrolled to near the bottom of the page
+      const isNearBottom =
+        window.innerHeight + window.scrollY >=
+        document.documentElement.scrollHeight - 70;
 
-      const topmost = intersecting.reduce((closest, entry) =>
-        entry.boundingClientRect.top < closest.boundingClientRect.top ? entry : closest
-      );
-      const catId = topmost.target.id.replace("category-", "");
-      setActiveCategoryId((prev) => (prev === catId ? prev : catId));
+      if (isNearBottom) {
+        const lastCategory = categories[categories.length - 1];
+        if (lastCategory) {
+          setActiveCategoryId(lastCategory.id);
+          return;
+        }
+      }
+
+      // 2. Find the category section currently in view
+      const headerThreshold = 100;
+      let matchedCategory = categories[0]?.id || "";
+
+      for (const cat of categories) {
+        const el = document.getElementById(`category-${cat.id}`);
+        if (el) {
+          const rect = el.getBoundingClientRect();
+          if (rect.top <= headerThreshold) {
+            matchedCategory = cat.id;
+          }
+        }
+      }
+
+      setActiveCategoryId(matchedCategory);
     };
 
-    const observer = new IntersectionObserver(handleIntersect, {
-      root: null,
-      rootMargin: "-20% 0px -70% 0px",
-      threshold: 0,
-    });
-
-    categories.forEach((cat) => {
-      const el = document.getElementById(`category-${cat.id}`);
-      if (el) observer.observe(el);
-    });
-
-    return () => observer.disconnect();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
   }, [categories]);
 
   const handleCategorySelect = (id: string) => {
@@ -81,11 +98,14 @@ export function MenuClientView({ categories, products, storeInfo }: MenuClientVi
     const element = document.getElementById(`category-${id}`);
     if (element) {
       isProgrammaticScroll.current = true;
-      const y = element.getBoundingClientRect().top + window.scrollY - 80;
-      window.scrollTo({ top: y, behavior: "smooth" });
+      const y = element.getBoundingClientRect().top + window.scrollY - 60;
+      window.scrollTo({
+        top: Math.max(0, y),
+        behavior: reduceMotion ? "instant" : "smooth",
+      });
       setTimeout(() => {
         isProgrammaticScroll.current = false;
-      }, 600);
+      }, 500);
     }
   };
 
@@ -94,76 +114,134 @@ export function MenuClientView({ categories, products, storeInfo }: MenuClientVi
     setIsProductSheetOpen(true);
   };
 
-  if (orderStatus === "confirmed") {
-    return <ConfirmationStep onReset={resetOrder} />;
-  }
-
+  // The sheets/drawer/toast below are deliberately NOT inside the
+  // AnimatePresence branches: each is Vaul/Radix-portaled and manages its
+  // own open/close transition independently. Nesting CheckoutSheet inside
+  // the "menu" branch caused a real bug -- its own success handler flips
+  // orderStatus (unmounting "menu" via AnimatePresence) and closes itself
+  // (its own Vaul close transition) in the same synchronous block, and the
+  // two competing unmount paths could leave the drawer stuck open showing a
+  // stale (already-cleared) cart instead of ever finishing either
+  // transition. Each overlay already self-gates via its own `open` prop, so
+  // hoisting them to unconditional siblings is both simpler and correct --
+  // they don't need to be inside whichever "screen" happens to be active.
   return (
-    <div className="flex w-full flex-col pb-36 relative">
-      <MenuCategoryHeader
-        categories={categories}
-        activeCategoryId={activeCategoryId}
-        onCategorySelect={handleCategorySelect}
-      />
-      
-      <div className="flex flex-col gap-10 px-4 pt-4">
-        {categories.map((category) => {
-          const categoryProducts = products.filter(
-            (p) => p.category === category.id
-          );
-          
-          if (categoryProducts.length === 0) return null;
+    <>
+    <AnimatePresence mode="wait">
+      {orderStatus === "confirmed" ? (
+        <motion.div
+          key="confirmation"
+          initial={reduceMotion ? undefined : screenVariants.initial}
+          animate={screenVariants.animate}
+          exit={reduceMotion ? undefined : screenVariants.exit}
+          transition={{ duration: reduceMotion ? 0 : 0.2, ease: "easeOut" }}
+        >
+          <ConfirmationStep onReset={resetOrder} />
+        </motion.div>
+      ) : (
+        <motion.div
+          key="menu"
+          initial={reduceMotion ? undefined : screenVariants.initial}
+          animate={screenVariants.animate}
+          exit={reduceMotion ? undefined : screenVariants.exit}
+          transition={{ duration: reduceMotion ? 0 : 0.2, ease: "easeOut" }}
+          className="flex w-full flex-col relative"
+        >
+          {/* Featured / Popular Carousel Section */}
+          <FeaturedMenuSection
+            products={products}
+            onProductClick={handleProductClick}
+          />
 
-          return (
-            <section
-              key={category.id}
-              id={`category-${category.id}`}
-              className="flex flex-col gap-4 scroll-mt-24"
-              aria-labelledby={`heading-${category.id}`}
-            >
-              <h2 id={`heading-${category.id}`} className="text-xl font-bold text-foreground">
-                {category.labelKo}
-              </h2>
-              <div className="flex flex-col gap-3">
-                {categoryProducts.map((product) => (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    onClick={() => handleProductClick(product)}
-                  />
-                ))}
-              </div>
-            </section>
-          );
-        })}
-      </div>
+          {/* Sticky Category Tabs with Pinned Settings Button */}
+          <MenuCategoryHeader
+            categories={categories}
+            activeCategoryId={activeCategoryId}
+            onCategorySelect={handleCategorySelect}
+          />
 
-      <CartSummaryPill onClick={() => setIsCartDrawerOpen(true)} />
+          {/* Categorized Product Sections with Search Section at bottom */}
+          <div className="flex flex-col gap-8 px-4 pt-3.5 pb-36 sm:pb-40">
+            {categories.map((category) => {
+              const categoryProducts = products.filter(
+                (p) => p.category === category.id
+              );
 
-      <ProductDetailSheet
-        product={selectedProduct}
-        open={isProductSheetOpen}
-        onOpenChange={setIsProductSheetOpen}
-      />
+              if (categoryProducts.length === 0) return null;
 
-      <CartDrawer
-        open={isCartDrawerOpen}
-        onOpenChange={setIsCartDrawerOpen}
-        onCheckout={() => {
-          setIsCartDrawerOpen(false);
-          setIsCheckoutSheetOpen(true);
-        }}
-      />
+              return (
+                <section
+                  key={category.id}
+                  id={`category-${category.id}`}
+                  className="flex flex-col gap-3.5 scroll-mt-[64px]"
+                  aria-labelledby={`heading-${category.id}`}
+                >
+                  <div className="flex items-baseline gap-2 pb-1">
+                    <h2
+                      id={`heading-${category.id}`}
+                      className="text-2xl sm:text-[26px] font-black text-foreground tracking-tight"
+                      aria-label={`${category.labelKo}, 총 ${categoryProducts.length}개 메뉴`}
+                    >
+                      {category.labelKo}
+                    </h2>
+                    <span className="text-base font-bold text-muted-foreground tabular-nums" aria-hidden="true">
+                      {categoryProducts.length}개
+                    </span>
+                  </div>
 
-      <CheckoutSheet
-        open={isCheckoutSheetOpen}
-        onOpenChange={setIsCheckoutSheetOpen}
-        onConfirm={() => {
-          window.scrollTo({ top: 0, behavior: "instant" });
-        }}
-      />
+                  <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                    {categoryProducts.map((product) => (
+                      <ProductCard
+                        key={product.id}
+                        product={product}
+                        onClick={() => handleProductClick(product)}
+                      />
+                    ))}
+                  </div>
+                </section>
+              );
+            })}
 
-      <A11yToastContainer />
-    </div>
+            {/* Bottom Search Section for quick menu lookup */}
+            <MenuSearchSection
+              products={products}
+              onProductClick={handleProductClick}
+            />
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+
+    {/* Fixed Bottom Action Controls: Staff Call (Bottom-Left) + Cart Summary Pill */}
+    {storeInfo && orderStatus !== "confirmed" && (
+      <StaffCallButton storeInfo={storeInfo} />
+    )}
+    <CartSummaryPill onClick={() => setIsCartDrawerOpen(true)} />
+
+    <ProductDetailSheet
+      product={selectedProduct}
+      open={isProductSheetOpen}
+      onOpenChange={setIsProductSheetOpen}
+    />
+
+    <CartDrawer
+      open={isCartDrawerOpen}
+      onOpenChange={setIsCartDrawerOpen}
+      onCheckout={() => {
+        setIsCartDrawerOpen(false);
+        setIsCheckoutSheetOpen(true);
+      }}
+    />
+
+    <CheckoutSheet
+      open={isCheckoutSheetOpen}
+      onOpenChange={setIsCheckoutSheetOpen}
+      onConfirm={() => {
+        window.scrollTo({ top: 0, behavior: "instant" });
+      }}
+    />
+
+    <A11yToastContainer />
+    </>
   );
 }
