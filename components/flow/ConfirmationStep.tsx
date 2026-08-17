@@ -108,13 +108,13 @@ export function ConfirmationStep({ onReset }: ConfirmationStepProps) {
   }
 
   const handleNewOrder = () => {
-    const storeId = lastReceipt.store.storeId;
+    const { store } = lastReceipt;
+    const href =
+      store.orderType === "dine-in"
+        ? `/order/${store.storeId}?table=${store.table}`
+        : `/order/${store.storeId}?type=takeout`;
     onReset();
-    if (storeId) {
-      router.push(`/order/${storeId}`);
-    } else {
-      router.push("/");
-    }
+    router.push(href);
   };
 
   const orderTypeLabel = lastReceipt.orderType === "dine-in" ? "매장 식사" : "포장하기";
@@ -170,7 +170,7 @@ export function ConfirmationStep({ onReset }: ConfirmationStepProps) {
               </div>
               <Badge
                 variant="secondary"
-                className="font-extrabold text-sm px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border-none"
+                className="font-extrabold text-sm px-2.5 py-0.5"
               >
                 {orderTypeLabel}
               </Badge>

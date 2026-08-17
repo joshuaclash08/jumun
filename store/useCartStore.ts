@@ -60,12 +60,22 @@ export const useCartStore = create<CartStore>()((set, get) => ({
 
   removeItem: (itemId) => {
     const { items, history, toasts } = get();
-    const removed = items.find((item) => item.id === itemId);
-    if (!removed) return;
+    const removedIndex = items.findIndex((item) => item.id === itemId);
+    if (removedIndex === -1) return;
+    const removed = items[removedIndex];
     const nextItems = items.filter((item) => item.id !== itemId);
     const toast = notify("success", "장바구니에서 삭제되었습니다.", {
       hapticsEnabled: hapticsEnabled(),
-      onUndo: () => set({ items: [...get().items, removed] }),
+      onUndo: () => {
+        const current = get().items;
+        set({
+          items: [
+            ...current.slice(0, removedIndex),
+            removed,
+            ...current.slice(removedIndex),
+          ],
+        });
+      },
     });
     set({ items: nextItems, history: pushHistory(history, items), toasts: [...toasts, toast] });
   },

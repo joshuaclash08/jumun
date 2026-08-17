@@ -18,7 +18,10 @@ export interface SubmitOrderOptions {
   forceFailure?: boolean;
 }
 
-const MOCK_FAILURE_RATE = 0.1;
+// No real backend or PG exists yet to fail against, so a random failure rate
+// only adds unrepeatable friction to every demo/QA run. The failure path
+// stays reachable and provably tested via `forceFailure`, not via chance.
+const MOCK_FAILURE_RATE = 0;
 
 // No real backend in Phase 1 (docs/architecture.md) -- mocked latency and a
 // reachable simulated failure path, deliberately, per docs/features.md's

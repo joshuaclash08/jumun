@@ -287,4 +287,12 @@ Every `text-xs` (12px) and `text-sm` (14px) instance across the app bumped to `t
 - `components/flow/MenuSearchSection.tsx` — category search matched `product.category` (the English id, e.g. `"coffee"`) against the user's Korean query, so searching "커피" returned zero results; now matches against the category's `labelKo` via an id→label map.
 - `components/flow/FeaturedMenuSection.tsx` — `scroll-mt-[64px]` → `scroll-mt-[72px]`, matching the sticky category header's real height.
 
+### Fixed — UX audit: cart undo, checkout redirect, mock failures, badge contrast
+
+- `store/useCartStore.ts` — `removeItem`'s undo always restored the item to the *end* of the cart, regardless of where it was removed from; now captures its original index via `findIndex` and re-inserts there.
+- `components/flow/ConfirmationStep.tsx` — "새로운 주문하기" read `store.orderType`/`store.table` *after* calling `onReset()`, which had already cleared them, so it always redirected to `/order/{storeId}` (skipping table re-entry for dine-in). Now reads the receipt's store info before resetting.
+- `lib/services/OrderService.ts` — `MOCK_FAILURE_RATE` set to `0` (was `0.1`). No real backend/PG exists to fail against yet, so a random failure rate only added unrepeatable friction to demo/QA runs; the failure path stays reachable and testable via `forceFailure`.
+- `components/flow/CartSummaryPill.tsx` — the pill returned `null` outright at zero items, tearing its parent `AnimatePresence` down synchronously and skipping the exit animation entirely. Restructured so the component always renders the `AnimatePresence` wrapper and the pill itself is the conditionally-rendered, keyed child, which is what lets Motion animate it out. Also gates `initial` behind `reduceMotion` and drops the now-dead `reserveStaffCallSpace` prop (superseded by `showLabel`, added in the next commit's dynamic bottom-bar work).
+- `components/ui/badge.tsx` — `secondary` variant was `bg-primary/10 text-primary` (4.26:1, under the 4.5:1 text floor); replaced with Toss's tinted-blue two-step `bg-secondary text-secondary-foreground` (5.94:1). Several consumers (`ConfirmationStep.tsx` here; `CheckoutSheet.tsx`/`HeaderBar.tsx` in the next commit) had been overriding the variant's color directly via `className`, which masked this and is also removed so the fixed token actually takes effect.
+
 

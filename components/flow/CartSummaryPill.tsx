@@ -12,13 +12,10 @@ import { RollingPrice } from "@/components/ui/RollingPrice";
 interface CartSummaryPillProps {
   onClick: () => void;
   className?: string;
-  // StaffCallButton reserves this space at bottom-left; when it isn't
-  // rendered (takeout has no table to call staff to), the pill spans full
-  // width instead of leaving that space empty.
-  reserveStaffCallSpace?: boolean;
+  showLabel?: boolean;
 }
 
-export function CartSummaryPill({ onClick, className, reserveStaffCallSpace = true }: CartSummaryPillProps) {
+export function CartSummaryPill({ onClick, className, showLabel = true }: CartSummaryPillProps) {
   const items = useCartStore((state) => state.items);
   const reduceMotion = useAccessibilityStore((state) => state.reducedMotion);
 
@@ -28,58 +25,67 @@ export function CartSummaryPill({ onClick, className, reserveStaffCallSpace = tr
     0
   );
 
-  if (totalQuantity === 0) {
-    return null;
-  }
-
   const ariaLabel = `장바구니에 ${totalQuantity}개의 상품이 담겨있습니다. 총 결제 금액은 ${totalPrice.toLocaleString("ko-KR")}원입니다. 결제하기 위해 버튼을 눌러주세요.`;
 
+  // The component itself always renders -- AnimatePresence needs the pill to
+  // be a keyed child that mounts/unmounts via this condition (not the whole
+  // component returning null) or it can't run the exit animation: a parent
+  // render returning null tears AnimatePresence down synchronously along with
+  // everything inside it, before it gets a chance to animate anything out.
   return (
-    <div
-      className={cn(
-        "fixed bottom-[calc(0.75rem+env(safe-area-inset-bottom,0px))] inset-x-0 z-50 pointer-events-none",
-        className
-      )}
-    >
-      <div className={cn("mx-auto max-w-[768px] pr-4", reserveStaffCallSpace ? "pl-[76px]" : "pl-4")}>
-      <AnimatePresence>
+    <AnimatePresence>
+      {totalQuantity > 0 && (
         <motion.div
-          initial={{ y: 50, opacity: 0 }}
+          key="cart-summary-pill"
+          initial={reduceMotion ? false : { y: 50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          exit={{ y: 50, opacity: 0 }}
+          exit={reduceMotion ? { opacity: 0 } : { y: 50, opacity: 0 }}
           whileTap={reduceMotion ? undefined : { scale: 0.96 }}
-          transition={{
-            type: "spring",
-            stiffness: 400,
-            damping: 25,
-            duration: reduceMotion ? 0 : undefined,
-          }}
-          className="pointer-events-auto w-full"
+          transition={{ type: "spring", stiffness: 400, damping: 25 }}
+          className={cn("pointer-events-auto flex-1 min-w-0", className)}
         >
           <Button
             size="lg"
             onClick={onClick}
             aria-label={ariaLabel}
-            className="flex h-14 min-h-[56px] w-full items-center justify-between rounded-full bg-primary px-5 text-primary-foreground shadow-[0_4px_16px_rgba(0,100,255,0.28)] hover:bg-primary/95 transition-all border-none"
+            className="flex h-14 min-h-[56px] w-full items-center justify-between rounded-full bg-primary px-4 sm:px-5 text-primary-foreground shadow-[0_4px_20px_rgba(0,100,255,0.28)] hover:bg-primary/95 transition-colors border-none"
           >
-            <div className="flex w-full items-center justify-between pointer-events-none" aria-hidden="true">
-              <div className="flex items-center gap-2">
-                <div className="flex h-7 min-w-7 items-center justify-center rounded-full bg-white/20 text-white font-black px-2 text-sm">
-                  <ShoppingBag className="h-3.5 w-3.5 mr-1" />
+            <div
+              className="flex w-full items-center justify-between pointer-events-none min-w-0"
+              aria-hidden="true"
+            >
+              <div className="flex items-center min-w-0 shrink">
+                <div className="flex h-7 min-w-7 items-center justify-center rounded-full bg-white/20 text-white font-black px-2 sm:px-2.5 text-sm shrink-0">
+                  <ShoppingBag className="size-4 mr-1 stroke-[2.2]" />
                   {totalQuantity}
                 </div>
-                <span className="font-extrabold text-[15px] sm:text-base">주문하기</span>
+                <motion.div
+                  initial={false}
+                  animate={{
+                    width: showLabel ? "auto" : 0,
+                    opacity: showLabel ? 1 : 0,
+                  }}
+                  transition={{
+                    duration: reduceMotion ? 0 : 0.28,
+                    ease: [0.16, 1, 0.3, 1],
+                  }}
+                  className="overflow-hidden"
+                  aria-hidden={!showLabel}
+                >
+                  <span className="block font-extrabold text-[15px] sm:text-base tracking-tight whitespace-nowrap pl-1.5 sm:pl-2">
+                    주문하기
+                  </span>
+                </motion.div>
               </div>
               <RollingPrice
                 value={totalPrice}
                 suffix="원"
-                className="text-lg sm:text-xl font-black"
+                className="text-base sm:text-lg md:text-xl font-black tabular-nums whitespace-nowrap shrink-0 ml-2"
               />
             </div>
           </Button>
         </motion.div>
-      </AnimatePresence>
-      </div>
-    </div>
+      )}
+    </AnimatePresence>
   );
 }
