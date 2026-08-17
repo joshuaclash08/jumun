@@ -3,12 +3,12 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { Check } from "lucide-react";
-import { SettingsHeader } from "@/components/settings/SettingsHeader";
-import { SettingsCard } from "@/components/settings/SettingsRow";
+import { SettingsHeader, SettingsCard } from "@/components/settings";
 import { Button } from "@/components/ui/button";
 import { usePaymentStore, type PaymentMethod } from "@/store/usePaymentStore";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
-import { notify } from "@/lib/services/A11yFeedbackService";
+import { toast } from "@/lib/services/A11yFeedbackService";
+import { StickyActionBar } from "@/components/shared/StickyActionBar";
 import { cn } from "@/lib/utils";
 
 const METHODS = [
@@ -38,7 +38,7 @@ export default function PaymentSettingsPage() {
       <SettingsHeader title="결제 수단 관리" />
 
       <div className="flex flex-col gap-4 px-4 pt-5">
-        <div className="flex flex-col gap-1 rounded-[20px] bg-[#E8F3FF] p-4.5 border border-[#0064FF]/15">
+        <div className="flex flex-col gap-1 rounded-[20px] bg-secondary p-4.5 border border-primary/15">
           <span className="text-base font-bold text-foreground">
             자동 기본값 저장
           </span>
@@ -59,13 +59,12 @@ export default function PaymentSettingsPage() {
                 ariaPressed={isSelected}
                 onClick={() => {
                   setDefaultMethod(method.id);
-                  notify(
-                    "success",
-                    `기본 결제 수단이 ${method.label}(으)로 설정되었습니다.`,
-                    {
-                      hapticsEnabled,
-                    },
-                  );
+                  toast({
+                    kind: "success",
+                    messageKo: `기본 결제 수단이 ${method.label}(으)로 설정되었습니다.`,
+                    variant: "generic",
+                    hapticsEnabled,
+                  });
                 }}
                 trailing={
                   <div
@@ -73,7 +72,7 @@ export default function PaymentSettingsPage() {
                       "flex h-6 w-6 shrink-0 items-center justify-center rounded-[8px] border-2 transition-colors",
                       isSelected
                         ? "border-primary bg-primary text-white"
-                        : "border-[#D1D6DB] bg-white",
+                        : "border-input bg-white",
                     )}
                     aria-hidden="true"
                   >
@@ -86,18 +85,11 @@ export default function PaymentSettingsPage() {
         </div>
       </div>
 
-      {/* ── Fixed Bottom Action Bar (Toss Standard with Progressive Blur Fade) ── */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 pointer-events-none flex justify-center">
-        <div className="w-full max-w-[768px] pointer-events-auto flex flex-col pt-7 px-4 pb-[calc(0.875rem+env(safe-area-inset-bottom,0px))] bg-gradient-to-t from-background via-background/95 to-transparent backdrop-blur-[6px] [mask-image:linear-gradient(to_top,black_80%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_top,black_80%,transparent_100%)]">
-          <Button
-            size="lg"
-            onClick={() => router.back()}
-            className="w-full h-14 min-h-[56px] font-extrabold bg-primary text-white shadow-none hover:bg-primary/95 rounded-[16px]"
-          >
-            설정 완료
-          </Button>
-        </div>
-      </div>
+      <StickyActionBar className="max-w-[768px]">
+        <Button size="cta-full" onClick={() => router.back()}>
+          설정 완료
+        </Button>
+      </StickyActionBar>
     </main>
   );
 }

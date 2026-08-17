@@ -2,12 +2,12 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { SettingsHeader } from "@/components/settings/SettingsHeader";
-import { SettingsGroup, SettingsRow } from "@/components/settings/SettingsRow";
+import { SettingsHeader, SettingsGroup, SettingsRow } from "@/components/settings";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
-import { notify } from "@/lib/services/A11yFeedbackService";
+import { toast } from "@/lib/services/A11yFeedbackService";
+import { StickyActionBar } from "@/components/shared/StickyActionBar";
 
 export default function AccessibilityDetailPage() {
   const router = useRouter();
@@ -22,7 +22,12 @@ export default function AccessibilityDetailPage() {
 
   const handleToggle = (name: string, next: boolean, setter: (val: boolean) => void) => {
     setter(next);
-    notify("success", `${name} 설정이 ${next ? "켜졌습니다" : "꺼졌습니다"}.`, { hapticsEnabled });
+    toast({
+      kind: "success",
+      messageKo: `${name} 설정이 ${next ? "켜졌습니다" : "꺼졌습니다"}.`,
+      variant: "generic",
+      hapticsEnabled,
+    });
   };
 
   return (
@@ -30,7 +35,7 @@ export default function AccessibilityDetailPage() {
       <SettingsHeader title="접근성" />
 
       <div className="flex flex-col gap-5 px-4 pt-5">
-        <div className="flex flex-col gap-1 rounded-[20px] bg-[#E8F3FF] p-4.5 border border-[#0064FF]/15">
+        <div className="flex flex-col gap-1 rounded-[20px] bg-secondary p-4.5 border border-primary/15">
           <span className="text-base font-bold text-foreground">자동 영구 저장</span>
           <span className="text-base font-medium text-muted-foreground">
             변경된 모든 접근성 설정은 기기에 영구 저장돼요.
@@ -86,18 +91,11 @@ export default function AccessibilityDetailPage() {
         </SettingsGroup>
       </div>
 
-      {/* ── Fixed Bottom Action Bar (Toss Standard with Progressive Blur Fade) ── */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 pointer-events-none flex justify-center">
-        <div className="w-full max-w-[768px] pointer-events-auto flex flex-col pt-7 px-4 pb-[calc(0.875rem+env(safe-area-inset-bottom,0px))] bg-gradient-to-t from-background via-background/95 to-transparent backdrop-blur-[6px] [mask-image:linear-gradient(to_top,black_80%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_top,black_80%,transparent_100%)]">
-          <Button
-            size="lg"
-            onClick={() => router.back()}
-            className="w-full h-14 min-h-[56px] font-extrabold bg-primary text-white shadow-none hover:bg-primary/95 rounded-[16px]"
-          >
-            설정 완료
-          </Button>
-        </div>
-      </div>
+      <StickyActionBar className="max-w-[768px]">
+        <Button size="cta-full" onClick={() => router.back()}>
+          설정 완료
+        </Button>
+      </StickyActionBar>
     </main>
   );
 }

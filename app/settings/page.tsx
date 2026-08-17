@@ -3,13 +3,13 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
-import { SettingsHeader } from "@/components/settings/SettingsHeader";
-import { SettingsGroup, SettingsRow } from "@/components/settings/SettingsRow";
+import { SettingsHeader, SettingsGroup, SettingsRow } from "@/components/settings";
 import { FontScaleSelector } from "@/components/settings/FontScaleSelector";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
-import { notify } from "@/lib/services/A11yFeedbackService";
+import { notify, toast } from "@/lib/services/A11yFeedbackService";
+import { StickyActionBar } from "@/components/shared/StickyActionBar";
 import { cn } from "@/lib/utils";
 
 const LANGUAGES = [
@@ -41,7 +41,10 @@ export default function SettingsPage() {
     setter: (val: boolean) => void,
   ) => {
     setter(next);
-    notify("success", `${name} 설정이 ${next ? "켜졌습니다" : "꺼졌습니다"}.`, {
+    toast({
+      kind: "success",
+      messageKo: `${name} 설정이 ${next ? "켜졌습니다" : "꺼졌습니다"}.`,
+      variant: "generic",
       hapticsEnabled,
     });
   };
@@ -60,8 +63,18 @@ export default function SettingsPage() {
   };
 
   const handleComplete = () => {
-    notify("success", "설정이 안전하게 저장되었습니다.", { hapticsEnabled });
-    router.back();
+    toast({
+      kind: "success",
+      messageKo: "설정이 안전하게 저장되었습니다.",
+      variant: "generic",
+      hapticsEnabled,
+    });
+    // Delay navigation so the screen reader finishes reading the live-region
+    // announcement before this page unmounts (router.back() was previously
+    // firing immediately, cutting the announcement off mid-sentence).
+    setTimeout(() => {
+      router.back();
+    }, 250);
   };
 
   return (
@@ -249,7 +262,7 @@ export default function SettingsPage() {
               whileTap={reducedMotion ? undefined : { scale: 0.96 }}
               transition={{ type: "spring", stiffness: 400, damping: 25 }}
               onClick={handleReset}
-              className="flex items-center justify-center rounded-full bg-[#FEEBE8] border border-[#F04452]/20 px-6 py-2.5 text-base font-bold text-[#F04452] hover:bg-[#FDD8D5] transition-colors"
+              className="flex items-center justify-center rounded-full bg-destructive/10 border border-destructive/20 px-6 py-2.5 text-base font-bold text-destructive hover:bg-destructive/20 transition-colors"
             >
               설정 초기화
             </motion.button>
@@ -257,18 +270,11 @@ export default function SettingsPage() {
         </section>
       </div>
 
-      {/* ── Fixed Bottom Action Bar (Toss Standard with Progressive Blur Fade) ── */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 pointer-events-none flex justify-center">
-        <div className="w-full max-w-[768px] pointer-events-auto flex flex-col pt-7 px-4 pb-[calc(0.875rem+env(safe-area-inset-bottom,0px))] bg-gradient-to-t from-background via-background/95 to-transparent backdrop-blur-[6px] [mask-image:linear-gradient(to_top,black_80%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_top,black_80%,transparent_100%)]">
-          <Button
-            size="lg"
-            onClick={handleComplete}
-            className="w-full h-14 min-h-[56px] font-extrabold bg-primary text-white shadow-none hover:bg-primary/95 rounded-[16px]"
-          >
-            설정 완료
-          </Button>
-        </div>
-      </div>
+      <StickyActionBar className="max-w-[768px]">
+        <Button size="cta-full" onClick={handleComplete}>
+          설정 완료
+        </Button>
+      </StickyActionBar>
     </main>
   );
 }
