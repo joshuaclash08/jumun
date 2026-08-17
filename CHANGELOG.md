@@ -333,4 +333,8 @@ Every `text-xs` (12px) and `text-sm` (14px) instance across the app bumped to `t
 - `components/flow/StaffCallButton.tsx` — its `notify()` call was followed by a manual `useCartStore.setState({toasts:...})`, bypassing the store's own action entirely; now calls `toast({..., variant: "staff-call"})` directly. Its 3 CTA buttons also had literal hex colors (`bg-[#F2F4F6]`, `bg-[#0064FF]`) instead of `Button` variants — switched to `variant="secondary"`/`variant="default"`.
 - `tests/unit/useCartStore.test.ts` — toast-related assertions repointed at `useToastStore` (a matching one-line fix in `tests/unit/components.test.tsx` ships in the menu-card-redesign commit below, alongside that file's other unrelated updates).
 
+### Changed — split SettingsRow into 3 components + barrel
+
+- `components/settings/SettingsRow.tsx` (~207 lines exporting 3 unrelated components) split into `SettingsRow.tsx`, `SettingsCard.tsx`, and `SettingsGroup.tsx`, each now under 80 lines, plus `components/settings/index.ts` barrelling all four settings components (including the pre-existing `SettingsHeader`). `SettingsCard`'s known `trailing ?? <ChevronRight />` footgun (`??` treats `trailing={null}` as nullish too, so it still renders the chevron) is left behaviorally unchanged, just documented in place. `SettingsRow.tsx` also drops a local `outline-none` that duplicated the global focus outline, and `SettingsCard`'s literal `text-[#0064FF]` icon-color default becomes `text-primary`.
+
 
