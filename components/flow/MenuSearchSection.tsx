@@ -85,9 +85,11 @@ export function MenuSearchSection({
             type="button"
             onClick={handleClear}
             aria-label="검색어 지우기"
-            className="absolute right-3.5 flex h-7 w-7 items-center justify-center rounded-full bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-colors"
+            className="absolute right-1.5 flex h-11 w-11 items-center justify-center rounded-full text-muted-foreground transition-colors"
           >
-            <X className="h-4 w-4" aria-hidden="true" />
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-muted hover:bg-muted/80 hover:text-foreground transition-colors">
+              <X className="h-4 w-4" aria-hidden="true" />
+            </span>
           </button>
         )}
       </div>

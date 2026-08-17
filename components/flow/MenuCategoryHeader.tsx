@@ -157,7 +157,7 @@ export function MenuCategoryHeader({
                   "relative rounded-full px-4.5 py-2 text-base font-bold transition-all",
                   isActive
                     ? "text-primary-foreground font-extrabold"
-                    : "bg-[#F2F4F6] text-muted-foreground hover:text-foreground hover:bg-[#E5E8EB]",
+                    : "bg-muted text-muted-foreground hover:text-foreground hover:bg-border",
                 )}
               >
                 {/* Above the sliding indicator (z-10) so labels stay

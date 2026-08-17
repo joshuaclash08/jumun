@@ -337,4 +337,12 @@ Every `text-xs` (12px) and `text-sm` (14px) instance across the app bumped to `t
 
 - `components/settings/SettingsRow.tsx` (~207 lines exporting 3 unrelated components) split into `SettingsRow.tsx`, `SettingsCard.tsx`, and `SettingsGroup.tsx`, each now under 80 lines, plus `components/settings/index.ts` barrelling all four settings components (including the pre-existing `SettingsHeader`). `SettingsCard`'s known `trailing ?? <ChevronRight />` footgun (`??` treats `trailing={null}` as nullish too, so it still renders the chevron) is left behaviorally unchanged, just documented in place. `SettingsRow.tsx` also drops a local `outline-none` that duplicated the global focus outline, and `SettingsCard`'s literal `text-[#0064FF]` icon-color default becomes `text-primary`.
 
+### Fixed — remaining literal-hex colors, dead dark: variants, outline-none duplicates, touch targets
+
+- `components/flow/MenuCategoryHeader.tsx` — `bg-[#F2F4F6]`/`hover:bg-[#E5E8EB]` (inactive category pill) → `bg-muted`/`hover:bg-border`.
+- `components/ui/checkbox.tsx`, `components/ui/drawer.tsx` — `border-[#D1D6DB]`/`bg-[#D1D6DB]` → `border-input`/`bg-input`.
+- `components/ui/badge.tsx` — removed dead `dark:` variants (this app has no dark theme, see `app/globals.css`).
+- `components/flow/MenuSearchSection.tsx` — search-clear button's hit area was 28×28px (`h-7 w-7`), below the 44px floor; enlarged the clickable area to `h-11 w-11` while keeping the visible circle the same apparent size via a non-interactive inner span.
+- `components/flow/TableSelectView.tsx`, `components/settings/FontScaleSelector.tsx` — removed local `outline-none` duplicating the global focus outline.
+
 

@@ -61,7 +61,7 @@ export function TableSelectView({ store }: TableSelectViewProps) {
               onClick={() => router.push(`/order/${store.storeId}?table=${tableId}`)}
               aria-label={`${tableId}번 테이블`}
               className={cn(
-                "flex h-16 min-h-[44px] items-center justify-center rounded-[16px] border-2 border-border bg-card font-extrabold text-lg text-foreground transition-all outline-none",
+                "flex h-16 min-h-[44px] items-center justify-center rounded-[16px] border-2 border-border bg-card font-extrabold text-lg text-foreground transition-all",
                 "hover:border-primary/40 hover:bg-muted/30 focus-visible:ring-2 focus-visible:ring-ring",
               )}
             >

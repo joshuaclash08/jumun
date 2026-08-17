@@ -73,7 +73,7 @@ function DrawerContent({
         {/* Drag handle — 40px wide, vertically & horizontally centered, smooth pill */}
         <DrawerPrimitive.Handle
           data-slot="drawer-handle"
-          className="mx-auto my-3 hidden h-1.5 w-10 shrink-0 rounded-full bg-[#D1D6DB] cursor-grab active:cursor-grabbing group-data-[vaul-drawer-direction=bottom]/drawer-content:block"
+          className="mx-auto my-3 hidden h-1.5 w-10 shrink-0 rounded-full bg-input cursor-grab active:cursor-grabbing group-data-[vaul-drawer-direction=bottom]/drawer-content:block"
         />
         {children}
       </DrawerPrimitive.Content>

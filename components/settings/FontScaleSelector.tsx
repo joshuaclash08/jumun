@@ -61,7 +61,7 @@ export function FontScaleSelector() {
                 );
               }}
               className={cn(
-                "flex h-11 items-center justify-center rounded-[12px] font-bold text-base transition-all outline-none cursor-pointer",
+                "flex h-11 items-center justify-center rounded-[12px] font-bold text-base transition-all cursor-pointer",
                 isSelected
                   ? "bg-primary text-white shadow-sm"
                   : "text-muted-foreground hover:text-foreground hover:bg-background/60",

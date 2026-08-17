@@ -18,7 +18,7 @@ const Checkbox = React.forwardRef<
     className={cn(
       // No outline-none/ring-* here -- relies on the global :focus-visible
       // outline (globals.css), same reasoning as button.tsx.
-      "peer group/checkbox relative flex shrink-0 cursor-pointer items-center justify-center rounded-[8px] border-2 border-[#D1D6DB] bg-white transition-all duration-150",
+      "peer group/checkbox relative flex shrink-0 cursor-pointer items-center justify-center rounded-[8px] border-2 border-input bg-white transition-all duration-150",
       "data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-white",
       "disabled:cursor-not-allowed disabled:opacity-50",
       "data-[size=sm]:h-5 data-[size=sm]:w-5 data-[size=sm]:rounded-[6px]",
