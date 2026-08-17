@@ -313,4 +313,9 @@ Every `text-xs` (12px) and `text-sm` (14px) instance across the app bumped to `t
 - `components/flow/OrderTypeSelectView.tsx` — replaced development placeholder sublabels ("이거" / "넣을까말까") with real copy ("테이블에서 편하게" / "포장 후 픽업").
 - `components/flow/MenuClientView.tsx` — the `IntersectionObserver` scroll-spy that consumes `MenuCategoryHeader`'s `#menu-category-header` anchor (added two commits back) lands here: `rootMargin` is measured off the anchor's live height and recalculated on `fontScale` change, picks the highest-`intersectionRatio` entry, and skips redundant state updates — this is what stops short categories from flickering the active tab.
 
+### Added — UX audit plan and session handoff
+
+- `docs/ux-plan-2026-08-17.md` — full UX/accessibility/maintainability audit against `/toss-design`, `/impeccable`, and `DESIGN.md`: whether the current menu-card layout, focus states, and component reuse hold up as production-ready; confirmed decisions on the 16px text floor, card layout, `QrScannerModal`'s wire-up-vs-delete question (held), the language setting (held), and `layout.tsx`'s max-width; a docs-restructure plan; a component-folder reorganization plan; and a file-by-file execution playbook, phases of which are the four commits directly above and are cross-referenced from each.
+- `docs/HANDOFF-2026-08-17.md` — session handoff written for continuation by a separate agent instance; superseded in part by this commit sequence actually landing everything through Phase 2 plus the component-extraction work its own "next steps" section still listed as not started — see the four commits above for what's real versus what the handoff still describes as pending.
+
 
