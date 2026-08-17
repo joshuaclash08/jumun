@@ -19,6 +19,8 @@ import { usePaymentStore } from "@/store/usePaymentStore";
 import { RollingPrice } from "@/components/ui/RollingPrice";
 import { SelectionCard } from "./SelectionCard";
 import { BackButton } from "@/components/ui/BackButton";
+import { StickyActionBar } from "@/components/shared/StickyActionBar";
+import { formatKRW } from "@/lib/format";
 
 interface CheckoutSheetProps {
   open: boolean;
@@ -156,7 +158,7 @@ export function CheckoutSheet({ open, onOpenChange, onConfirm }: CheckoutSheetPr
                         )}
                       </div>
                       <span className="font-extrabold text-foreground tabular-nums tracking-[0.6px]">
-                        {(item.unitPrice * item.quantity).toLocaleString("ko-KR")}원
+                        {formatKRW(item.unitPrice * item.quantity)}
                       </span>
                     </div>
                   ))}
@@ -198,36 +200,33 @@ export function CheckoutSheet({ open, onOpenChange, onConfirm }: CheckoutSheetPr
             </div>
           </div>
 
-          <div className="absolute bottom-0 left-0 right-0 z-30 pointer-events-none flex justify-center">
-            <div className="w-full pointer-events-auto flex flex-col pt-7 px-4 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] bg-gradient-to-t from-background via-background/95 to-transparent backdrop-blur-[6px] [mask-image:linear-gradient(to_top,black_80%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_top,black_80%,transparent_100%)]">
-              <Button
-                size="lg"
-                disabled={isSubmitting || items.length === 0}
-                className="w-full h-14 min-h-[56px] font-extrabold text-base rounded-[16px] bg-primary text-white shadow-none hover:bg-primary/95"
-                onClick={handleCheckout}
-                aria-busy={isSubmitting}
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
-                    결제 승인 처리 중...
-                  </>
-                ) : errorMessage ? (
-                  <RollingPrice
-                    value={totalPrice}
-                    suffix="원 다시 결제하기"
-                    className="font-extrabold text-base text-primary-foreground"
-                  />
-                ) : (
-                  <RollingPrice
-                    value={totalPrice}
-                    suffix="원 결제하기"
-                    className="font-extrabold text-base text-primary-foreground"
-                  />
-                )}
-              </Button>
-            </div>
-          </div>
+          <StickyActionBar position="absolute">
+            <Button
+              size="cta-full"
+              disabled={isSubmitting || items.length === 0}
+              onClick={handleCheckout}
+              aria-busy={isSubmitting}
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
+                  결제 승인 처리 중...
+                </>
+              ) : errorMessage ? (
+                <RollingPrice
+                  value={totalPrice}
+                  suffix="원 다시 결제하기"
+                  className="font-extrabold text-base text-primary-foreground"
+                />
+              ) : (
+                <RollingPrice
+                  value={totalPrice}
+                  suffix="원 결제하기"
+                  className="font-extrabold text-base text-primary-foreground"
+                />
+              )}
+            </Button>
+          </StickyActionBar>
         </div>
       </DrawerContent>
     </Drawer>

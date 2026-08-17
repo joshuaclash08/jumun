@@ -13,11 +13,14 @@ import { Check } from "lucide-react";
 import type { Product, CartItemSelection } from "@/lib/types";
 import { useCartStore } from "@/store/useCartStore";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
+import { toast } from "@/lib/services/A11yFeedbackService";
 import Image from "next/image";
 import { RollingPrice } from "@/components/ui/RollingPrice";
 import { BackButton } from "@/components/ui/BackButton";
 import { QuantityStepper } from "@/components/flow/QuantityStepper";
+import { StickyActionBar } from "@/components/shared/StickyActionBar";
 import { generateUUID } from "@/lib/utils";
+import { formatKRW } from "@/lib/format";
 
 interface ProductDetailSheetProps {
   product: Product | null;
@@ -42,7 +45,7 @@ function ProductDetailContent({
   onClose,
 }: ProductDetailContentProps) {
   const reduceMotion = useAccessibilityStore((state) => state.reducedMotion);
-  const showToast = useCartStore((state) => state.showToast);
+  const hapticsEnabled = useAccessibilityStore((state) => state.hapticsEnabled);
 
   // Initialize options selections
   const [selections, setSelections] = React.useState<Record<string, string[]>>(() => {
@@ -78,7 +81,12 @@ function ProductDetailContent({
     }
 
     if (maxSelections && current.length >= maxSelections) {
-      showToast("error", `최대 ${maxSelections}개까지 선택할 수 있어요.`);
+      toast({
+        kind: "error",
+        messageKo: `최대 ${maxSelections}개까지 선택할 수 있어요.`,
+        variant: "generic",
+        hapticsEnabled,
+      });
       return;
     }
 
@@ -161,7 +169,7 @@ function ProductDetailContent({
           <div className="flex flex-col gap-4">
             <div
               style={{ backgroundColor: product.themeBg || '#F4F4F6' }}
-              className="relative flex h-56 sm:h-64 w-full items-center justify-center rounded-[24px] overflow-hidden border border-black/5 dark:border-white/10 shadow-resting"
+              className="relative flex h-56 sm:h-64 w-full items-center justify-center rounded-[24px] overflow-hidden border border-black/5 shadow-resting"
               aria-hidden="true"
             >
               <Image
@@ -187,7 +195,7 @@ function ProductDetailContent({
                 <div className="flex flex-col">
                   <span className="text-base text-muted-foreground font-semibold">주문 금액</span>
                   <span className="text-xl font-black text-foreground tabular-nums tracking-[0.6px]">
-                    {unitPrice.toLocaleString("ko-KR")}원
+                    {formatKRW(unitPrice)}
                   </span>
                 </div>
 
@@ -231,7 +239,7 @@ function ProductDetailContent({
                     <div className="flex flex-col gap-2">
                       {group.options.map((opt) => {
                         const isSelected = selectedIds.includes(opt.id);
-                        const priceDescription = opt.priceDelta > 0 ? `, 추가 금액 ${opt.priceDelta.toLocaleString("ko-KR")}원` : "";
+                        const priceDescription = opt.priceDelta > 0 ? `, 추가 금액 ${formatKRW(opt.priceDelta)}` : "";
 
                         return (
                           <motion.button
@@ -265,7 +273,7 @@ function ProductDetailContent({
 
                               {opt.priceDelta > 0 ? (
                                 <span className="text-base font-extrabold tabular-nums tracking-[0.6px]">
-                                  +{opt.priceDelta.toLocaleString("ko-KR")}원
+                                  +{formatKRW(opt.priceDelta)}
                                 </span>
                               ) : null}
                             </div>
@@ -282,21 +290,15 @@ function ProductDetailContent({
       </div>
 
       {/* ── Fixed Bottom Action Bar with Progressive Blur Fade (matching Settings) ── */}
-      <div className="absolute bottom-0 left-0 right-0 z-30 pointer-events-none flex justify-center">
-        <div className="w-full pointer-events-auto flex flex-col pt-7 px-4 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] bg-gradient-to-t from-background via-background/95 to-transparent backdrop-blur-[6px] [mask-image:linear-gradient(to_top,black_80%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_top,black_80%,transparent_100%)]">
-          <Button
-            size="lg"
-            className="w-full h-14 min-h-[56px] font-extrabold text-base rounded-[16px] bg-primary text-white shadow-none hover:bg-primary/95"
-            onClick={handleSubmit}
-          >
-            <RollingPrice
-              value={totalPrice}
-              suffix="원 담기"
-              className="font-extrabold text-base text-primary-foreground"
-            />
-          </Button>
-        </div>
-      </div>
+      <StickyActionBar position="absolute">
+        <Button size="cta-full" onClick={handleSubmit}>
+          <RollingPrice
+            value={totalPrice}
+            suffix="원 담기"
+            className="font-extrabold text-base text-primary-foreground"
+          />
+        </Button>
+      </StickyActionBar>
     </div>
   );
 }

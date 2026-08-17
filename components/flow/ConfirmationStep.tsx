@@ -9,6 +9,8 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
+import { StickyActionBar } from "@/components/shared/StickyActionBar";
+import { formatKRW } from "@/lib/format";
 import confetti from "canvas-confetti";
 
 interface ConfirmationStepProps {
@@ -195,7 +197,7 @@ export function ConfirmationStep({ onReset }: ConfirmationStepProps) {
                     )}
                   </div>
                   <span className="font-extrabold text-foreground tabular-nums text-base">
-                    {(item.unitPrice * item.quantity).toLocaleString("ko-KR")}원
+                    {formatKRW(item.unitPrice * item.quantity)}
                   </span>
                 </div>
               ))}
@@ -206,7 +208,7 @@ export function ConfirmationStep({ onReset }: ConfirmationStepProps) {
             <div className="pt-1 flex justify-between items-center text-base font-bold">
               <span className="text-foreground">총 결제 금액</span>
               <span className="text-primary text-xl sm:text-2xl font-black tabular-nums tracking-tight">
-                {lastReceipt.total.toLocaleString("ko-KR")}원
+                {formatKRW(lastReceipt.total)}
               </span>
             </div>
           </Card>
@@ -214,18 +216,13 @@ export function ConfirmationStep({ onReset }: ConfirmationStepProps) {
       </div>
 
       {/* Fixed/Sticky Bottom Action Bar — Always visible without scrolling */}
-      <motion.div
-        variants={receiptItem}
-        className="sticky bottom-0 left-0 right-0 w-full pt-3 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] bg-gradient-to-t from-background via-background/95 to-transparent backdrop-blur-[6px] [mask-image:linear-gradient(to_top,black_80%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_top,black_80%,transparent_100%)] z-20 flex justify-center"
-      >
-        <Button
-          size="lg"
-          className="w-full max-w-sm h-14 min-h-[56px] font-extrabold text-base rounded-[16px] bg-primary text-white shadow-none hover:bg-primary/95"
-          onClick={handleNewOrder}
-        >
-          새로운 주문하기
-        </Button>
-      </motion.div>
+      <StickyActionBar>
+        <motion.div variants={receiptItem}>
+          <Button size="cta-full" className="max-w-sm mx-auto" onClick={handleNewOrder}>
+            새로운 주문하기
+          </Button>
+        </motion.div>
+      </StickyActionBar>
     </motion.div>
   );
 }

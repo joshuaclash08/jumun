@@ -18,7 +18,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-primary text-primary-foreground shadow-none hover:bg-primary/95",
+          "bg-primary text-primary-foreground shadow-[0_4px_16px_rgba(0,100,255,0.28)] hover:bg-primary/95",
         outline:
           "border-border bg-background text-foreground hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground",
         secondary:
@@ -36,6 +36,8 @@ const buttonVariants = cva(
         sm: "h-9 gap-1.5 rounded-[12px] px-3 text-base [&_svg:not([class*='size-']):not([class*='h-']):not([class*='w-'])]:size-3.5",
         /* 56px — CTA standard (담기 / 장바구니 주문) */
         lg: "h-14 gap-2.5 px-5 text-base font-bold rounded-[16px]",
+        /* 56px — full-width primary CTA, replaces hand-rolled size='lg' + className overrides */
+        "cta-full": "h-14 w-full gap-2.5 px-5 text-base font-extrabold rounded-[16px]",
         /* 64px — highest-stakes CTA (결제하기), one per flow */
         cta: "h-16 gap-2.5 px-6 text-lg font-bold rounded-[18px] shadow-none",
         icon: "size-11 rounded-[14px]",

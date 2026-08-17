@@ -18,6 +18,8 @@ import { EmptyCartIllustration } from "@/components/ui/TossIllustrations";
 import { RollingPrice } from "@/components/ui/RollingPrice";
 import { BackButton } from "@/components/ui/BackButton";
 import { QuantityStepper } from "@/components/flow/QuantityStepper";
+import { StickyActionBar } from "@/components/shared/StickyActionBar";
+import { formatKRW } from "@/lib/format";
 
 interface CartDrawerProps {
   open: boolean;
@@ -108,7 +110,7 @@ export function CartDrawer({ open, onOpenChange, onCheckout }: CartDrawerProps) 
                         </div>
 
                         <div className="text-base font-medium text-muted-foreground">
-                          단가 {item.unitPrice.toLocaleString("ko-KR")}원
+                          단가 {formatKRW(item.unitPrice)}
                         </div>
 
                         <Separator className="my-0.5" />
@@ -138,22 +140,19 @@ export function CartDrawer({ open, onOpenChange, onCheckout }: CartDrawerProps) 
           </div>
 
           {items.length > 0 && (
-            <div className="absolute bottom-0 left-0 right-0 z-30 pointer-events-none flex justify-center">
-              <div className="w-full pointer-events-auto flex flex-col pt-7 px-4 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] bg-gradient-to-t from-background via-background/95 to-transparent backdrop-blur-[6px] [mask-image:linear-gradient(to_top,black_80%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_top,black_80%,transparent_100%)]">
-                <Button
-                  size="lg"
-                  disabled={items.length === 0}
-                  className="w-full h-14 min-h-[56px] font-extrabold text-base rounded-[16px] bg-primary text-white shadow-none hover:bg-primary/95"
-                  onClick={onCheckout}
-                >
-                  <RollingPrice
-                    value={totalPrice}
-                    suffix="원 주문하기"
-                    className="font-extrabold text-base text-primary-foreground"
-                  />
-                </Button>
-              </div>
-            </div>
+            <StickyActionBar position="absolute">
+              <Button
+                size="cta-full"
+                disabled={items.length === 0}
+                onClick={onCheckout}
+              >
+                <RollingPrice
+                  value={totalPrice}
+                  suffix="원 주문하기"
+                  className="font-extrabold text-base text-primary-foreground"
+                />
+              </Button>
+            </StickyActionBar>
           )}
         </div>
       </DrawerContent>
