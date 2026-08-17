@@ -34,7 +34,7 @@ export function SelectionCard({
       aria-pressed={isSelected}
       aria-label={fullLabel}
       className={cn(
-        "relative flex min-h-[80px] w-full cursor-pointer flex-col items-center justify-center gap-1 rounded-[18px] border-2 p-3.5 font-bold transition-all outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        "relative flex min-h-[80px] w-full cursor-pointer flex-col items-center justify-center gap-1 rounded-[18px] border-2 p-3.5 font-bold transition-all",
         isSelected
           ? "border-primary bg-primary/5 text-primary shadow-2xs"
           : "border-border bg-card text-foreground hover:bg-muted/30"

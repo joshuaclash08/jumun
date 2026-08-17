@@ -30,7 +30,7 @@ export function FeaturedMenuSection({
   return (
     <section
       id="category-popular"
-      className={cn("flex flex-col gap-3.5 scroll-mt-[64px]", className)}
+      className={cn("flex flex-col gap-3.5 scroll-mt-[72px]", className)}
       aria-labelledby="heading-popular"
     >
       {/* Section Heading matching other category sections */}
@@ -79,7 +79,7 @@ export function FeaturedMenuSection({
                   disabled={!product.available}
                   aria-label={`${product.nameKo}, ${product.price.toLocaleString("ko-KR")}원, 인기 ${index + 1}위 메뉴`}
                   style={{ backgroundColor: cardBg }}
-                  className="group relative flex w-full aspect-[4/5] sm:aspect-[1/1] min-h-[185px] text-left outline-none rounded-[22px] overflow-hidden border border-black/6 dark:border-white/10 shadow-resting focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-shadow duration-200 hover:shadow-md"
+                  className="group relative flex w-full aspect-[4/5] sm:aspect-[1/1] min-h-[185px] text-left rounded-[22px] overflow-hidden border border-black/6 shadow-resting transition-shadow duration-200 hover:shadow-md"
                 >
                   {/* Full-bleed Studio Photo */}
                   <div className="absolute inset-0" aria-hidden="true">

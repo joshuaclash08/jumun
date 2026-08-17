@@ -166,7 +166,7 @@ export function SettingsCard({
       >
         <Link
           href={href}
-          className="block outline-none rounded-[24px] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          className="block rounded-[24px]"
         >
           {cardInner}
         </Link>
@@ -182,7 +182,7 @@ export function SettingsCard({
         whileTap={reduceMotion ? undefined : { scale: 0.96 }}
         transition={{ type: "spring", stiffness: 400, damping: 25 }}
         onClick={onClick}
-        className="w-full text-left outline-none rounded-[24px] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        className="w-full text-left rounded-[24px]"
       >
         {cardInner}
       </motion.button>

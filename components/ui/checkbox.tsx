@@ -16,9 +16,10 @@ const Checkbox = React.forwardRef<
     data-slot="checkbox"
     data-size={size}
     className={cn(
-      "peer group/checkbox relative flex shrink-0 cursor-pointer items-center justify-center rounded-[8px] border-2 border-[#D1D6DB] bg-white transition-all duration-150 outline-none",
+      // No outline-none/ring-* here -- relies on the global :focus-visible
+      // outline (globals.css), same reasoning as button.tsx.
+      "peer group/checkbox relative flex shrink-0 cursor-pointer items-center justify-center rounded-[8px] border-2 border-[#D1D6DB] bg-white transition-all duration-150",
       "data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-white",
-      "focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2",
       "disabled:cursor-not-allowed disabled:opacity-50",
       "data-[size=sm]:h-5 data-[size=sm]:w-5 data-[size=sm]:rounded-[6px]",
       "data-[size=default]:h-6 data-[size=default]:w-6 data-[size=default]:rounded-[8px]",

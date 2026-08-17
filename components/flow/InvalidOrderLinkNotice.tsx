@@ -27,7 +27,7 @@ export function InvalidOrderLinkNotice({
       </div>
       <Link
         href="/order/jumun-cafe-01"
-        className="mt-3 inline-flex h-14 items-center justify-center rounded-[--radius-md] bg-primary px-6 font-bold text-primary-foreground shadow-none transition-transform active:scale-[0.96] focus-visible:ring-2 focus-visible:ring-ring outline-none"
+        className="mt-3 inline-flex h-14 items-center justify-center rounded-[14px] bg-primary px-6 font-bold text-primary-foreground shadow-none transition-transform active:scale-[0.96]"
       >
         샘플 매장 열기
       </Link>

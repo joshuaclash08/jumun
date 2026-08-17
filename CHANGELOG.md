@@ -279,4 +279,12 @@ Every `text-xs` (12px) and `text-sm` (14px) instance across the app bumped to `t
 - `lib/data/menu.json` — dropped the `브런치` (brunch) category and its sole item (`avocado-brunch-plate`); nothing in the catalog referenced the category after this pass, so it was dead data, not a live menu section.
 - `lib/types/menu.ts` — removed the now-dangling `"brunch"` literal from `ProductCategory`; the union already carries `(string & {})` for forward compatibility, so this only removes a literal nothing produces anymore, not real type coverage.
 
+### Fixed — UX audit: duplicate focus rings, category search, scroll-spy flicker, invalid radius
+
+- `components/ui/button.tsx`, `components/ui/checkbox.tsx`, `components/ui/switch.tsx`, `components/flow/ProductCard.tsx`, `components/flow/SelectionCard.tsx`, `components/flow/MenuCategoryHeader.tsx`, `components/flow/MenuSearchSection.tsx`, `components/flow/FeaturedMenuSection.tsx`, `components/settings/SettingsRow.tsx` — removed `outline-none` + a low-contrast `ring-*`/`ring-ring/50` pairing that had quietly become the *only* focus indicator on these components (computing to ~2.17:1, below WCAG 1.4.11's 3:1 non-text floor). All now fall back to the global 2px Toss Blue `:focus-visible` outline (`app/globals.css`, 4.92:1) instead of shipping a second, weaker ring per component. See DESIGN.md's "every focusable element gets the same ring" rule.
+- `components/flow/InvalidOrderLinkNotice.tsx` — `rounded-[--radius-md]` compiled to the literal invalid CSS `border-radius: --radius-md` (Tailwind v4 arbitrary-value syntax needs `var(--radius-md)` or a raw px value), silently rendering the CTA link with square corners; replaced with `rounded-[14px]`.
+- `components/flow/MenuCategoryHeader.tsx` — added an `id="menu-category-header"` anchor on the sticky category strip so its real rendered height can be measured live instead of guessed; the scroll-spy logic that consumes this anchor lands in the next commit alongside `MenuClientView.tsx`.
+- `components/flow/MenuSearchSection.tsx` — category search matched `product.category` (the English id, e.g. `"coffee"`) against the user's Korean query, so searching "커피" returned zero results; now matches against the category's `labelKo` via an id→label map.
+- `components/flow/FeaturedMenuSection.tsx` — `scroll-mt-[64px]` → `scroll-mt-[72px]`, matching the sticky category header's real height.
+
 

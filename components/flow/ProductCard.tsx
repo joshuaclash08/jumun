@@ -38,7 +38,7 @@ export function ProductCard({ product, onClick, className }: ProductCardProps) {
         aria-label={ariaLabel}
         style={{ backgroundColor: cardBg }}
         className={cn(
-          "group relative flex w-full aspect-[4/5] sm:aspect-[1/1] min-h-[190px] text-left outline-none rounded-[22px] overflow-hidden border border-black/6 dark:border-white/10 shadow-resting focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-shadow duration-200 hover:shadow-md",
+          "group relative flex w-full aspect-[4/5] sm:aspect-[1/1] min-h-[190px] text-left rounded-[22px] overflow-hidden border border-black/6 shadow-resting transition-shadow duration-200 hover:shadow-md",
           !product.available && "cursor-not-allowed opacity-60",
           className
         )}

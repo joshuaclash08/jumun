@@ -3,17 +3,19 @@
 import * as React from "react";
 import { Search, X } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import type { Product } from "@/lib/types";
+import type { MenuCategory, Product } from "@/lib/types";
 import { ProductCard } from "@/components/flow/ProductCard";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
 
 interface MenuSearchSectionProps {
   products: Product[];
+  categories: MenuCategory[];
   onProductClick: (product: Product) => void;
 }
 
 export function MenuSearchSection({
   products,
+  categories,
   onProductClick,
 }: MenuSearchSectionProps) {
   const reduceMotion = useAccessibilityStore((state) => state.reducedMotion);
@@ -22,21 +24,25 @@ export function MenuSearchSection({
 
   const trimmedQuery = query.trim();
 
+  // p.category is the English id ("coffee"), never what a user types --
+  // match against the Korean category label instead.
+  const categoryLabelById = React.useMemo(
+    () => new Map(categories.map((c) => [c.id, c.labelKo])),
+    [categories]
+  );
+
   const filteredProducts = React.useMemo(() => {
     if (!trimmedQuery) return [];
     const lower = trimmedQuery.toLowerCase();
     return products.filter((p) => {
       const nameMatch = p.nameKo.toLowerCase().includes(lower);
       const descMatch = p.descriptionKo.toLowerCase().includes(lower);
-      const categoryMatch = p.category.toLowerCase().includes(lower);
+      const categoryMatch = (categoryLabelById.get(p.category) ?? "")
+        .toLowerCase()
+        .includes(lower);
       return nameMatch || descMatch || categoryMatch;
     });
-  }, [products, trimmedQuery]);
-
-  const handleTagClick = (tag: string) => {
-    setQuery(tag);
-    inputRef.current?.focus();
-  };
+  }, [products, trimmedQuery, categoryLabelById]);
 
   const handleClear = () => {
     setQuery("");
@@ -72,7 +78,7 @@ export function MenuSearchSection({
           onChange={(e) => setQuery(e.target.value)}
           aria-label="메뉴 검색"
           placeholder="메뉴 검색"
-          className="h-14 w-full rounded-[18px] border border-border bg-background pl-12 pr-11 text-base font-medium text-foreground placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 outline-none transition-all [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden"
+          className="h-14 w-full rounded-[18px] border border-border bg-background pl-12 pr-11 text-base font-medium text-foreground placeholder:text-muted-foreground focus-visible:border-primary transition-all [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden"
         />
         {query && (
           <button

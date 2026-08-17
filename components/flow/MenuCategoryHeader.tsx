@@ -1,7 +1,13 @@
 "use client";
 
 import * as React from "react";
-import { animate, motion, motionValue, useTransform, type MotionValue } from "motion/react";
+import {
+  animate,
+  motion,
+  useMotionValue,
+  useTransform,
+  type MotionValue,
+} from "motion/react";
 import { cn } from "@/lib/utils";
 import type { MenuCategory } from "@/lib/types";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
@@ -29,9 +35,14 @@ export function MenuCategoryHeader({
   const navRef = React.useRef<HTMLElement | null>(null);
   const buttonRefs = React.useRef<Record<string, HTMLButtonElement | null>>({});
   const scrollAnimationRef = React.useRef<{ stop: () => void } | null>(null);
-  const fallbackTransitionProgress = React.useRef(motionValue(1)).current;
-  const transitionProgress = activeTransitionProgress ?? fallbackTransitionProgress;
-  const activeLabelOpacity = useTransform(transitionProgress, [0, 1], [0.85, 1]);
+  const fallbackTransitionProgress = useMotionValue(1);
+  const transitionProgress =
+    activeTransitionProgress ?? fallbackTransitionProgress;
+  const activeLabelOpacity = useTransform(
+    transitionProgress,
+    [0, 1],
+    [0.85, 1],
+  );
   const activeLabelScale = useTransform(transitionProgress, [0, 1], [0.94, 1]);
 
   // Single persistent pill -- never unmounted/remounted between categories,
@@ -101,7 +112,7 @@ export function MenuCategoryHeader({
   }, [activeCategoryId, reduceMotion]);
 
   return (
-    <div className="sticky top-0 z-40 flex w-full items-center bg-background/90 backdrop-blur-md py-2.5">
+    <div id="menu-category-header" className="sticky top-0 z-40 flex w-full items-center py-2.5">
       {/* Horizontally Scrollable Categories with Smooth Left/Right Edge Fade Mask */}
       <motion.nav
         ref={navRef}
@@ -143,7 +154,7 @@ export function MenuCategoryHeader({
                 transition={{ type: "spring", stiffness: 400, damping: 25 }}
                 onClick={() => onCategorySelect(category.id)}
                 className={cn(
-                  "relative rounded-full px-4.5 py-2 text-base font-bold transition-all focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 outline-none",
+                  "relative rounded-full px-4.5 py-2 text-base font-bold transition-all",
                   isActive
                     ? "text-primary-foreground font-extrabold"
                     : "bg-[#F2F4F6] text-muted-foreground hover:text-foreground hover:bg-[#E5E8EB]",
