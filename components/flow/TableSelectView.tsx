@@ -1,12 +1,11 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
-import { ChevronLeft, Settings } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
+import { BackButton } from "@/components/ui/BackButton";
+import { SettingsIconButton } from "@/components/ui/SettingsIconButton";
 import { cn } from "@/lib/utils";
 import type { StoreListing } from "@/lib/types";
 
@@ -31,38 +30,14 @@ export function TableSelectView({ store }: TableSelectViewProps) {
       className="flex min-h-[100dvh] w-full flex-col bg-background text-foreground"
     >
       <header className="sticky top-0 z-30 flex h-14 items-center justify-between px-4 bg-background/90 backdrop-blur-md">
-        <motion.div
-          whileTap={reduceMotion ? undefined : { scale: 0.90 }}
-          transition={{ type: "spring", stiffness: 400, damping: 25 }}
-        >
-          <Button
-            asChild
-            variant="ghost"
-            size="icon"
-            className="h-10 w-10 rounded-full bg-background/85 hover:bg-background text-foreground backdrop-blur-md shadow-sm border border-border/50 flex items-center justify-center -ml-1"
-          >
-            <Link href={`/order/${store.storeId}`} aria-label="이전 화면으로 돌아가기">
-              <ChevronLeft className="size-6 stroke-[2.5]" aria-hidden="true" />
-            </Link>
-          </Button>
-        </motion.div>
-
-        <motion.div
-          whileTap={reduceMotion ? undefined : { scale: 0.90 }}
-          transition={{ type: "spring", stiffness: 400, damping: 25 }}
-        >
-          <Button
-            asChild
-            variant="ghost"
-            size="icon"
-            className="h-10 w-10 rounded-full bg-background/85 hover:bg-background text-foreground backdrop-blur-md shadow-sm border border-border/50 flex items-center justify-center -mr-1"
-          >
-            <Link href="/settings" aria-label="설정 열기">
-              <Settings className="size-5.5 stroke-[2.2]" aria-hidden="true" />
-            </Link>
-          </Button>
-        </motion.div>
+        <BackButton
+          href={`/order/${store.storeId}`}
+          label="이전 화면으로 돌아가기"
+          className="-ml-1"
+        />
+        <SettingsIconButton className="-mr-1" />
       </header>
+
 
       <div className="flex flex-1 flex-col gap-6 px-5 pt-2 pb-[calc(2rem+env(safe-area-inset-bottom,0px))]">
         <div className="flex flex-col gap-1.5">

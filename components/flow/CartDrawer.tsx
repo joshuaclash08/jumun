@@ -11,11 +11,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Plus, Minus, Trash2, ChevronLeft } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { useCartStore } from "@/store/useCartStore";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
 import { EmptyCartIllustration } from "@/components/ui/TossIllustrations";
 import { RollingPrice } from "@/components/ui/RollingPrice";
+import { BackButton } from "@/components/ui/BackButton";
+import { QuantityStepper } from "@/components/flow/QuantityStepper";
 
 interface CartDrawerProps {
   open: boolean;
@@ -38,24 +40,14 @@ export function CartDrawer({ open, onOpenChange, onCheckout }: CartDrawerProps) 
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent>
         <div className="relative flex flex-col max-h-[90vh] min-h-0 overflow-hidden">
-          <DrawerHeader className="relative grid grid-cols-[40px_1fr_40px] items-center px-4 py-3">
-            <motion.div
-              whileTap={reduceMotion ? undefined : { scale: 0.90 }}
-              transition={{ type: "spring", stiffness: 400, damping: 25 }}
-            >
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => onOpenChange(false)}
-                aria-label="장바구니 닫기"
-                className="h-10 w-10 rounded-full bg-background/85 hover:bg-background text-foreground backdrop-blur-md shadow-sm border border-border/50 flex items-center justify-center -ml-1"
-              >
-                <ChevronLeft className="size-6 stroke-[2.5]" aria-hidden="true" />
-              </Button>
-            </motion.div>
+          <DrawerHeader className="relative grid grid-cols-[44px_1fr_44px] items-center px-4 py-3">
+            <BackButton
+              onClick={() => onOpenChange(false)}
+              label="장바구니 닫기"
+              className="-ml-1"
+            />
             <DrawerTitle className="text-lg sm:text-xl font-extrabold text-foreground text-center">장바구니</DrawerTitle>
-            <div className="w-10" aria-hidden="true" />
+            <div className="w-11" aria-hidden="true" />
           </DrawerHeader>
 
           <div
@@ -122,34 +114,14 @@ export function CartDrawer({ open, onOpenChange, onCheckout }: CartDrawerProps) 
                         <Separator className="my-0.5" />
 
                         <div className="flex items-center justify-between pt-1">
-                          {/* Stepper */}
-                          <div className="flex items-center rounded-full border border-border bg-muted/40 p-0.5">
-                            <motion.button
-                              type="button"
-                              whileTap={reduceMotion ? undefined : { scale: 0.9 }}
-                              onClick={() => updateQuantity(item.id, -1)}
-                              className="flex h-8 w-8 items-center justify-center text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-full hover:bg-background"
-                              aria-label={`${item.nameKo || '상품'} 수량 1개 줄이기`}
-                            >
-                              <Minus className="h-3.5 w-3.5 stroke-[2.5]" />
-                            </motion.button>
-                            <span
-                              className="flex w-7 justify-center font-extrabold text-base text-foreground tabular-nums tracking-[0.6px]"
-                              aria-live="polite"
-                              aria-label={`현재 수량 ${item.quantity}개`}
-                            >
-                              {item.quantity}
-                            </span>
-                            <motion.button
-                              type="button"
-                              whileTap={reduceMotion ? undefined : { scale: 0.9 }}
-                              onClick={() => updateQuantity(item.id, 1)}
-                              className="flex h-8 w-8 items-center justify-center text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-full hover:bg-background"
-                              aria-label={`${item.nameKo || '상품'} 수량 1개 늘리기`}
-                            >
-                              <Plus className="h-3.5 w-3.5 stroke-[2.5]" />
-                            </motion.button>
-                          </div>
+                          <QuantityStepper
+                            value={item.quantity}
+                            onIncrement={() => updateQuantity(item.id, 1)}
+                            onDecrement={() => updateQuantity(item.id, -1)}
+                            min={1}
+                            size="sm"
+                            itemLabel={item.nameKo || "상품"}
+                          />
 
                           <RollingPrice
                             value={item.unitPrice * item.quantity}

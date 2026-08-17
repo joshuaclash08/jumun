@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { motion } from "motion/react";
 import {
   Drawer,
   DrawerContent,
@@ -12,13 +11,14 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, CreditCard, Smartphone, TriangleAlert, Utensils, ShoppingBag, ChevronLeft } from "lucide-react";
+import { Loader2, CreditCard, Smartphone, TriangleAlert, Utensils, ShoppingBag } from "lucide-react";
 import { OrderService } from "@/lib/services";
 import { useCartStore } from "@/store/useCartStore";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
 import { usePaymentStore } from "@/store/usePaymentStore";
 import { RollingPrice } from "@/components/ui/RollingPrice";
 import { SelectionCard } from "./SelectionCard";
+import { BackButton } from "@/components/ui/BackButton";
 
 interface CheckoutSheetProps {
   open: boolean;
@@ -77,24 +77,14 @@ export function CheckoutSheet({ open, onOpenChange, onConfirm }: CheckoutSheetPr
     <Drawer open={open} onOpenChange={handleOpenChange}>
       <DrawerContent>
         <div className="relative flex flex-col max-h-[90vh] min-h-0 overflow-hidden">
-          <DrawerHeader className="relative grid grid-cols-[40px_1fr_40px] items-center px-4 py-3">
-            <motion.div
-              whileTap={reduceMotion ? undefined : { scale: 0.90 }}
-              transition={{ type: "spring", stiffness: 400, damping: 25 }}
-            >
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => handleOpenChange(false)}
-                aria-label="주문 및 결제 닫기"
-                className="h-10 w-10 rounded-full bg-background/85 hover:bg-background text-foreground backdrop-blur-md shadow-sm border border-border/50 flex items-center justify-center -ml-1"
-              >
-                <ChevronLeft className="size-6 stroke-[2.5]" aria-hidden="true" />
-              </Button>
-            </motion.div>
+          <DrawerHeader className="relative grid grid-cols-[44px_1fr_44px] items-center px-4 py-3">
+            <BackButton
+              onClick={() => handleOpenChange(false)}
+              label="주문 및 결제 닫기"
+              className="-ml-1"
+            />
             <DrawerTitle className="text-lg sm:text-xl font-extrabold text-foreground text-center">주문 및 결제</DrawerTitle>
-            <div className="w-10" aria-hidden="true" />
+            <div className="w-11" aria-hidden="true" />
           </DrawerHeader>
 
           <div
@@ -145,7 +135,7 @@ export function CheckoutSheet({ open, onOpenChange, onConfirm }: CheckoutSheetPr
               <Card className="flex flex-col gap-3 p-4.5 rounded-[22px] shadow-resting border-border">
                 <div className="flex items-center justify-between">
                   <h3 className="text-base font-bold text-foreground">주문 내역 ({items.reduce((s, i) => s + i.quantity, 0)}개)</h3>
-                  <Badge variant="secondary" className="text-base font-bold px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border-none">
+                  <Badge variant="secondary" className="text-base font-bold px-2.5 py-0.5">
                     {storeInfo?.storeName}
                   </Badge>
                 </div>

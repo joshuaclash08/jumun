@@ -10,6 +10,10 @@ import { StaffCallButton } from "@/components/flow/StaffCallButton";
 import { ProductDetailSheet } from "@/components/flow/ProductDetailSheet";
 import { OrderTypeSelectView } from "@/components/flow/OrderTypeSelectView";
 import { TableSelectView } from "@/components/flow/TableSelectView";
+import { BackButton } from "@/components/ui/BackButton";
+import { SettingsIconButton } from "@/components/ui/SettingsIconButton";
+import { QuantityStepper } from "@/components/flow/QuantityStepper";
+import { FontScaleSelector } from "@/components/settings/FontScaleSelector";
 import { useCartStore } from "@/store/useCartStore";
 import type { Product, CartItem, OrderReceipt, StoreListing } from "@/lib/types";
 
@@ -146,8 +150,8 @@ describe("Component Accessibility & Rendering", () => {
     expect(screen.getAllByText("9,000원").length).toBeGreaterThanOrEqual(1);
   });
 
-  it("renders HeaderBar with back button and without settings button", () => {
-    render(
+  it("renders HeaderBar with back button, settings link, dine-in table badge, and passes axe check", async () => {
+    const { container } = render(
       <HeaderBar
         storeInfo={{
           storeId: "jumun-cafe-01",
@@ -160,10 +164,36 @@ describe("Component Accessibility & Rendering", () => {
 
     const backLink = screen.getByRole("link", { name: "뒤로 이동" });
     expect(backLink).toBeInTheDocument();
-    expect(backLink).toHaveAttribute("href", "/order/jumun-cafe-01");
-    expect(screen.queryByRole("link", { name: "설정 열기" })).not.toBeInTheDocument();
+    // Dine-in back goes to the table picker, not the order-type picker --
+    // see components/layout/HeaderBar.tsx's backHref comment.
+    expect(backLink).toHaveAttribute("href", "/order/jumun-cafe-01/table");
+    expect(screen.getByRole("link", { name: "설정 열기" })).toBeInTheDocument();
     expect(screen.getByText("주문 카페 1호점")).toBeInTheDocument();
     expect(screen.getByText("3번 테이블")).toBeInTheDocument();
+
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
+  });
+
+  it("renders HeaderBar in takeout mode with takeout badge and passes axe check", async () => {
+    const { container } = render(
+      <HeaderBar
+        storeInfo={{
+          storeId: "jumun-cafe-01",
+          storeName: "주문 카페 1호점",
+          orderType: "takeout",
+        }}
+      />
+    );
+
+    const backLink = screen.getByRole("link", { name: "뒤로 이동" });
+    expect(backLink).toHaveAttribute("href", "/order/jumun-cafe-01");
+    expect(screen.getByRole("link", { name: "설정 열기" })).toBeInTheDocument();
+    expect(screen.getByText("주문 카페 1호점")).toBeInTheDocument();
+    expect(screen.getByText("포장")).toBeInTheDocument();
+
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
   });
 
   it("renders StaffCallButton with accessible trigger and handles call flow", async () => {
@@ -196,6 +226,37 @@ describe("Component Accessibility & Rendering", () => {
     // Success state in drawer
     expect(await screen.findByText("호출이 완료되었어요!")).toBeInTheDocument();
     expect(await screen.findByRole("button", { name: "확인" })).toBeInTheDocument();
+  });
+
+  it("renders StaffCallButton with text label when isExpanded is true and compact icon when false", async () => {
+    const { rerender } = render(
+      <StaffCallButton
+        isExpanded={true}
+        storeInfo={{
+          storeId: "jumun-cafe-01",
+          storeName: "주문 카페 1호점",
+          orderType: "dine-in",
+          table: "3",
+        }}
+      />
+    );
+
+    expect(screen.getByText("직원 호출")).toBeInTheDocument();
+
+    rerender(
+      <StaffCallButton
+        isExpanded={false}
+        storeInfo={{
+          storeId: "jumun-cafe-01",
+          storeName: "주문 카페 1호점",
+          orderType: "dine-in",
+          table: "3",
+        }}
+      />
+    );
+
+    expect(screen.getByText("직원 호출").parentElement).toHaveAttribute("aria-hidden", "true");
+    expect(screen.getByRole("button", { name: "직원 호출하기" })).toBeInTheDocument();
   });
 
   it("renders ProductDetailSheet with overlaid back button, required badge, and no '추가금 없음' text", () => {
@@ -306,5 +367,61 @@ describe("Component Accessibility & Rendering", () => {
     expect(settingsLink).toBeInTheDocument();
     expect(settingsLink).toHaveAttribute("href", "/settings");
   });
+
+  it("renders standalone BackButton with link and custom click handler", () => {
+    const onClick = vi.fn();
+    render(<BackButton href="/custom-url" label="이전으로" onClick={onClick} />);
+
+    const link = screen.getByRole("link", { name: "이전으로" });
+    expect(link).toBeInTheDocument();
+    expect(link).toHaveAttribute("href", "/custom-url");
+
+    fireEvent.click(link);
+    expect(onClick).toHaveBeenCalledTimes(1);
+  });
+
+  it("renders standalone SettingsIconButton with link to /settings", () => {
+    render(<SettingsIconButton />);
+    const link = screen.getByRole("link", { name: "설정 열기" });
+    expect(link).toBeInTheDocument();
+    expect(link).toHaveAttribute("href", "/settings");
+  });
+
+  it("renders QuantityStepper and fires increment/decrement handlers", () => {
+    const onIncrement = vi.fn();
+    const onDecrement = vi.fn();
+
+    render(
+      <QuantityStepper
+        value={3}
+        onIncrement={onIncrement}
+        onDecrement={onDecrement}
+        min={1}
+        max={10}
+        itemLabel="아메리카노"
+      />
+    );
+
+    expect(screen.getByText("3")).toBeInTheDocument();
+
+    const incBtn = screen.getByRole("button", { name: "아메리카노 수량 1개 늘리기" });
+    const decBtn = screen.getByRole("button", { name: "아메리카노 수량 1개 줄이기" });
+
+    fireEvent.click(incBtn);
+    expect(onIncrement).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(decBtn);
+    expect(onDecrement).toHaveBeenCalledTimes(1);
+  });
+
+  it("renders FontScaleSelector with radio options", () => {
+    render(<FontScaleSelector />);
+    const group = screen.getByRole("radiogroup", { name: "글자 크기 선택" });
+    expect(group).toBeInTheDocument();
+    expect(screen.getByText("보통")).toBeInTheDocument();
+    expect(screen.getByText("크게")).toBeInTheDocument();
+    expect(screen.getByText("아주 크게")).toBeInTheDocument();
+  });
 });
+
 

@@ -46,10 +46,14 @@ export function MenuClientView({ categories, products, storeInfo }: MenuClientVi
   const [isCartDrawerOpen, setIsCartDrawerOpen] = React.useState(false);
   const [isCheckoutSheetOpen, setIsCheckoutSheetOpen] = React.useState(false);
 
+  const [isStaffCallExpanded, setIsStaffCallExpanded] = React.useState(true);
+  const lastScrollY = React.useRef(0);
+
   const setStoreInfo = useCartStore((state) => state.setStoreInfo);
   const orderStatus = useCartStore((state) => state.orderStatus);
   const resetOrder = useCartStore((state) => state.resetOrder);
   const reduceMotion = useAccessibilityStore((state) => state.reducedMotion);
+  const fontScale = useAccessibilityStore((state) => state.fontScale);
   const isProgrammaticScroll = React.useRef(false);
 
   React.useEffect(() => {
@@ -58,12 +62,28 @@ export function MenuClientView({ categories, products, storeInfo }: MenuClientVi
     }
   }, [storeInfo, setStoreInfo]);
 
-  // Precise Scroll Sync via scroll listener with bottom detection
+  // Staff-call button expand/collapse on scroll direction, plus a
+  // force-last-category fallback near the very bottom of the page (a short
+  // last section can end well above the IntersectionObserver band below and
+  // never itself cross it). Deliberately lightweight -- no per-category
+  // getBoundingClientRect here; that used to run on every scroll event for
+  // all 8 categories and is now the IntersectionObserver effect's job.
   React.useEffect(() => {
     const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      const scrollDiff = currentScrollY - lastScrollY.current;
+
+      if (currentScrollY <= 50) {
+        setIsStaffCallExpanded(true);
+      } else if (scrollDiff > 8) {
+        setIsStaffCallExpanded(false);
+      } else if (scrollDiff < -8) {
+        setIsStaffCallExpanded(true);
+      }
+      lastScrollY.current = currentScrollY;
+
       if (isProgrammaticScroll.current) return;
 
-      // 1. Detect if scrolled to near the bottom of the page
       const isNearBottom =
         window.innerHeight + window.scrollY >=
         document.documentElement.scrollHeight - 70;
@@ -71,34 +91,63 @@ export function MenuClientView({ categories, products, storeInfo }: MenuClientVi
       if (isNearBottom) {
         const lastCategory = allCategories[allCategories.length - 1];
         if (lastCategory) {
-          setActiveCategoryId(lastCategory.id);
-          return;
+          setActiveCategoryId((prev) => (prev === lastCategory.id ? prev : lastCategory.id));
         }
       }
-
-      // 2. Find the category section currently in view
-      const headerThreshold = 100;
-      let matchedCategory = allCategories[0]?.id || "popular";
-
-      for (const cat of allCategories) {
-        const el = document.getElementById(`category-${cat.id}`);
-        if (el) {
-          const rect = el.getBoundingClientRect();
-          if (rect.top <= headerThreshold) {
-            matchedCategory = cat.id;
-          }
-        }
-      }
-
-      setActiveCategoryId(matchedCategory);
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, [allCategories]);
 
+  // Category scrollspy via IntersectionObserver. rootMargin's top offset is
+  // measured live off the sticky #menu-category-header (not a hardcoded
+  // guess), since its height changes with fontScale. When several short
+  // sections cross the detection band in the same callback batch, only the
+  // entry with the largest intersectionRatio wins, and state updates are
+  // skipped when the winner already matches the current value -- this is
+  // what stops the active-tab flicker on short categories (see
+  // docs/archive/2026-08-16-ux-audit.md §2.1).
+  React.useEffect(() => {
+    const headerEl = document.getElementById("menu-category-header");
+    const chromeHeight = headerEl?.getBoundingClientRect().height ?? 60;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (isProgrammaticScroll.current) return;
+
+        let best: IntersectionObserverEntry | null = null;
+        for (const entry of entries) {
+          if (
+            entry.isIntersecting &&
+            (!best || entry.intersectionRatio > best.intersectionRatio)
+          ) {
+            best = entry;
+          }
+        }
+        if (!best) return;
+
+        const nextId = best.target.id.replace("category-", "");
+        setActiveCategoryId((prev) => (prev === nextId ? prev : nextId));
+      },
+      {
+        rootMargin: `-${Math.ceil(chromeHeight)}px 0px -60% 0px`,
+        threshold: [0, 0.25, 0.5, 0.75, 1],
+      }
+    );
+
+    allCategories.forEach((cat) => {
+      const el = document.getElementById(`category-${cat.id}`);
+      if (el) observer.observe(el);
+    });
+
+    return () => observer.disconnect();
+  }, [allCategories, fontScale]);
+
   const handleCategorySelect = (id: string) => {
     setActiveCategoryId(id);
+    const headerEl = document.getElementById("menu-category-header");
+    const chromeHeight = headerEl?.getBoundingClientRect().height ?? 60;
     if (id === "popular") {
       isProgrammaticScroll.current = true;
       window.scrollTo({
@@ -113,7 +162,7 @@ export function MenuClientView({ categories, products, storeInfo }: MenuClientVi
     const element = document.getElementById(`category-${id}`);
     if (element) {
       isProgrammaticScroll.current = true;
-      const y = element.getBoundingClientRect().top + window.scrollY - 60;
+      const y = element.getBoundingClientRect().top + window.scrollY - chromeHeight - 8;
       window.scrollTo({
         top: Math.max(0, y),
         behavior: reduceMotion ? "instant" : "smooth",
@@ -190,7 +239,7 @@ export function MenuClientView({ categories, products, storeInfo }: MenuClientVi
                   <section
                     key={category.id}
                     id={`category-${category.id}`}
-                    className="flex flex-col gap-3.5 scroll-mt-[64px]"
+                    className="flex flex-col gap-3.5 scroll-mt-[72px]"
                     aria-labelledby={`heading-${category.id}`}
                   >
                     <div className="flex items-baseline gap-2 pb-1">
@@ -222,6 +271,7 @@ export function MenuClientView({ categories, products, storeInfo }: MenuClientVi
               {/* Bottom Search Section for quick menu lookup */}
               <MenuSearchSection
                 products={products}
+                categories={categories}
                 onProductClick={handleProductClick}
               />
             </div>
@@ -230,15 +280,23 @@ export function MenuClientView({ categories, products, storeInfo }: MenuClientVi
       )}
     </AnimatePresence>
 
-    {/* Fixed Bottom Action Controls: Staff Call (Bottom-Left) + Cart Summary Pill */}
-    {/* Takeout has no table to call staff to -- dine-in only. */}
-    {storeInfo && storeInfo.orderType === "dine-in" && orderStatus !== "confirmed" && (
-      <StaffCallButton storeInfo={storeInfo} />
+    {/* Fixed Bottom Action Controls: Staff Call + Cart Summary Pill in unified dynamic bar */}
+    {orderStatus !== "confirmed" && (
+      <div className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] inset-x-0 z-50 pointer-events-none px-4">
+        <div className="mx-auto max-w-[768px] flex items-center gap-3 w-full">
+          {storeInfo && storeInfo.orderType === "dine-in" && (
+            <StaffCallButton
+              storeInfo={storeInfo}
+              isExpanded={isStaffCallExpanded}
+            />
+          )}
+          <CartSummaryPill
+            onClick={() => setIsCartDrawerOpen(true)}
+            showLabel={!storeInfo || storeInfo.orderType !== "dine-in" || !isStaffCallExpanded}
+          />
+        </div>
+      </div>
     )}
-    <CartSummaryPill
-      onClick={() => setIsCartDrawerOpen(true)}
-      reserveStaffCallSpace={storeInfo?.orderType === "dine-in"}
-    />
 
     <ProductDetailSheet
       product={selectedProduct}

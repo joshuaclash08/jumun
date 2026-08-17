@@ -1,13 +1,12 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { motion } from "motion/react";
-import { ChevronLeft, Utensils, ShoppingBag, Settings } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Utensils, ShoppingBag } from "lucide-react";
 import { SelectionCard } from "./SelectionCard";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
+import { BackButton } from "@/components/ui/BackButton";
+import { SettingsIconButton } from "@/components/ui/SettingsIconButton";
 import type { StoreListing } from "@/lib/types";
 
 interface OrderTypeSelectViewProps {
@@ -27,38 +26,10 @@ export function OrderTypeSelectView({ store }: OrderTypeSelectViewProps) {
       className="flex min-h-[100dvh] w-full flex-col bg-background text-foreground"
     >
       <header className="sticky top-0 z-30 flex h-14 items-center justify-between px-4 bg-background/90 backdrop-blur-md">
-        <motion.div
-          whileTap={reduceMotion ? undefined : { scale: 0.9 }}
-          transition={{ type: "spring", stiffness: 400, damping: 25 }}
-        >
-          <Button
-            asChild
-            variant="ghost"
-            size="icon"
-            className="h-10 w-10 rounded-full bg-background/85 hover:bg-background text-foreground backdrop-blur-md shadow-sm border border-border/50 flex items-center justify-center -ml-1"
-          >
-            <Link href="/" aria-label="홈으로 이동">
-              <ChevronLeft className="size-6 stroke-[2.5]" aria-hidden="true" />
-            </Link>
-          </Button>
-        </motion.div>
-
-        <motion.div
-          whileTap={reduceMotion ? undefined : { scale: 0.9 }}
-          transition={{ type: "spring", stiffness: 400, damping: 25 }}
-        >
-          <Button
-            asChild
-            variant="ghost"
-            size="icon"
-            className="h-10 w-10 rounded-full bg-background/85 hover:bg-background text-foreground backdrop-blur-md shadow-sm border border-border/50 flex items-center justify-center -mr-1"
-          >
-            <Link href="/settings" aria-label="설정 열기">
-              <Settings className="size-5.5 stroke-[2.2]" aria-hidden="true" />
-            </Link>
-          </Button>
-        </motion.div>
+        <BackButton href="/" label="홈으로 이동" className="-ml-1" />
+        <SettingsIconButton className="-mr-1" />
       </header>
+
 
       <div className="flex flex-1 flex-col justify-center gap-6 px-5 pb-[calc(2rem+env(safe-area-inset-bottom,0px))]">
         <div className="flex flex-col gap-1.5">
@@ -75,7 +46,7 @@ export function OrderTypeSelectView({ store }: OrderTypeSelectViewProps) {
             isSelected={false}
             onClick={() => router.push(`/order/${store.storeId}/table`)}
             label="매장 식사"
-            sublabel="이거"
+            sublabel="테이블에서 편하게"
             icon={<Utensils className="h-5 w-5" />}
             reduceMotion={reduceMotion}
           />
@@ -83,7 +54,7 @@ export function OrderTypeSelectView({ store }: OrderTypeSelectViewProps) {
             isSelected={false}
             onClick={() => router.push(`/order/${store.storeId}?type=takeout`)}
             label="포장하기"
-            sublabel="넣을까말까"
+            sublabel="포장 후 픽업"
             icon={<ShoppingBag className="h-5 w-5" />}
             reduceMotion={reduceMotion}
           />

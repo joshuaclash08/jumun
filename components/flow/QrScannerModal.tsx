@@ -2,8 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { Camera, QrCode, ChevronLeft } from "lucide-react";
-import { motion } from "motion/react";
+import { Camera, QrCode } from "lucide-react";
 import {
   Drawer,
   DrawerContent,
@@ -13,7 +12,7 @@ import {
   DrawerFooter,
 } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
-import { useAccessibilityStore } from "@/store/useAccessibilityStore";
+import { BackButton } from "@/components/ui/BackButton";
 
 interface QrScannerModalProps {
   open: boolean;
@@ -22,7 +21,6 @@ interface QrScannerModalProps {
 
 export function QrScannerModal({ open, onOpenChange }: QrScannerModalProps) {
   const router = useRouter();
-  const reduceMotion = useAccessibilityStore((state) => state.reducedMotion);
   const videoRef = React.useRef<HTMLVideoElement>(null);
   const [cameraError, setCameraError] = React.useState<string | null>(null);
   const [isScanning, setIsScanning] = React.useState(false);
@@ -105,22 +103,12 @@ export function QrScannerModal({ open, onOpenChange }: QrScannerModalProps) {
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent>
         <DrawerHeader className="relative items-center pb-2 text-center">
-          <motion.div
-            whileTap={reduceMotion ? undefined : { scale: 0.90 }}
-            transition={{ type: "spring", stiffness: 400, damping: 25 }}
-            className="absolute top-3 left-3"
-          >
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
+          <div className="absolute top-3 left-3">
+            <BackButton
               onClick={() => onOpenChange(false)}
-              aria-label="QR 스캐너 닫기"
-              className="h-10 w-10 rounded-full bg-background/85 hover:bg-background text-foreground backdrop-blur-md shadow-sm border border-border/50 flex items-center justify-center"
-            >
-              <ChevronLeft className="size-6 stroke-[2.5]" aria-hidden="true" />
-            </Button>
-          </motion.div>
+              label="QR 스캐너 닫기"
+            />
+          </div>
 
           <div className="flex h-10 w-10 items-center justify-center rounded-[12px] bg-primary/10 text-primary mb-1 mt-1">
             <QrCode className="h-5 w-5" />

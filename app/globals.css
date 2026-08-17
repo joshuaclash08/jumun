@@ -17,6 +17,8 @@
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
+  --color-success: var(--success);
+  --color-success-bg: var(--success-bg);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
@@ -64,6 +66,12 @@
   --accent: #e8f2ff; /* Toss info-bg */
   --accent-foreground: #0064ff;
   --destructive: #b91c1c;
+  /* Toss success green -- icon/large-surface accent only per DESIGN.md's
+     Status-Color Exception Rule. As direct small text on --success-bg it
+     computes to ~2.83:1, below the 4.5:1 floor; use --foreground for text
+     on this background instead (see StaffCallButton.tsx). */
+  --success: #00a85a;
+  --success-bg: #e8f8ee;
   --border: #e5e8eb; /* Toss border-default */
   --input: #d1d6db; /* Toss border-strong */
   --ring: #0064ff; /* Toss border-focus */

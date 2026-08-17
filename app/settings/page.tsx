@@ -5,17 +5,12 @@ import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
 import { SettingsHeader } from "@/components/settings/SettingsHeader";
 import { SettingsGroup, SettingsRow } from "@/components/settings/SettingsRow";
+import { FontScaleSelector } from "@/components/settings/FontScaleSelector";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
 import { notify } from "@/lib/services/A11yFeedbackService";
 import { cn } from "@/lib/utils";
-
-const FONT_SCALES = [
-  { scale: 1.0, label: "보통" },
-  { scale: 1.15, label: "크게" },
-  { scale: 1.3, label: "아주 크게" },
-];
 
 const LANGUAGES = [
   { id: "ko" as const, label: "한국어" },
@@ -27,8 +22,6 @@ export default function SettingsPage() {
   const {
     highContrast,
     setHighContrast,
-    fontScale,
-    setFontScale,
     reducedMotion,
     setReducedMotion,
     dyslexiaSpacing,
@@ -86,51 +79,7 @@ export default function SettingsPage() {
           </h2>
           <SettingsGroup>
             {/* Font Scale Control */}
-            <div className="flex flex-col gap-3 px-5 py-4">
-              <div className="flex flex-col gap-1">
-                <span className="text-base font-bold text-foreground">
-                  글자 크기
-                </span>
-                <span className="text-base font-medium text-muted-foreground">
-                  화면 전체 기본 글꼴 크기를 조절해요
-                </span>
-              </div>
-              <div className="grid grid-cols-3 gap-2 pt-1 bg-muted/40 p-1.5 rounded-[16px]">
-                {FONT_SCALES.map((item) => {
-                  const isSelected = fontScale === item.scale;
-                  return (
-                    <motion.button
-                      key={item.scale}
-                      type="button"
-                      whileTap={reducedMotion ? undefined : { scale: 0.96 }}
-                      transition={{
-                        type: "spring",
-                        stiffness: 400,
-                        damping: 25,
-                      }}
-                      onClick={() => {
-                        setFontScale(item.scale);
-                        notify(
-                          "success",
-                          `글자 크기가 ${item.label}로 변경되었습니다.`,
-                          {
-                            hapticsEnabled,
-                          },
-                        );
-                      }}
-                      className={cn(
-                        "flex h-11 items-center justify-center rounded-[12px] font-bold text-base transition-all outline-none",
-                        isSelected
-                          ? "bg-primary text-white shadow-sm"
-                          : "text-muted-foreground hover:text-foreground hover:bg-background/60",
-                      )}
-                    >
-                      {item.label}
-                    </motion.button>
-                  );
-                })}
-              </div>
-            </div>
+            <FontScaleSelector />
 
             <SettingsRow
               htmlFor="setting-high-contrast"

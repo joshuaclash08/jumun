@@ -9,12 +9,14 @@ import {
   DrawerDescription,
 } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
-import { Check, Plus, Minus, ChevronLeft } from "lucide-react";
+import { Check } from "lucide-react";
 import type { Product, CartItemSelection } from "@/lib/types";
 import { useCartStore } from "@/store/useCartStore";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
 import Image from "next/image";
 import { RollingPrice } from "@/components/ui/RollingPrice";
+import { BackButton } from "@/components/ui/BackButton";
+import { QuantityStepper } from "@/components/flow/QuantityStepper";
 import { generateUUID } from "@/lib/utils";
 
 interface ProductDetailSheetProps {
@@ -141,22 +143,13 @@ function ProductDetailContent({
       <DrawerTitle className="sr-only">{product.nameKo}</DrawerTitle>
 
       {/* Top Floating Back Button overlaid on hero stage */}
-      <motion.div
-        whileTap={reduceMotion ? undefined : { scale: 0.90 }}
-        transition={{ type: "spring", stiffness: 400, damping: 25 }}
-        className="absolute top-3.5 left-4 z-30"
-      >
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
+      <div className="absolute top-3 left-3 z-30">
+        <BackButton
           onClick={onClose}
-          aria-label="메뉴 상세 닫기"
-          className="h-10 w-10 rounded-full bg-background/85 hover:bg-background text-foreground backdrop-blur-md shadow-sm border border-border/50 flex items-center justify-center"
-        >
-          <ChevronLeft className="size-6 stroke-[2.5]" aria-hidden="true" />
-        </Button>
-      </motion.div>
+          label="메뉴 상세 닫기"
+          className="bg-background/80 backdrop-blur-md"
+        />
+      </div>
 
       {/* Scrollable Content Container */}
       <div
@@ -199,35 +192,14 @@ function ProductDetailContent({
                 </div>
 
                 {/* Tactile Stepper */}
-                <div className="flex items-center rounded-full border border-border bg-muted/40 p-1">
-                  <motion.button
-                    type="button"
-                    whileTap={reduceMotion ? undefined : { scale: 0.9 }}
-                    onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                    disabled={quantity <= 1}
-                    className="flex h-9 w-9 items-center justify-center rounded-full text-foreground hover:bg-background disabled:opacity-30 outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
-                    aria-label="주문 수량 1개 줄이기"
-                  >
-                    <Minus className="h-4 w-4 stroke-[2.5]" />
-                  </motion.button>
-                  <span
-                    className="flex w-9 justify-center text-base font-extrabold text-foreground tabular-nums tracking-[0.6px]"
-                    aria-live="polite"
-                    aria-label={`현재 주문 수량 ${quantity}개`}
-                  >
-                    {quantity}
-                  </span>
-                  <motion.button
-                    type="button"
-                    whileTap={reduceMotion ? undefined : { scale: 0.9 }}
-                    onClick={() => setQuantity((q) => Math.min(20, q + 1))}
-                    disabled={quantity >= 20}
-                    className="flex h-9 w-9 items-center justify-center rounded-full text-foreground hover:bg-background disabled:opacity-30 outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
-                    aria-label="주문 수량 1개 늘리기"
-                  >
-                    <Plus className="h-4 w-4 stroke-[2.5]" />
-                  </motion.button>
-                </div>
+                <QuantityStepper
+                  value={quantity}
+                  onIncrement={() => setQuantity((q) => Math.min(20, q + 1))}
+                  onDecrement={() => setQuantity((q) => Math.max(1, q - 1))}
+                  min={1}
+                  max={20}
+                  itemLabel="주문"
+                />
               </div>
             </div>
           </div>
@@ -246,7 +218,7 @@ function ProductDetailContent({
                         {group.labelKo}
                       </h3>
                       {group.required && (
-                        <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-sm font-extrabold text-primary">
+                        <span className="inline-flex items-center rounded-full bg-secondary px-2.5 py-0.5 text-sm font-extrabold text-secondary-foreground">
                           필수
                         </span>
                       )}
@@ -270,7 +242,7 @@ function ProductDetailContent({
                             onClick={() => handleOptionToggle(group, opt.id)}
                             aria-pressed={isSelected}
                             aria-label={`${opt.labelKo}${priceDescription}`}
-                            className={`flex min-h-[56px] items-center justify-between rounded-[18px] border-2 p-3.5 transition-all focus-visible:ring-2 focus-visible:ring-ring outline-none ${
+                            className={`flex min-h-[56px] items-center justify-between rounded-[18px] border-2 p-3.5 transition-all ${
                               isSelected
                                 ? "border-primary bg-primary/5 font-bold text-primary shadow-2xs"
                                 : "border-border bg-card text-foreground hover:bg-muted/30"

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Bell, ChevronLeft, Check } from "lucide-react";
+import { Bell, Check } from "lucide-react";
 import {
   Drawer,
   DrawerContent,
@@ -12,6 +12,7 @@ import {
   DrawerFooter,
 } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
+import { BackButton } from "@/components/ui/BackButton";
 import { useCartStore } from "@/store/useCartStore";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
 import { notify } from "@/lib/services/A11yFeedbackService";
@@ -21,16 +22,19 @@ import { cn } from "@/lib/utils";
 interface StaffCallButtonProps {
   storeInfo: Extract<StoreInfo, { orderType: "dine-in" }>;
   className?: string;
+  isExpanded?: boolean;
 }
 
 /**
- * Toss TDS Outline Bell Icon with soft-tint circular surface (#E8F2FF / #0064FF)
+ * Toss TDS Outline Bell Icon with soft-tint circular surface. Icon-sized use
+ * of the accent color, not small text, so accent/secondary tokens apply
+ * directly (no Status-Color Exception Rule concern here).
  */
 function TossOutlineBellIcon({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "flex h-16 w-16 items-center justify-center rounded-full bg-[#E8F2FF] text-[#0064FF] select-none",
+        "flex h-16 w-16 items-center justify-center rounded-full bg-secondary text-secondary-foreground select-none",
         className,
       )}
     >
@@ -40,13 +44,15 @@ function TossOutlineBellIcon({ className }: { className?: string }) {
 }
 
 /**
- * Toss TDS Outline Success Check Icon (#E8F8EE / #00A85A)
+ * Toss TDS Outline Success Check Icon -- large icon-sized use of --success,
+ * which is fine per the Status-Color Exception Rule (icon/large-surface
+ * only, never small text).
  */
 function TossOutlineCheckIcon({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "flex h-16 w-16 items-center justify-center rounded-full bg-[#E8F8EE] text-[#00A85A] select-none",
+        "flex h-16 w-16 items-center justify-center rounded-full bg-success-bg text-success select-none",
         className,
       )}
     >
@@ -58,6 +64,7 @@ function TossOutlineCheckIcon({ className }: { className?: string }) {
 export function StaffCallButton({
   storeInfo,
   className,
+  isExpanded = true,
 }: StaffCallButtonProps) {
   const [open, setOpen] = React.useState(false);
   const [callStatus, setCallStatus] = React.useState<"idle" | "success">("idle");
@@ -115,54 +122,48 @@ export function StaffCallButton({
 
   return (
     <>
-      <div
-        className={cn(
-          "fixed bottom-[calc(0.75rem+env(safe-area-inset-bottom,0px))] inset-x-0 z-50 pointer-events-none",
-          className,
-        )}
+      <motion.div
+        whileTap={reduceMotion ? undefined : { scale: 0.92 }}
+        transition={{ type: "spring", stiffness: 400, damping: 25 }}
+        className={cn("pointer-events-auto shrink-0", className)}
       >
-        <div className="mx-auto max-w-[768px] pl-4">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => handleOpenChange(true)}
+          className="h-14 rounded-full bg-card/95 backdrop-blur-md hover:bg-muted text-foreground border border-border/80 shadow-[0_4px_16px_rgba(25,31,40,0.08)] flex items-center p-0 gap-0 cursor-pointer overflow-hidden transition-colors px-4"
+          aria-label="직원 호출하기"
+        >
+          <Bell className="size-6 stroke-[1.9] shrink-0" aria-hidden="true" />
           <motion.div
-            whileTap={reduceMotion ? undefined : { scale: 0.9 }}
-            transition={{ type: "spring", stiffness: 400, damping: 25 }}
-            className="pointer-events-auto w-fit"
+            initial={false}
+            animate={{
+              width: isExpanded ? "auto" : 0,
+              opacity: isExpanded ? 1 : 0,
+            }}
+            transition={{
+              duration: reduceMotion ? 0 : 0.28,
+              ease: [0.16, 1, 0.3, 1],
+            }}
+            className="overflow-hidden"
+            aria-hidden={!isExpanded}
           >
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              onClick={() => handleOpenChange(true)}
-              className="h-14 w-14 rounded-full bg-card/95 backdrop-blur-md hover:bg-muted text-foreground border border-border/80 shadow-[0_4px_16px_rgba(25,31,40,0.12)] p-0 flex items-center justify-center shrink-0 cursor-pointer"
-              aria-label="직원 호출하기"
-            >
-              <Bell className="size-6 stroke-[2.2]" aria-hidden="true" />
-            </Button>
+            <span className="block font-bold text-[15px] sm:text-base whitespace-nowrap text-foreground pl-2.5">
+              직원 호출
+            </span>
           </motion.div>
-        </div>
-      </div>
+        </Button>
+      </motion.div>
 
       <Drawer open={open} onOpenChange={handleOpenChange}>
         <DrawerContent>
           <DrawerHeader className="relative items-center pb-2 pt-6 text-center">
-            <motion.div
-              whileTap={reduceMotion ? undefined : { scale: 0.9 }}
-              transition={{ type: "spring", stiffness: 400, damping: 25 }}
-              className="absolute top-3 left-3"
-            >
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
+            <div className="absolute top-3 left-3">
+              <BackButton
                 onClick={handleCloseImmediately}
-                aria-label="직원 호출 닫기"
-                className="h-10 w-10 rounded-full bg-background/85 hover:bg-background text-foreground backdrop-blur-md shadow-xs border border-border/50 flex items-center justify-center cursor-pointer"
-              >
-                <ChevronLeft
-                  className="size-6 stroke-[2.5]"
-                  aria-hidden="true"
-                />
-              </Button>
-            </motion.div>
+                label="직원 호출 닫기"
+              />
+            </div>
 
             <AnimatePresence mode="wait">
               {callStatus === "idle" ? (
@@ -178,7 +179,7 @@ export function StaffCallButton({
                     <TossOutlineBellIcon />
                   </div>
 
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#E8F2FF] text-[#0064FF] font-bold text-xs mb-2">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary text-secondary-foreground font-bold text-sm mb-2">
                     <span>{storeInfo.storeName}</span>
                     <span className="opacity-40">•</span>
                     <span>{storeInfo.table}번 테이블</span>
@@ -201,7 +202,7 @@ export function StaffCallButton({
                     <TossOutlineCheckIcon />
                   </div>
 
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#E8F8EE] text-[#00A85A] font-bold text-xs mb-2">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-success-bg text-foreground font-bold text-sm mb-2">
                     <span>{storeInfo.table}번 테이블</span>
                     <span className="opacity-40">•</span>
                     <span>호출 완료</span>
