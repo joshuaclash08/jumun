@@ -12,10 +12,3 @@ export interface CartItem {
   selections: CartItemSelection[];
   unitPrice: number;
 }
-
-export interface ToastItem {
-  id: string;
-  messageKo: string;
-  kind: "success" | "error";
-  onUndo?: () => void;
-}

@@ -1,8 +1,8 @@
 "use client";
 
 import { create } from "zustand";
-import type { CartItem, OrderReceipt, OrderStatus, StoreInfo, ToastItem } from "@/lib/types";
-import { notify } from "@/lib/services/A11yFeedbackService";
+import type { CartItem, OrderReceipt, OrderStatus, StoreInfo } from "@/lib/types";
+import { toast } from "@/lib/services/A11yFeedbackService";
 import { useAccessibilityStore } from "./useAccessibilityStore";
 
 interface CartStore {
@@ -10,7 +10,6 @@ interface CartStore {
   items: CartItem[];
   orderStatus: OrderStatus;
   lastReceipt: OrderReceipt | null;
-  toasts: ToastItem[];
   history: CartItem[][];
 
   setStoreInfo: (storeInfo: StoreInfo) => void;
@@ -21,8 +20,6 @@ interface CartStore {
   resetOrder: () => void;
   setOrderStatus: (status: OrderStatus) => void;
   setLastReceipt: (receipt: OrderReceipt | null) => void;
-  dismissToast: (toastId: string) => void;
-  showToast: (kind: "success" | "error", messageKo: string) => void;
   undoLastAction: () => void;
 }
 
@@ -45,26 +42,31 @@ export const useCartStore = create<CartStore>()((set, get) => ({
   items: [],
   orderStatus: "idle",
   lastReceipt: null,
-  toasts: [],
   history: [],
 
   setStoreInfo: (storeInfo) => set({ storeInfo }),
 
   addItem: (item) => {
-    const { items, history, toasts } = get();
-    const toast = notify("success", `${item.quantity}개가 장바구니에 담겼습니다.`, {
+    const { items, history } = get();
+    toast({
+      kind: "success",
+      messageKo: `${item.nameKo || "상품"} ${item.quantity}잔이 장바구니에 담겼습니다.`,
+      variant: "cart",
       hapticsEnabled: hapticsEnabled(),
     });
-    set({ items: [...items, item], history: pushHistory(history, items), toasts: [...toasts, toast] });
+    set({ items: [...items, item], history: pushHistory(history, items) });
   },
 
   removeItem: (itemId) => {
-    const { items, history, toasts } = get();
+    const { items, history } = get();
     const removedIndex = items.findIndex((item) => item.id === itemId);
     if (removedIndex === -1) return;
     const removed = items[removedIndex];
     const nextItems = items.filter((item) => item.id !== itemId);
-    const toast = notify("success", "장바구니에서 삭제되었습니다.", {
+    toast({
+      kind: "success",
+      messageKo: `${removed.nameKo || "상품"}가 장바구니에서 삭제되었습니다.`,
+      variant: "delete",
       hapticsEnabled: hapticsEnabled(),
       onUndo: () => {
         const current = get().items;
@@ -77,7 +79,7 @@ export const useCartStore = create<CartStore>()((set, get) => ({
         });
       },
     });
-    set({ items: nextItems, history: pushHistory(history, items), toasts: [...toasts, toast] });
+    set({ items: nextItems, history: pushHistory(history, items) });
   },
 
   updateQuantity: (itemId, delta) => {
@@ -104,16 +106,6 @@ export const useCartStore = create<CartStore>()((set, get) => ({
   setOrderStatus: (orderStatus) => set({ orderStatus }),
 
   setLastReceipt: (lastReceipt) => set({ lastReceipt }),
-
-  dismissToast: (toastId) =>
-    set((state) => ({ toasts: state.toasts.filter((toast) => toast.id !== toastId) })),
-
-  showToast: (kind, messageKo) => {
-    const toast = notify(kind, messageKo, {
-      hapticsEnabled: hapticsEnabled(),
-    });
-    set((state) => ({ toasts: [...state.toasts, toast] }));
-  },
 
   undoLastAction: () => {
     const { history } = get();

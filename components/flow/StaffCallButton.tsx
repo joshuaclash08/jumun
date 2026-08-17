@@ -13,9 +13,8 @@ import {
 } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { BackButton } from "@/components/ui/BackButton";
-import { useCartStore } from "@/store/useCartStore";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
-import { notify } from "@/lib/services/A11yFeedbackService";
+import { toast } from "@/lib/services/A11yFeedbackService";
 import type { StoreInfo } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -98,14 +97,12 @@ export function StaffCallButton({
   const handleConfirm = () => {
     setCallStatus("success");
 
-    const toast = notify(
-      "success",
-      `${storeInfo.table}번 테이블로 직원을 호출했어요.`,
-      {
-        hapticsEnabled,
-      },
-    );
-    useCartStore.setState((state) => ({ toasts: [...state.toasts, toast] }));
+    toast({
+      kind: "success",
+      messageKo: `${storeInfo.table}번 테이블로 직원을 호출했어요.`,
+      variant: "staff-call",
+      hapticsEnabled,
+    });
 
     // Auto dismiss after 2.4s
     if (autoCloseTimerRef.current) {
@@ -232,17 +229,19 @@ export function StaffCallButton({
                 >
                   <Button
                     type="button"
+                    variant="secondary"
                     size="lg"
                     onClick={handleCloseImmediately}
-                    className="w-full h-14 min-h-[56px] font-bold text-base rounded-[16px] bg-[#F2F4F6] text-[#4E5968] hover:bg-[#E5E8EB] hover:text-[#191F28] border-0 shadow-none active:scale-[0.96] transition-all cursor-pointer"
+                    className="w-full h-14 min-h-[56px] font-bold text-base rounded-[16px] border-0 shadow-none active:scale-[0.96] transition-all cursor-pointer"
                   >
                     취소
                   </Button>
                   <Button
                     type="button"
+                    variant="default"
                     size="lg"
                     onClick={handleConfirm}
-                    className="w-full h-14 min-h-[56px] font-extrabold text-base rounded-[16px] bg-[#0064FF] text-white hover:bg-[#0050D9] shadow-none border-0 active:scale-[0.96] transition-all cursor-pointer"
+                    className="w-full h-14 min-h-[56px] font-extrabold text-base rounded-[16px] shadow-none border-0 active:scale-[0.96] transition-all cursor-pointer"
                   >
                     호출하기
                   </Button>
@@ -258,9 +257,10 @@ export function StaffCallButton({
                 >
                   <Button
                     type="button"
+                    variant="default"
                     size="lg"
                     onClick={handleCloseImmediately}
-                    className="w-full h-14 min-h-[56px] font-extrabold text-base rounded-[16px] bg-[#0064FF] text-white hover:bg-[#0050D9] shadow-none border-0 active:scale-[0.96] transition-all cursor-pointer"
+                    className="w-full h-14 min-h-[56px] font-extrabold text-base rounded-[16px] shadow-none border-0 active:scale-[0.96] transition-all cursor-pointer"
                   >
                     확인
                   </Button>

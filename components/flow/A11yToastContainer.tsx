@@ -1,10 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { useCartStore } from "@/store/useCartStore";
+import { useToastStore } from "@/store/useToastStore";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
 import { motion, AnimatePresence } from "motion/react";
-import { Check, Bell, Trash2, TriangleAlert } from "lucide-react";
+import { Check, Bell, Trash2, ShoppingBag, TriangleAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ToastItem } from "@/lib/types";
 
@@ -14,24 +14,30 @@ function getToastVisual(toast: ToastItem) {
       icon: <TriangleAlert className="h-4 w-4 stroke-[2.5] text-[#FF4D4D]" />,
     };
   }
-  if (toast.messageKo.includes("직원") || toast.messageKo.includes("호출")) {
-    return {
-      icon: <Bell className="h-4 w-4 stroke-[2.5] text-[#FFB020]" />,
-    };
+  switch (toast.variant) {
+    case "cart":
+      return {
+        icon: <ShoppingBag className="h-4 w-4 stroke-[2.5] text-primary" />,
+      };
+    case "staff-call":
+      return {
+        icon: <Bell className="h-4 w-4 stroke-[2.5] text-[#FFB020]" />,
+      };
+    case "delete":
+      return {
+        icon: <Trash2 className="h-4 w-4 stroke-[2.5] text-[#FF6B6B]" />,
+      };
+    case "generic":
+    default:
+      return {
+        icon: <Check className="h-4 w-4 stroke-[3] text-primary" />,
+      };
   }
-  if (toast.messageKo.includes("삭제")) {
-    return {
-      icon: <Trash2 className="h-4 w-4 stroke-[2.5] text-[#FF6B6B]" />,
-    };
-  }
-  return {
-    icon: <Check className="h-4 w-4 stroke-[3] text-[#3182F6]" />,
-  };
 }
 
 export function A11yToastContainer() {
-  const toasts = useCartStore((state) => state.toasts);
-  const dismissToast = useCartStore((state) => state.dismissToast);
+  const toasts = useToastStore((state) => state.toasts);
+  const dismissToast = useToastStore((state) => state.dismissToast);
   const reducedMotion = useAccessibilityStore((state) => state.reducedMotion);
   const timeoutExtension = useAccessibilityStore(
     (state) => state.timeoutExtension
@@ -96,7 +102,7 @@ export function A11yToastContainer() {
                 currentToast.onUndo?.();
                 dismissToast(currentToast.id);
               }}
-              className="ml-1 shrink-0 text-base font-bold text-[#3182F6] hover:text-[#5299FF] transition-colors outline-none focus-visible:underline"
+              className="ml-1 shrink-0 text-base font-bold text-primary hover:text-primary/80 transition-colors focus-visible:underline"
               aria-label="방금 실행한 작업 취소"
             >
               취소
@@ -107,4 +113,3 @@ export function A11yToastContainer() {
     </div>
   );
 }
-

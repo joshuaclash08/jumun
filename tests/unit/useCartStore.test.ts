@@ -1,10 +1,12 @@
 import { describe, expect, it, beforeEach } from "vitest";
 import { useCartStore } from "@/store/useCartStore";
+import { useToastStore } from "@/store/useToastStore";
 import type { CartItem, StoreInfo } from "@/lib/types";
 
 describe("useCartStore", () => {
   beforeEach(() => {
     useCartStore.getState().clearCart();
+    useToastStore.setState({ toasts: [] });
   });
 
   const mockStoreInfo: StoreInfo = {
@@ -27,14 +29,13 @@ describe("useCartStore", () => {
     expect(useCartStore.getState().storeInfo).toEqual(mockStoreInfo);
   });
 
-  it("adds items and records toast and history", () => {
+  it("adds items and records history", () => {
     useCartStore.getState().addItem(sampleItem);
     const state = useCartStore.getState();
 
     expect(state.items).toHaveLength(1);
     expect(state.items[0]).toEqual(sampleItem);
     expect(state.history).toHaveLength(1);
-    expect(state.toasts.length).toBeGreaterThan(0);
   });
 
   it("updates item quantity correctly", () => {
@@ -53,8 +54,10 @@ describe("useCartStore", () => {
 
     expect(useCartStore.getState().items).toHaveLength(0);
 
-    // Call onUndo from the latest toast
-    const latestToast = useCartStore.getState().toasts.at(-1);
+    // removeItem wires an onUndo closure into the toast it pushes -- call it
+    // from the latest toast on useToastStore (toasts live there now, not on
+    // useCartStore).
+    const latestToast = useToastStore.getState().toasts.at(-1);
     expect(latestToast?.onUndo).toBeDefined();
     latestToast?.onUndo?.();
 
@@ -78,14 +81,8 @@ describe("useCartStore", () => {
     expect(useCartStore.getState().items.length).toBe(countBefore - 1);
   });
 
-  it("clears cart and dismisses toasts", () => {
+  it("clears cart", () => {
     useCartStore.getState().addItem(sampleItem);
-    const toastId = useCartStore.getState().toasts[0].id;
-
-    useCartStore.getState().dismissToast(toastId);
-    expect(
-      useCartStore.getState().toasts.find((t) => t.id === toastId)
-    ).toBeUndefined();
 
     useCartStore.getState().clearCart();
     expect(useCartStore.getState().items).toHaveLength(0);

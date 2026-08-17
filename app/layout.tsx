@@ -4,6 +4,7 @@ import { Noto_Sans_KR } from "next/font/google";
 import { Providers } from "./providers";
 import { LiveRegionAnnouncer } from "@/components/a11y/LiveRegionAnnouncer";
 import { SkipLink } from "@/components/a11y/SkipLink";
+import { A11yToastContainer } from "@/components/flow/A11yToastContainer";
 import "./globals.css";
 
 // Self-hosted from public/fonts/ (the official Pretendard 1.3.9 release
@@ -51,6 +52,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <SkipLink targetId="main-content">본문으로 바로가기</SkipLink>
             {children}
             <LiveRegionAnnouncer />
+            <A11yToastContainer />
           </Providers>
         </div>
       </body>
