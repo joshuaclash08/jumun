@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { Separator } from "@/components/ui/separator";
 import { MenuCategoryHeader } from "./MenuCategoryHeader";
 import { FeaturedMenuSection } from "./FeaturedMenuSection";
 import { ProductCard } from "./ProductCard";
@@ -13,7 +14,6 @@ import { ProductDetailSheet } from "./ProductDetailSheet";
 import { CartDrawer } from "./CartDrawer";
 import { CheckoutSheet } from "./CheckoutSheet";
 import { ConfirmationStep } from "./ConfirmationStep";
-import { A11yToastContainer } from "./A11yToastContainer";
 import { useCartStore } from "@/store/useCartStore";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
 
@@ -178,6 +178,14 @@ export function MenuClientView({ categories, products, storeInfo }: MenuClientVi
     setIsProductSheetOpen(true);
   };
 
+  // At large font scale, a 2-column grid leaves too little width for long
+  // Korean product names (they'd clip or need a line-clamp again -- the exact
+  // thing the card redesign removed). Switching to a 1-column row layout
+  // gives names ~2.5x more horizontal room instead.
+  const isLargeFontScale = fontScale >= 1.15;
+  const categoryGridClass = isLargeFontScale ? "grid-cols-1" : "grid-cols-2";
+  const cardLayout = isLargeFontScale ? "row" : "grid";
+
   // The sheets/drawer/toast below are deliberately NOT inside the
   // AnimatePresence branches: each is Vaul/Radix-portaled and manages its
   // own open/close transition independently. Nesting CheckoutSheet inside
@@ -227,46 +235,47 @@ export function MenuClientView({ categories, products, storeInfo }: MenuClientVi
             />
 
             {/* Categorized Product Sections with Search Section at bottom */}
-            <div className="flex flex-col gap-8 px-4">
-              {categories.map((category) => {
-                const categoryProducts = products.filter(
-                  (p) => p.category === category.id
-                );
+            <div className="flex flex-col gap-10 px-4">
+              {categories
+                .map((category) => ({
+                  category,
+                  categoryProducts: products.filter((p) => p.category === category.id),
+                }))
+                .filter(({ categoryProducts }) => categoryProducts.length > 0)
+                .map(({ category, categoryProducts }, visibleIndex) => (
+                  <React.Fragment key={category.id}>
+                    {visibleIndex > 0 && <Separator />}
+                    <section
+                      id={`category-${category.id}`}
+                      className="flex flex-col gap-3.5 scroll-mt-[72px]"
+                      aria-labelledby={`heading-${category.id}`}
+                    >
+                      <div className="flex items-baseline gap-2 pb-1">
+                        <h2
+                          id={`heading-${category.id}`}
+                          className="text-2xl sm:text-[26px] font-black text-foreground tracking-tight"
+                          aria-label={`${category.labelKo}, 총 ${categoryProducts.length}개 메뉴`}
+                        >
+                          {category.labelKo}
+                        </h2>
+                        <span className="text-base font-bold text-muted-foreground tabular-nums" aria-hidden="true">
+                          {categoryProducts.length}개
+                        </span>
+                      </div>
 
-                if (categoryProducts.length === 0) return null;
-
-                return (
-                  <section
-                    key={category.id}
-                    id={`category-${category.id}`}
-                    className="flex flex-col gap-3.5 scroll-mt-[72px]"
-                    aria-labelledby={`heading-${category.id}`}
-                  >
-                    <div className="flex items-baseline gap-2 pb-1">
-                      <h2
-                        id={`heading-${category.id}`}
-                        className="text-2xl sm:text-[26px] font-black text-foreground tracking-tight"
-                        aria-label={`${category.labelKo}, 총 ${categoryProducts.length}개 메뉴`}
-                      >
-                        {category.labelKo}
-                      </h2>
-                      <span className="text-base font-bold text-muted-foreground tabular-nums" aria-hidden="true">
-                        {categoryProducts.length}개
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                      {categoryProducts.map((product) => (
-                        <ProductCard
-                          key={product.id}
-                          product={product}
-                          onClick={() => handleProductClick(product)}
-                        />
-                      ))}
-                    </div>
-                  </section>
-                );
-              })}
+                      <div className={`grid ${categoryGridClass} gap-3 sm:gap-4`}>
+                        {categoryProducts.map((product) => (
+                          <ProductCard
+                            key={product.id}
+                            product={product}
+                            onClick={() => handleProductClick(product)}
+                            layout={cardLayout}
+                          />
+                        ))}
+                      </div>
+                    </section>
+                  </React.Fragment>
+                ))}
 
               {/* Bottom Search Section for quick menu lookup */}
               <MenuSearchSection
@@ -320,8 +329,6 @@ export function MenuClientView({ categories, products, storeInfo }: MenuClientVi
         window.scrollTo({ top: 0, behavior: "instant" });
       }}
     />
-
-    <A11yToastContainer />
     </>
   );
 }

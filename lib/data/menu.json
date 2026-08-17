@@ -70,7 +70,8 @@
       "imageUrl": "/images/menu/americano-v2.jpg",
       "themeBg": "#F0EFEA",
       "optionGroupIds": ["temperature", "size", "syrup"],
-      "available": true
+      "available": true,
+      "popularityRank": 1
     },
     {
       "id": "cafe-latte",
@@ -154,7 +155,8 @@
       "imageUrl": "/images/menu/grapefruit-ade-v2.jpg",
       "themeBg": "#FDE8E4",
       "optionGroupIds": ["size"],
-      "available": true
+      "available": true,
+      "popularityRank": 3
     },
     {
       "id": "peach-iced-tea",
@@ -202,7 +204,8 @@
       "imageUrl": "/images/menu/cheesecake.jpg",
       "themeBg": "#FAF0D6",
       "optionGroupIds": [],
-      "available": true
+      "available": true,
+      "popularityRank": 2
     },
     {
       "id": "chocolate-brownie",
@@ -250,7 +253,8 @@
       "imageUrl": "/images/menu/croque-monsieur.jpg",
       "themeBg": "#F7EBD8",
       "optionGroupIds": [],
-      "available": true
+      "available": true,
+      "popularityRank": 4
     },
     {
       "id": "egg-sandwich",

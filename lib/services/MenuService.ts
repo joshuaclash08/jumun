@@ -39,3 +39,10 @@ export async function getProduct(productId: string): Promise<Product | null> {
   await delay(MOCK_LATENCY_MS);
   return PRODUCTS.find((product) => product.id === productId) ?? null;
 }
+
+export async function getPopularProducts(limit = 4): Promise<Product[]> {
+  await delay(MOCK_LATENCY_MS);
+  return PRODUCTS.filter((product) => product.popularityRank !== undefined)
+    .sort((a, b) => a.popularityRank! - b.popularityRank!)
+    .slice(0, limit);
+}

@@ -1,11 +1,9 @@
 "use client";
 
 import * as React from "react";
-import Image from "next/image";
-import { motion } from "motion/react";
 import type { Product } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { useAccessibilityStore } from "@/store/useAccessibilityStore";
+import { ProductCard } from "@/components/flow/ProductCard";
 
 interface FeaturedMenuSectionProps {
   products: Product[];
@@ -18,11 +16,14 @@ export function FeaturedMenuSection({
   onProductClick,
   className,
 }: FeaturedMenuSectionProps) {
-  const reduceMotion = useAccessibilityStore((state) => state.reducedMotion);
-
-  // Pick top 4 popular items across categories
+  // Popularity-ranked items only (lib/types/menu.ts's popularityRank), not
+  // just whichever 4 happen to sit first in the catalog -- that used to
+  // duplicate 3 of 4 items with the category section right below it.
   const featuredProducts = React.useMemo(() => {
-    return products.slice(0, 4);
+    return products
+      .filter((p) => p.popularityRank !== undefined)
+      .sort((a, b) => a.popularityRank! - b.popularityRank!)
+      .slice(0, 4);
   }, [products]);
 
   if (featuredProducts.length === 0) return null;
@@ -62,61 +63,16 @@ export function FeaturedMenuSection({
         className="w-full overflow-x-auto scrollbar-none"
       >
         <div className="flex gap-3 px-4 pb-2 snap-x snap-mandatory w-max">
-          {featuredProducts.map((product, index) => {
-            const fallbackBg = "#F4F4F6";
-            const cardBg = product.themeBg || fallbackBg;
-
-            return (
-              <motion.div
-                key={`featured-${product.id}`}
-                whileTap={!product.available || reduceMotion ? undefined : { scale: 0.97 }}
-                transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                className="shrink-0 snap-start w-38 sm:w-44"
-              >
-                <button
-                  type="button"
-                  onClick={() => onProductClick(product)}
-                  disabled={!product.available}
-                  aria-label={`${product.nameKo}, ${product.price.toLocaleString("ko-KR")}원, 인기 ${index + 1}위 메뉴`}
-                  style={{ backgroundColor: cardBg }}
-                  className="group relative flex w-full aspect-[4/5] sm:aspect-[1/1] min-h-[185px] text-left rounded-[22px] overflow-hidden border border-black/6 shadow-resting transition-shadow duration-200 hover:shadow-md"
-                >
-                  {/* Full-bleed Studio Photo */}
-                  <div className="absolute inset-0" aria-hidden="true">
-                    <Image
-                      src={product.imageUrl}
-                      alt={product.nameKo}
-                      fill
-                      sizes="176px"
-                      className="object-cover transition-transform duration-500 ease-out group-hover:scale-106"
-                    />
-                  </div>
-
-                  {/* Minimalist Rank Chip: e.g. 1, 2, 3, 4 */}
-                  <div
-                    className="absolute top-2.5 left-2.5 z-20 flex h-7 w-7 items-center justify-center rounded-[8px] bg-black/65 text-white backdrop-blur-md text-sm font-black shadow-sm"
-                    aria-hidden="true"
-                  >
-                    {index + 1}
-                  </div>
-
-                  {/* Bottom: Color-matched glassmorphic info panel */}
-                  <div
-                    style={{ backgroundColor: `${cardBg}4D` }}
-                    className="absolute inset-x-0 bottom-0 z-10 flex flex-col justify-end px-3.5 pt-16 pb-3.5 gap-0.5 backdrop-blur-sm [mask-image:linear-gradient(to_top,black_30%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_top,black_30%,transparent_100%)]"
-                    aria-hidden="true"
-                  >
-                    <span className="text-[15px] sm:text-base font-extrabold text-[#191F28] break-keep line-clamp-2">
-                      {product.nameKo}
-                    </span>
-                    <span className="text-base sm:text-lg font-black text-[#191F28] tabular-nums tracking-[0.6px] pt-0.5">
-                      {product.price.toLocaleString("ko-KR")}원
-                    </span>
-                  </div>
-                </button>
-              </motion.div>
-            );
-          })}
+          {featuredProducts.map((product, index) => (
+            <div key={`featured-${product.id}`} className="shrink-0 snap-start w-38 sm:w-44">
+              <ProductCard
+                product={product}
+                onClick={() => onProductClick(product)}
+                layout="carousel"
+                rank={index + 1}
+              />
+            </div>
+          ))}
         </div>
       </div>
     </section>

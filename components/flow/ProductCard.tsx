@@ -12,18 +12,54 @@ import { useAccessibilityStore } from "@/store/useAccessibilityStore";
 interface ProductCardProps {
   product: Product;
   onClick: () => void;
+  /**
+   * 'grid' = photo-above-text 2-column grid card (default).
+   * 'row' = compact list row: a smaller square photo on the left plus the
+   *   same text panel to its right in a horizontal layout, used for a
+   *   1-column list mode at large font scales.
+   * 'carousel' = same visual treatment as 'grid' but sized for a fixed-width
+   *   horizontal-scroll context and can show a rank badge.
+   */
+  layout?: "grid" | "row" | "carousel";
+  /** Only meaningful with layout='carousel' -- shows a small numbered rank chip. */
+  rank?: number;
   className?: string;
 }
 
-export function ProductCard({ product, onClick, className }: ProductCardProps) {
+export function ProductCard({
+  product,
+  onClick,
+  layout = "grid",
+  rank,
+  className,
+}: ProductCardProps) {
   const reduceMotion = useAccessibilityStore((state) => state.reducedMotion);
 
-  // Concise accessible name for fast VoiceOver navigation across menu items
-  const baseLabel = `${product.nameKo}, ${product.price.toLocaleString("ko-KR")}원`;
-  const ariaLabel = product.available ? baseLabel : `${baseLabel}, 품절된 상품입니다`;
+  // Rich, full-sentence accessible name sourced from the data's own
+  // voice-description field -- falls back to the terse "name, price"
+  // pattern only if that field is unexpectedly empty, so nothing ever
+  // announces blank.
+  const baseLabel =
+    product.voiceDescriptionKo ||
+    `${product.nameKo}, ${product.price.toLocaleString("ko-KR")}원`;
 
-  const fallbackBg = "#F4F4F6";
-  const cardBg = product.themeBg || fallbackBg;
+  const isRow = layout === "row";
+  const showRankChip = layout === "carousel" && typeof rank === "number" && product.available;
+
+  // Carousel cards show a visual (aria-hidden) rank badge -- fold that same
+  // popularity rank into the accessible name too, so screen-reader users get
+  // the same "인기 N위" context sighted users get from the badge.
+  const rankAnnouncement = showRankChip ? `, 인기 ${rank}위 메뉴` : "";
+  const ariaLabel = product.available
+    ? `${baseLabel}${rankAnnouncement}`
+    : `${baseLabel}, 품절된 상품입니다`;
+
+  // Sold-out items stay focusable/announced (no `disabled`) so screen-reader
+  // users know they exist; the click is just a no-op instead.
+  const handleClick = () => {
+    if (!product.available) return;
+    onClick();
+  };
 
   return (
     <motion.div
@@ -33,63 +69,78 @@ export function ProductCard({ product, onClick, className }: ProductCardProps) {
     >
       <button
         type="button"
-        onClick={onClick}
-        disabled={!product.available}
+        onClick={handleClick}
+        aria-disabled={!product.available}
         aria-label={ariaLabel}
-        style={{ backgroundColor: cardBg }}
         className={cn(
-          "group relative flex w-full aspect-[4/5] sm:aspect-[1/1] min-h-[190px] text-left rounded-[22px] overflow-hidden border border-black/6 shadow-resting transition-shadow duration-200 hover:shadow-md",
-          !product.available && "cursor-not-allowed opacity-60",
+          "flex w-full overflow-hidden text-left rounded-[20px] border border-border bg-card shadow-resting transition-colors duration-200 hover:border-input",
+          isRow ? "flex-row items-stretch" : "flex-col",
+          !product.available && "cursor-not-allowed",
           className
         )}
       >
-        {/* Full-bleed Studio Food Photo -- the info panel below overlays its bottom edge
-            rather than sitting in its own stacked block, so the blur has an actual photo
-            behind it to blur instead of just blurring a flat matching color. */}
+        {/* Photo area -- fixed aspect ratio, never itself dimmed so the
+            sold-out badge (a sibling inside it) keeps full contrast. */}
         <div
-          className={cn("absolute inset-0", !product.available && "grayscale")}
-          aria-hidden="true"
+          className={cn(
+            "relative shrink-0 overflow-hidden",
+            isRow
+              ? "h-28 w-28 aspect-square rounded-[16px] m-2"
+              : "aspect-[4/3] w-full rounded-t-[20px]"
+          )}
         >
-          <Image
-            src={product.imageUrl}
-            alt={product.nameKo}
-            fill
-            sizes="(max-width: 640px) 50vw, 240px"
-            className="object-cover transition-transform duration-500 ease-out group-hover:scale-106"
-          />
+          <div
+            className={cn("absolute inset-0", !product.available && "grayscale opacity-60")}
+            style={{ backgroundColor: product.themeBg || "#F4F4F6" }}
+          >
+            <Image
+              src={product.imageUrl}
+              alt=""
+              fill
+              sizes={
+                isRow
+                  ? "112px"
+                  : layout === "carousel"
+                    ? "176px"
+                    : "(max-width: 640px) 50vw, 240px"
+              }
+              className="object-cover"
+            />
+          </div>
+
+          {!product.available ? (
+            <Badge
+              variant="outline"
+              className="absolute top-2.5 left-2.5 z-20 flex items-center gap-1 bg-black/80 px-2.5 py-0.5 text-base font-bold text-white border-none rounded-[8px]"
+            >
+              <Ban className="h-3.5 w-3.5" aria-hidden="true" />
+              품절
+            </Badge>
+          ) : null}
+
+          {showRankChip ? (
+            <div
+              className="absolute top-2.5 left-2.5 z-20 flex h-7 w-7 items-center justify-center rounded-[8px] bg-black/65 text-white backdrop-blur-md text-sm font-black shadow-sm"
+              aria-hidden="true"
+            >
+              {rank}
+            </div>
+          ) : null}
         </div>
 
-        {/* Status Badge */}
-        {!product.available ? (
-          <Badge
-            variant="outline"
-            className="absolute top-2.5 left-2.5 z-20 flex items-center gap-1 bg-black/80 px-2.5 py-0.5 text-base font-bold text-white border-none rounded-[8px]"
-          >
-            <Ban className="h-3.5 w-3.5" aria-hidden="true" />
-            품절
-          </Badge>
-        ) : null}
-
-        {/* Bottom: Color-matched glassmorphic info panel -- the tint and the blur both
-            fade out via the same mask gradient, so it blends into the photo instead of
-            cutting off at a hard seam. */}
+        {/* Text panel -- solid card surface, not glassmorphic, grows with content. */}
         <div
-          style={{ backgroundColor: `${cardBg}4D` }} // ~30% alpha -- liquid-glass level, not a near-solid block
-          className="absolute inset-x-0 bottom-0 z-10 flex flex-col justify-end px-3 sm:px-3.5 pt-16 sm:pt-20 pb-3 sm:pb-3.5 gap-0.5 backdrop-blur-sm [mask-image:linear-gradient(to_top,black_30%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_top,black_30%,transparent_100%)]"
+          className={cn(
+            "flex flex-col gap-1 bg-card px-3 py-3 text-card-foreground",
+            isRow && "min-w-0 flex-1 justify-center"
+          )}
         >
-          <h3 className="text-[15px] sm:text-base font-extrabold leading-snug text-[#191F28] break-keep line-clamp-2">
-            {product.nameKo}
-          </h3>
-
-          <div className="flex items-baseline justify-between pt-0.5">
-            <span className="text-base sm:text-lg font-black text-[#191F28] tabular-nums tracking-[0.6px]">
-              {product.price.toLocaleString("ko-KR")}원
-            </span>
-          </div>
+          <h3 className="text-base font-bold break-keep">{product.nameKo}</h3>
+          <span className="text-base font-bold tabular-nums text-card-foreground">
+            {product.price.toLocaleString("ko-KR")}원
+          </span>
         </div>
       </button>
     </motion.div>
   );
 }
-
-

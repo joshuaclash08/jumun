@@ -42,5 +42,7 @@ export interface Product {
   themeBg?: string;
   optionGroups: ProductOptionGroup[];
   available: boolean;
+  /** Popularity-section display rank. Absent = not shown in the popular section. 1 is highest. */
+  popularityRank?: number;
 }
 

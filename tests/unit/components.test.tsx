@@ -15,6 +15,7 @@ import { SettingsIconButton } from "@/components/ui/SettingsIconButton";
 import { QuantityStepper } from "@/components/flow/QuantityStepper";
 import { FontScaleSelector } from "@/components/settings/FontScaleSelector";
 import { useCartStore } from "@/store/useCartStore";
+import { useToastStore } from "@/store/useToastStore";
 import type { Product, CartItem, OrderReceipt, StoreListing } from "@/lib/types";
 
 vi.mock("next/navigation", () => ({
@@ -37,10 +38,11 @@ describe("Component Accessibility & Rendering", () => {
     category: "coffee",
     nameKo: "아메리카노",
     descriptionKo: "깊고 풍부한 바디감의 에스프레소에 물을 더한 클래식 커피",
-    voiceDescriptionKo: "아메리카노, 4500원, 깊고 풍부한 바디감의 클래식 커피",
+    voiceDescriptionKo: "아메리카노, 4,500원, 깊고 풍부한 바디감의 클래식 커피",
     price: 4500,
     imageUrl: "/images/menu/americano.jpg",
     available: true,
+    popularityRank: 1,
     optionGroups: [
       {
         id: "temp",
@@ -65,10 +67,12 @@ describe("Component Accessibility & Rendering", () => {
     unitPrice: 4500,
   };
 
-  it("renders ProductCard with concise accessible label and price", () => {
+  it("renders ProductCard with full voice-description accessible label and price", () => {
     render(<ProductCard product={sampleProduct} onClick={() => {}} />);
+    // ProductCard prefers the data's own voiceDescriptionKo sentence over the
+    // terse "name, price" fallback whenever it's present.
     const cardButton = screen.getByRole("button", {
-      name: "아메리카노, 4,500원",
+      name: sampleProduct.voiceDescriptionKo,
     });
     expect(cardButton).toBeInTheDocument();
     expect(screen.getByText("아메리카노")).toBeInTheDocument();
@@ -97,8 +101,12 @@ describe("Component Accessibility & Rendering", () => {
     expect(screen.getByText("인기 메뉴")).toBeInTheDocument();
     expect(screen.getByText("1")).toBeInTheDocument();
 
+    // Accessible name is the full voice-description sentence plus a trailing
+    // rank announcement (e.g. "..., 인기 1위 메뉴") -- match both ends rather
+    // than requiring exact adjacency, since the description clause sits
+    // between the price and the rank suffix.
     const itemButton = screen.getByRole("button", {
-      name: /아메리카노, 4,500원, 인기 1위 메뉴/i,
+      name: /^아메리카노, 4,500원.*인기 1위 메뉴$/i,
     });
     fireEvent.click(itemButton);
     expect(clickedProduct).toEqual(sampleProduct);
@@ -108,7 +116,9 @@ describe("Component Accessibility & Rendering", () => {
     const soldOutProduct = { ...sampleProduct, available: false };
     render(<ProductCard product={soldOutProduct} onClick={() => {}} />);
     const cardButton = screen.getByRole("button");
-    expect(cardButton).toBeDisabled();
+    // Sold-out cards stay focusable/announced for screen readers (no native
+    // `disabled`) -- they use aria-disabled instead, per ProductCard.tsx.
+    expect(cardButton).toHaveAttribute("aria-disabled", "true");
     expect(screen.getByText("품절")).toBeInTheDocument();
   });
 
@@ -322,7 +332,7 @@ describe("Component Accessibility & Rendering", () => {
     fireEvent.click(caramelBtn);
     expect(caramelBtn).toHaveAttribute("aria-pressed", "false");
 
-    const toasts = useCartStore.getState().toasts;
+    const toasts = useToastStore.getState().toasts;
     expect(toasts.some((t) => t.messageKo.includes("최대 1개"))).toBe(true);
   });
 
