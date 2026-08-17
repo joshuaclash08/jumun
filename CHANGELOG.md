@@ -274,4 +274,9 @@ Every `text-xs` (12px) and `text-sm` (14px) instance across the app bumped to `t
 - `next.config.ts` — added `devIndicators: false`.
 - `tests/unit/components.test.tsx` — added comprehensive tests covering HeaderBar back navigation, StaffCallButton 2-step drawer flow, ProductDetailSheet overlaid back button & maxSelections validation, and OrderTypeSelectView / TableSelectView rendering.
 
+### Removed — UX audit: unused menu category
+
+- `lib/data/menu.json` — dropped the `브런치` (brunch) category and its sole item (`avocado-brunch-plate`); nothing in the catalog referenced the category after this pass, so it was dead data, not a live menu section.
+- `lib/types/menu.ts` — removed the now-dangling `"brunch"` literal from `ProductCategory`; the union already carries `(string & {})` for forward compatibility, so this only removes a literal nothing produces anymore, not real type coverage.
+
 

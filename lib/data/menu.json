@@ -7,7 +7,6 @@
     { "id": "dessert", "labelKo": "디저트" },
     { "id": "bakery", "labelKo": "베이커리" },
     { "id": "food", "labelKo": "푸드" },
-    { "id": "brunch", "labelKo": "브런치" },
     { "id": "md", "labelKo": "원두/MD" }
   ],
   "optionGroups": {
@@ -51,7 +50,11 @@
       "options": [
         { "id": "vanilla-syrup", "labelKo": "바닐라 시럽", "priceDelta": 500 },
         { "id": "caramel-syrup", "labelKo": "카라멜 시럽", "priceDelta": 500 },
-        { "id": "hazelnut-syrup", "labelKo": "헤이즐넛 시럽", "priceDelta": 500 },
+        {
+          "id": "hazelnut-syrup",
+          "labelKo": "헤이즐넛 시럽",
+          "priceDelta": 500
+        },
         { "id": "shot-add", "labelKo": "샷 추가", "priceDelta": 500 }
       ]
     }
@@ -261,18 +264,7 @@
       "optionGroupIds": [],
       "available": true
     },
-    {
-      "id": "avocado-brunch-plate",
-      "category": "brunch",
-      "nameKo": "아보카도 브런치 플레이트",
-      "descriptionKo": "신선한 아보카도, 수란, 구운 토마토와 토스트로 구성된 든든한 플레이트예요.",
-      "voiceDescriptionKo": "아보카도 브런치 플레이트, 12,000원. 든든한 브런치 플레이트예요.",
-      "price": 12000,
-      "imageUrl": "/images/menu/avocado-brunch-plate.jpg",
-      "themeBg": "#EBF2E5",
-      "optionGroupIds": [],
-      "available": true
-    },
+
     {
       "id": "house-blend-beans",
       "category": "md",

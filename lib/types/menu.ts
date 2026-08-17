@@ -6,7 +6,6 @@ export type ProductCategory =
   | "dessert"
   | "bakery"
   | "food"
-  | "brunch"
   | "md"
   | (string & {});
 
