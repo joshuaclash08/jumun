@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { BackButton } from "@/components/ui/BackButton";
+import { tablePath } from "@/lib/routes";
 
 interface QrScannerModalProps {
   open: boolean;
@@ -130,7 +131,7 @@ export function QrScannerModal({ open, onOpenChange }: QrScannerModalProps) {
                 className="mt-2 text-base font-bold rounded-[12px]"
                 onClick={() => {
                   onOpenChange(false);
-                  router.push("/order/jumun-cafe-01?table=3");
+                  router.push(tablePath("jumun-cafe-01", "3"));
                 }}
               >
                 샘플 매장(3번 테이블)으로 바로가기
@@ -161,7 +162,7 @@ export function QrScannerModal({ open, onOpenChange }: QrScannerModalProps) {
             size="lg"
             onClick={() => {
               onOpenChange(false);
-              router.push("/order/jumun-cafe-01?table=3");
+              router.push(tablePath("jumun-cafe-01", "3"));
             }}
             className="w-full h-14 min-h-[56px] font-extrabold text-base rounded-[16px] bg-primary text-white shadow-none hover:bg-primary/95"
           >

@@ -4,6 +4,7 @@ import * as React from "react";
 import type { Product } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { ProductCard } from "@/components/flow/ProductCard";
+import { selectPopularProducts } from "@/lib/services/MenuService";
 
 interface FeaturedMenuSectionProps {
   products: Product[];
@@ -18,12 +19,11 @@ export function FeaturedMenuSection({
 }: FeaturedMenuSectionProps) {
   // Popularity-ranked items only (lib/types/menu.ts's popularityRank), not
   // just whichever 4 happen to sit first in the catalog -- that used to
-  // duplicate 3 of 4 items with the category section right below it.
+  // duplicate 3 of 4 items with the category section right below it. Shares
+  // its ranking rule with MenuService.getPopularProducts via the same
+  // selectPopularProducts helper, so the two can't drift apart.
   const featuredProducts = React.useMemo(() => {
-    return products
-      .filter((p) => p.popularityRank !== undefined)
-      .sort((a, b) => a.popularityRank! - b.popularityRank!)
-      .slice(0, 4);
+    return selectPopularProducts(products, 4);
   }, [products]);
 
   if (featuredProducts.length === 0) return null;
@@ -67,7 +67,7 @@ export function FeaturedMenuSection({
             <div key={`featured-${product.id}`} className="shrink-0 snap-start w-38 sm:w-44">
               <ProductCard
                 product={product}
-                onClick={() => onProductClick(product)}
+                onProductClick={onProductClick}
                 layout="carousel"
                 rank={index + 1}
               />

@@ -11,6 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
 import { StickyActionBar } from "@/components/shared/StickyActionBar";
 import { formatKRW } from "@/lib/format";
+import { tablePath, takeoutPath } from "@/lib/routes";
 import confetti from "canvas-confetti";
 
 interface ConfirmationStepProps {
@@ -113,8 +114,8 @@ export function ConfirmationStep({ onReset }: ConfirmationStepProps) {
     const { store } = lastReceipt;
     const href =
       store.orderType === "dine-in"
-        ? `/order/${store.storeId}?table=${store.table}`
-        : `/order/${store.storeId}?type=takeout`;
+        ? tablePath(store.storeId, store.table)
+        : takeoutPath(store.storeId);
     onReset();
     router.push(href);
   };

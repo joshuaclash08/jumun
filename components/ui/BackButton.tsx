@@ -1,13 +1,9 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
-import { motion } from "motion/react";
-import { Button } from "@/components/ui/button";
-import { useAccessibilityStore } from "@/store/useAccessibilityStore";
-import { cn } from "@/lib/utils";
+import { IconNavButton } from "@/components/ui/IconNavButton";
 
 export interface BackButtonProps {
   /** Target URL to navigate to. If omitted and onClick is not provided, defaults to router.back(). */
@@ -32,7 +28,6 @@ export function BackButton({
   className,
 }: BackButtonProps) {
   const router = useRouter();
-  const reduceMotion = useAccessibilityStore((state) => state.reducedMotion);
 
   const handleClick = (e: React.MouseEvent) => {
     if (onClick) {
@@ -43,48 +38,13 @@ export function BackButton({
     }
   };
 
-  const buttonClasses = cn(
-    "h-11 w-11 shrink-0 rounded-full text-foreground hover:bg-muted/50 active:bg-muted/70 transition-colors flex items-center justify-center",
-    className
-  );
-
-  if (href) {
-    return (
-      <motion.div
-        whileTap={reduceMotion ? undefined : { scale: 0.9 }}
-        transition={{ type: "spring", stiffness: 400, damping: 25 }}
-        className="shrink-0"
-      >
-        <Button
-          asChild
-          variant="ghost"
-          size="icon"
-          className={buttonClasses}
-        >
-          <Link href={href} aria-label={label} onClick={onClick}>
-            <ChevronLeft className="size-6 stroke-[2.5]" aria-hidden="true" />
-          </Link>
-        </Button>
-      </motion.div>
-    );
-  }
-
   return (
-    <motion.div
-      whileTap={reduceMotion ? undefined : { scale: 0.9 }}
-      transition={{ type: "spring", stiffness: 400, damping: 25 }}
-      className="shrink-0"
-    >
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        onClick={handleClick}
-        aria-label={label}
-        className={buttonClasses}
-      >
-        <ChevronLeft className="size-6 stroke-[2.5]" aria-hidden="true" />
-      </Button>
-    </motion.div>
+    <IconNavButton
+      icon={<ChevronLeft className="size-6 stroke-[2.5]" aria-hidden="true" />}
+      href={href}
+      onClick={href ? onClick : handleClick}
+      label={label}
+      className={className}
+    />
   );
 }

@@ -8,10 +8,12 @@ import { cn } from "@/lib/utils";
 import { Ban } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
+import { formatKRW } from "@/lib/format";
 
 interface ProductCardProps {
   product: Product;
-  onClick: () => void;
+  onProductClick?: (product: Product) => void;
+  onClick?: () => void;
   /**
    * 'grid' = photo-above-text 2-column grid card (default).
    * 'row' = compact list row: a smaller square photo on the left plus the
@@ -26,8 +28,9 @@ interface ProductCardProps {
   className?: string;
 }
 
-export function ProductCard({
+function ProductCardImpl({
   product,
+  onProductClick,
   onClick,
   layout = "grid",
   rank,
@@ -40,8 +43,7 @@ export function ProductCard({
   // pattern only if that field is unexpectedly empty, so nothing ever
   // announces blank.
   const baseLabel =
-    product.voiceDescriptionKo ||
-    `${product.nameKo}, ${product.price.toLocaleString("ko-KR")}원`;
+    product.voiceDescriptionKo || `${product.nameKo}, ${formatKRW(product.price)}`;
 
   const isRow = layout === "row";
   const showRankChip = layout === "carousel" && typeof rank === "number" && product.available;
@@ -58,7 +60,11 @@ export function ProductCard({
   // users know they exist; the click is just a no-op instead.
   const handleClick = () => {
     if (!product.available) return;
-    onClick();
+    if (onProductClick) {
+      onProductClick(product);
+    } else if (onClick) {
+      onClick();
+    }
   };
 
   return (
@@ -137,10 +143,12 @@ export function ProductCard({
         >
           <h3 className="text-base font-bold break-keep">{product.nameKo}</h3>
           <span className="text-base font-bold tabular-nums text-card-foreground">
-            {product.price.toLocaleString("ko-KR")}원
+            {formatKRW(product.price)}
           </span>
         </div>
       </button>
     </motion.div>
   );
 }
+
+export const ProductCard = React.memo(ProductCardImpl);

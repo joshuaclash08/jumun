@@ -1,8 +1,37 @@
 import storeData from "@/lib/data/stores.json";
 import type { OrderType, StoreInfo, StoreListing } from "@/lib/types";
 
+// Runtime shape check for stores.json, which architecture.md notes is hand-
+// edited during content updates -- a typo'd or missing field here would
+// otherwise type-check fine (via the `as` cast) and only surface as an
+// `undefined` reaching a component deep in the render tree. Fails loudly at
+// module load instead.
+function validateStores(raw: unknown): StoreListing[] {
+  if (!Array.isArray(raw)) {
+    throw new Error("stores.json: `stores` must be an array");
+  }
+  const requiredStringFields: (keyof StoreListing)[] = [
+    "storeId",
+    "storeName",
+    "branchKo",
+    "addressKo",
+    "distanceKo",
+  ];
+  raw.forEach((entry: Partial<StoreListing>, index) => {
+    for (const field of requiredStringFields) {
+      if (typeof entry?.[field] !== "string") {
+        throw new Error(`stores.json: stores[${index}].${field} must be a string`);
+      }
+    }
+    if (typeof entry?.tableCount !== "number") {
+      throw new Error(`stores.json: stores[${index}].tableCount must be a number`);
+    }
+  });
+  return raw as StoreListing[];
+}
+
 // Source of truth is lib/data/stores.json, not hardcoded TS.
-const STORES = storeData.stores as StoreListing[];
+const STORES = validateStores(storeData.stores);
 const STORES_BY_ID = new Map(STORES.map((store) => [store.storeId, store]));
 
 const MOCK_LATENCY_MS = 200;

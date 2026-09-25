@@ -17,7 +17,7 @@ export function SettingsCard({
   onClick,
   trailing,
   className,
-  iconBgClass = "bg-[#E8F3FF]",
+  iconBgClass = "bg-secondary",
   iconColorClass = "text-primary",
   isSelected = false,
   ariaPressed,

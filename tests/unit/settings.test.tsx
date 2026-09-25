@@ -102,7 +102,7 @@ describe("SettingsPage - Icon Removal & Checkbox Migration", () => {
 describe("AccessibilityDetailPage & PaymentSettingsPage", () => {
   it("renders AccessibilityDetailPage with checkboxes and clean text", async () => {
     const { container } = render(<AccessibilityDetailPage />);
-    expect(screen.getByText("자동 영구 저장")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "접근성" })).toBeInTheDocument();
     expect(screen.getAllByRole("checkbox").length).toBe(3);
 
     const results = await axe(container);
@@ -114,7 +114,7 @@ describe("AccessibilityDetailPage & PaymentSettingsPage", () => {
     const { container } = render(<PaymentSettingsPage />);
 
     expect(screen.getByText("신용 / 체크카드")).toBeInTheDocument();
-    expect(screen.getByText("간편 결제 (Pay)")).toBeInTheDocument();
+    expect(screen.getByText("간편 결제")).toBeInTheDocument();
 
     const results = await axe(container);
     expect(results).toHaveNoViolations();

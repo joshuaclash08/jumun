@@ -1,5 +1,4 @@
 import { vibrate, HAPTIC_PATTERNS } from "@/hooks/useHaptics";
-import type { ToastItem } from "@/lib/types";
 import { generateUUID } from "@/lib/utils";
 import { useToastStore } from "@/store/useToastStore";
 
@@ -59,12 +58,6 @@ export function notify(
   kind: "success" | "error",
   messageKo: string,
   options: { hapticsEnabled?: boolean; onUndo?: () => void } = {},
-): ToastItem {
+): void {
   toast({ kind, messageKo, variant: "generic", ...options });
-  return {
-    id: generateUUID(),
-    messageKo,
-    kind,
-    onUndo: options.onUndo,
-  };
 }

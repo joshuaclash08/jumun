@@ -5,6 +5,7 @@ import { Utensils, ShoppingBag } from "lucide-react";
 import type { StoreInfo } from "@/lib/types";
 import { BackButton } from "@/components/ui/BackButton";
 import { SettingsIconButton } from "@/components/ui/SettingsIconButton";
+import { orderPath, tablePath } from "@/lib/routes";
 
 interface HeaderBarProps {
   storeInfo: StoreInfo;
@@ -19,8 +20,8 @@ export function HeaderBar({ storeInfo }: HeaderBarProps) {
   // manual entrants) is the closer, safer guess either way.
   const backHref =
     storeInfo.orderType === "dine-in"
-      ? `/order/${storeInfo.storeId}/table`
-      : `/order/${storeInfo.storeId}`;
+      ? tablePath(storeInfo.storeId)
+      : orderPath(storeInfo.storeId);
 
   return (
     <header className="flex items-center justify-between gap-3 px-4 h-14 bg-background shrink-0">

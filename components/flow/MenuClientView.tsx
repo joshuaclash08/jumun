@@ -268,7 +268,7 @@ export function MenuClientView({ categories, products, storeInfo }: MenuClientVi
                           <ProductCard
                             key={product.id}
                             product={product}
-                            onClick={() => handleProductClick(product)}
+                            onProductClick={handleProductClick}
                             layout={cardLayout}
                           />
                         ))}

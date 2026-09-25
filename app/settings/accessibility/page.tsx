@@ -35,13 +35,6 @@ export default function AccessibilityDetailPage() {
       <SettingsHeader title="접근성" />
 
       <div className="flex flex-col gap-5 px-4 pt-5">
-        <div className="flex flex-col gap-1 rounded-[20px] bg-secondary p-4.5 border border-primary/15">
-          <span className="text-base font-bold text-foreground">자동 영구 저장</span>
-          <span className="text-base font-medium text-muted-foreground">
-            변경된 모든 접근성 설정은 기기에 영구 저장돼요.
-          </span>
-        </div>
-
         <SettingsGroup>
           <SettingsRow
             htmlFor="detail-dyslexia-spacing"

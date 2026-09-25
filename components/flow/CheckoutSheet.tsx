@@ -191,7 +191,6 @@ export function CheckoutSheet({ open, onOpenChange, onConfirm }: CheckoutSheetPr
                     isSelected={paymentMethod === "easy-pay"}
                     onClick={() => setPaymentMethod("easy-pay")}
                     label="간편 결제"
-                    sublabel="Pay"
                     icon={<Smartphone className="h-5 w-5" />}
                     reduceMotion={reduceMotion}
                   />

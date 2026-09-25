@@ -119,7 +119,7 @@ export function MenuSearchSection({
                   <ProductCard
                     key={`search-${product.id}`}
                     product={product}
-                    onClick={() => onProductClick(product)}
+                    onProductClick={onProductClick}
                   />
                 ))}
               </div>

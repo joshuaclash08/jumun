@@ -8,7 +8,7 @@ import { FontScaleSelector } from "@/components/settings/FontScaleSelector";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
-import { notify, toast } from "@/lib/services/A11yFeedbackService";
+import { toast } from "@/lib/services/A11yFeedbackService";
 import { StickyActionBar } from "@/components/shared/StickyActionBar";
 import { cn } from "@/lib/utils";
 
@@ -196,7 +196,6 @@ export default function SettingsPage() {
 
             <SettingsRow
               label="기본 결제 수단 관리"
-              description="주문 결제 시 기본으로 선택될 수단 (신용카드 / 간편결제)"
               href="/settings/payment"
             />
           </SettingsGroup>
@@ -209,14 +208,9 @@ export default function SettingsPage() {
           </h2>
           <SettingsGroup>
             <div className="flex flex-col gap-3 px-5 py-4">
-              <div className="flex flex-col gap-1">
-                <span className="text-base font-bold text-foreground">
-                  언어 (Language)
-                </span>
-                <span className="text-base font-medium text-muted-foreground">
-                  앱 표시 언어를 선택해요
-                </span>
-              </div>
+              <span className="text-base font-bold text-foreground">
+                언어 (Language)
+              </span>
               <div className="grid grid-cols-2 gap-2 pt-1 bg-muted/40 p-1.5 rounded-[16px]">
                 {LANGUAGES.map((item) => {
                   const isSelected = language === item.id;
@@ -232,13 +226,12 @@ export default function SettingsPage() {
                       }}
                       onClick={() => {
                         setLanguage(item.id);
-                        notify(
-                          "success",
-                          `언어가 ${item.label}로 설정되었습니다.`,
-                          {
-                            hapticsEnabled,
-                          },
-                        );
+                        toast({
+                          kind: "success",
+                          messageKo: `언어가 ${item.label}로 설정되었습니다.`,
+                          variant: "generic",
+                          hapticsEnabled,
+                        });
                       }}
                       className={cn(
                         "flex h-11 items-center justify-center rounded-[12px] font-bold text-base transition-all outline-none",

@@ -7,6 +7,7 @@ import { SelectionCard } from "./SelectionCard";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
 import { BackButton } from "@/components/ui/BackButton";
 import { SettingsIconButton } from "@/components/ui/SettingsIconButton";
+import { tablePath, takeoutPath } from "@/lib/routes";
 import type { StoreListing } from "@/lib/types";
 
 interface OrderTypeSelectViewProps {
@@ -44,17 +45,15 @@ export function OrderTypeSelectView({ store }: OrderTypeSelectViewProps) {
         <div className="grid grid-cols-2 gap-3">
           <SelectionCard
             isSelected={false}
-            onClick={() => router.push(`/order/${store.storeId}/table`)}
+            onClick={() => router.push(tablePath(store.storeId))}
             label="매장 식사"
-            sublabel="테이블에서 편하게"
             icon={<Utensils className="h-5 w-5" />}
             reduceMotion={reduceMotion}
           />
           <SelectionCard
             isSelected={false}
-            onClick={() => router.push(`/order/${store.storeId}?type=takeout`)}
+            onClick={() => router.push(takeoutPath(store.storeId))}
             label="포장하기"
-            sublabel="포장 후 픽업"
             icon={<ShoppingBag className="h-5 w-5" />}
             reduceMotion={reduceMotion}
           />

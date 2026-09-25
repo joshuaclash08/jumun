@@ -76,6 +76,7 @@ export const useCartStore = create<CartStore>()((set, get) => ({
             removed,
             ...current.slice(removedIndex),
           ],
+          history: pushHistory(get().history, current),
         });
       },
     });

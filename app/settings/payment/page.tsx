@@ -15,12 +15,10 @@ const METHODS = [
   {
     id: "card" as PaymentMethod,
     label: "신용 / 체크카드",
-    sublabel: "주문 시 카드로 결제 진행",
   },
   {
     id: "easy-pay" as PaymentMethod,
-    label: "간편 결제 (Pay)",
-    sublabel: "Apple Pay, 토스페이, 카카오페이 등",
+    label: "간편 결제",
   },
 ];
 
@@ -37,24 +35,14 @@ export default function PaymentSettingsPage() {
     >
       <SettingsHeader title="결제 수단 관리" />
 
-      <div className="flex flex-col gap-4 px-4 pt-5">
-        <div className="flex flex-col gap-1 rounded-[20px] bg-secondary p-4.5 border border-primary/15">
-          <span className="text-base font-bold text-foreground">
-            자동 기본값 저장
-          </span>
-          <span className="text-base font-medium text-muted-foreground">
-            선택한 결제 수단은 다음 주문 시 자동으로 우선 선택돼요.
-          </span>
-        </div>
-
-        <div className="flex flex-col gap-3 pt-2">
+      <div className="flex flex-col gap-3 px-4 pt-5">
+        <div className="flex flex-col gap-3">
           {METHODS.map((method) => {
             const isSelected = defaultMethod === method.id;
             return (
               <SettingsCard
                 key={method.id}
                 label={method.label}
-                description={method.sublabel}
                 isSelected={isSelected}
                 ariaPressed={isSelected}
                 onClick={() => {

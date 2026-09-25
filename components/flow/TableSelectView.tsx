@@ -7,6 +7,7 @@ import { useAccessibilityStore } from "@/store/useAccessibilityStore";
 import { BackButton } from "@/components/ui/BackButton";
 import { SettingsIconButton } from "@/components/ui/SettingsIconButton";
 import { cn } from "@/lib/utils";
+import { orderPath, tablePath } from "@/lib/routes";
 import type { StoreListing } from "@/lib/types";
 
 interface TableSelectViewProps {
@@ -31,7 +32,7 @@ export function TableSelectView({ store }: TableSelectViewProps) {
     >
       <header className="sticky top-0 z-30 flex h-14 items-center justify-between px-4 bg-background/90 backdrop-blur-md">
         <BackButton
-          href={`/order/${store.storeId}`}
+          href={orderPath(store.storeId)}
           label="이전 화면으로 돌아가기"
           className="-ml-1"
         />
@@ -58,7 +59,7 @@ export function TableSelectView({ store }: TableSelectViewProps) {
               type="button"
               whileTap={reduceMotion ? undefined : { scale: 0.94 }}
               transition={{ type: "spring", stiffness: 400, damping: 25 }}
-              onClick={() => router.push(`/order/${store.storeId}?table=${tableId}`)}
+              onClick={() => router.push(tablePath(store.storeId, tableId))}
               aria-label={`${tableId}번 테이블`}
               className={cn(
                 "flex h-16 min-h-[44px] items-center justify-center rounded-[16px] border-2 border-border bg-card font-extrabold text-lg text-foreground transition-all",
