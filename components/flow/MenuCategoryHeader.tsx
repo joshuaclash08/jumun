@@ -112,7 +112,10 @@ export function MenuCategoryHeader({
   }, [activeCategoryId, reduceMotion]);
 
   return (
-    <div id="menu-category-header" className="sticky top-0 z-40 flex w-full items-center py-2.5">
+    <div
+      id="menu-category-header"
+      className="sticky top-0 z-40 flex w-full items-center py-2.5"
+    >
       {/* Horizontally Scrollable Categories with Smooth Left/Right Edge Fade Mask */}
       <motion.nav
         ref={navRef}

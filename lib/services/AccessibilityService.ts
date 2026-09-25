@@ -16,6 +16,8 @@ export function getSettings(): AccessibilitySettings {
     dyslexiaSpacing: state.dyslexiaSpacing,
     hapticsEnabled: state.hapticsEnabled,
     timeoutExtension: state.timeoutExtension,
+    oneHandedMode: state.oneHandedMode,
+    voiceGuideEnabled: state.voiceGuideEnabled,
   };
 }
 

@@ -8,6 +8,18 @@ This file is a history — entries are appended, never rewritten. For current-st
 
 ### Added
 
+- `components/flow/WizardOrderView.tsx` — 4-step Wizard ordering flow ("한 화면에 하나의 선택만 제시": Category → Product → Options & Checkout/Add More → Payment) tailored for cognitive clarity and motor impairment accessibility.
+- `components/settings/OneHandedModeSelector.tsx` — One-Handed Layout segmented control (`기본(양손)`, `왼손 모드`, `오른손 모드`) to bias interactive controls and action bars into the user's active thumb arc (designed for hemiplegic / stroke aftermath users).
+- `hooks/useVoiceGuide.ts` — Web Speech API (TTS) integration providing Korean speech narration for wizard steps, options, and actions with mute/unmute control.
+- `tests/unit/wizard.test.tsx` — Unit and axe accessibility tests covering one-handed layout classes, full 4-step wizard flow, multi-item cart accumulation, disclaimer banner, and mode switching.
+
+### Changed
+
+- `lib/types/accessibility.ts` & `store/useAccessibilityStore.ts` — Added `oneHandedMode` and `voiceGuideEnabled` state and setters.
+- `app/settings/page.tsx` & `app/settings/accessibility/page.tsx` — Added One-Handed Layout control and Voice Guide toggle.
+- `components/flow/MenuClientView.tsx` — Added banner launcher for Wizard mode and seamless switching between standard catalog and wizard ordering.
+- `vitest.setup.ts` — Added `IntersectionObserver` mock for headless JSDOM environments.
+
 - `.gitignore` — excludes future build/dependency artifacts; excludes `legacy-reference/` from this repo's tracked history.
 - `plan.md` — master roadmap (Phase 1–4), Phase 1 scope boundary (in/out), documentation-set overview, and the standing working agreement (every change gets documented and committed).
 - `docs/decisions/0001-onboarding-model.md` — ADR: accessible-by-default with no disability-select gate, replacing legacy's dead-end gated onboarding.

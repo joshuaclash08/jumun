@@ -2,7 +2,12 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { SettingsHeader, SettingsGroup, SettingsRow } from "@/components/settings";
+import {
+  SettingsHeader,
+  SettingsGroup,
+  SettingsRow,
+  OneHandedModeSelector,
+} from "@/components/settings";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
@@ -18,6 +23,8 @@ export default function AccessibilityDetailPage() {
     setHapticsEnabled,
     timeoutExtension,
     setTimeoutExtension,
+    voiceGuideEnabled,
+    setVoiceGuideEnabled,
   } = useAccessibilityStore();
 
   const handleToggle = (name: string, next: boolean, setter: (val: boolean) => void) => {
@@ -36,6 +43,25 @@ export default function AccessibilityDetailPage() {
 
       <div className="flex flex-col gap-5 px-4 pt-5">
         <SettingsGroup>
+          <OneHandedModeSelector />
+        </SettingsGroup>
+
+        <SettingsGroup>
+          <SettingsRow
+            htmlFor="detail-voice-guide"
+            label="음성 안내 (보이스오버 체험)"
+            description="단계별 주문 화면과 메뉴 정보를 브라우저 음성으로 들려줘요"
+            trailing={
+              <Checkbox
+                id="detail-voice-guide"
+                checked={voiceGuideEnabled}
+                onCheckedChange={(checked) =>
+                  handleToggle("음성 안내", !!checked, setVoiceGuideEnabled)
+                }
+                aria-label="음성 안내 (보이스오버 체험)"
+              />
+            }
+          />
           <SettingsRow
             htmlFor="detail-dyslexia-spacing"
             label="난독증 친화 간격"

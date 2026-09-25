@@ -6,6 +6,7 @@ import {
   DEFAULT_ACCESSIBILITY_SETTINGS,
   type AccessibilitySettings,
   type AppLanguage,
+  type OneHandedMode,
 } from "@/lib/types";
 
 interface AccessibilityStore extends AccessibilitySettings {
@@ -18,6 +19,8 @@ interface AccessibilityStore extends AccessibilitySettings {
   setDyslexiaSpacing: (dyslexiaSpacing: boolean) => void;
   setHapticsEnabled: (hapticsEnabled: boolean) => void;
   setTimeoutExtension: (timeoutExtension: boolean) => void;
+  setOneHandedMode: (oneHandedMode: OneHandedMode) => void;
+  setVoiceGuideEnabled: (voiceGuideEnabled: boolean) => void;
   applyPreset: (preset: "visual" | "hearing" | "reading" | "senior") => void;
   resetAll: () => void;
 }
@@ -47,6 +50,8 @@ export const useAccessibilityStore = create<AccessibilityStore>()(
       setDyslexiaSpacing: (dyslexiaSpacing) => set({ dyslexiaSpacing }),
       setHapticsEnabled: (hapticsEnabled) => set({ hapticsEnabled }),
       setTimeoutExtension: (timeoutExtension) => set({ timeoutExtension }),
+      setOneHandedMode: (oneHandedMode) => set({ oneHandedMode }),
+      setVoiceGuideEnabled: (voiceGuideEnabled) => set({ voiceGuideEnabled }),
       applyPreset: (preset) => {
         switch (preset) {
           case "visual":

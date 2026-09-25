@@ -14,8 +14,11 @@ import { ProductDetailSheet } from "./ProductDetailSheet";
 import { CartDrawer } from "./CartDrawer";
 import { CheckoutSheet } from "./CheckoutSheet";
 import { ConfirmationStep } from "./ConfirmationStep";
+import { WizardOrderView } from "./WizardOrderView";
 import { useCartStore } from "@/store/useCartStore";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
+import { Sparkles } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 // docs/animation-guide.md §3A's wizard-transition recipe -- menu <-> receipt
 // is the one true "screen change" in this flow (everything else is a sheet
@@ -45,6 +48,7 @@ export function MenuClientView({ categories, products, storeInfo }: MenuClientVi
   const [isProductSheetOpen, setIsProductSheetOpen] = React.useState(false);
   const [isCartDrawerOpen, setIsCartDrawerOpen] = React.useState(false);
   const [isCheckoutSheetOpen, setIsCheckoutSheetOpen] = React.useState(false);
+  const [isWizardMode, setIsWizardMode] = React.useState(false);
 
   const [isStaffCallExpanded, setIsStaffCallExpanded] = React.useState(true);
   const lastScrollY = React.useRef(0);
@@ -182,43 +186,49 @@ export function MenuClientView({ categories, products, storeInfo }: MenuClientVi
   // Korean product names (they'd clip or need a line-clamp again -- the exact
   // thing the card redesign removed). Switching to a 1-column row layout
   // gives names ~2.5x more horizontal room instead.
-  const isLargeFontScale = fontScale >= 1.15;
-  const categoryGridClass = isLargeFontScale ? "grid-cols-1" : "grid-cols-2";
-  const cardLayout = isLargeFontScale ? "row" : "grid";
+    const isLargeFontScale = fontScale >= 1.15;
+    const categoryGridClass = isLargeFontScale ? "grid-cols-1" : "grid-cols-2";
+    const cardLayout = isLargeFontScale ? "row" : "grid";
+    const isMotionDisabled = reduceMotion || process.env.NODE_ENV === "test";
 
-  // The sheets/drawer/toast below are deliberately NOT inside the
-  // AnimatePresence branches: each is Vaul/Radix-portaled and manages its
-  // own open/close transition independently. Nesting CheckoutSheet inside
-  // the "menu" branch caused a real bug -- its own success handler flips
-  // orderStatus (unmounting "menu" via AnimatePresence) and closes itself
-  // (its own Vaul close transition) in the same synchronous block, and the
-  // two competing unmount paths could leave the drawer stuck open showing a
-  // stale (already-cleared) cart instead of ever finishing either
-  // transition. Each overlay already self-gates via its own `open` prop, so
-  // hoisting them to unconditional siblings is both simpler and correct --
-  // they don't need to be inside whichever "screen" happens to be active.
-  return (
-    <>
-    <AnimatePresence mode="wait">
-      {orderStatus === "confirmed" ? (
-        <motion.div
-          key="confirmation"
-          initial={reduceMotion ? undefined : screenVariants.initial}
-          animate={screenVariants.animate}
-          exit={reduceMotion ? undefined : screenVariants.exit}
-          transition={{ duration: reduceMotion ? 0 : 0.2, ease: "easeOut" }}
-        >
-          <ConfirmationStep onReset={resetOrder} />
-        </motion.div>
-      ) : (
-        <motion.div
-          key="menu"
-          initial={reduceMotion ? undefined : screenVariants.initial}
-          animate={screenVariants.animate}
-          exit={reduceMotion ? undefined : screenVariants.exit}
-          transition={{ duration: reduceMotion ? 0 : 0.2, ease: "easeOut" }}
-          className="flex w-full flex-col relative"
-        >
+    return (
+      <>
+      <AnimatePresence mode="wait">
+        {orderStatus === "confirmed" ? (
+          <motion.div
+            key="confirmation"
+            initial={isMotionDisabled ? undefined : screenVariants.initial}
+            animate={screenVariants.animate}
+            exit={isMotionDisabled ? undefined : screenVariants.exit}
+            transition={{ duration: isMotionDisabled ? 0 : 0.2, ease: "easeOut" }}
+          >
+            <ConfirmationStep onReset={resetOrder} />
+          </motion.div>
+        ) : isWizardMode ? (
+          <motion.div
+            key="wizard"
+            initial={isMotionDisabled ? undefined : screenVariants.initial}
+            animate={screenVariants.animate}
+            exit={isMotionDisabled ? undefined : screenVariants.exit}
+            transition={{ duration: isMotionDisabled ? 0 : 0.2, ease: "easeOut" }}
+            className="flex w-full flex-col relative"
+          >
+            <WizardOrderView
+              categories={categories}
+              products={products}
+              storeInfo={storeInfo}
+              onExitWizard={() => setIsWizardMode(false)}
+            />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="menu"
+            initial={isMotionDisabled ? undefined : screenVariants.initial}
+            animate={screenVariants.animate}
+            exit={isMotionDisabled ? undefined : screenVariants.exit}
+            transition={{ duration: isMotionDisabled ? 0 : 0.2, ease: "easeOut" }}
+            className="flex w-full flex-col relative"
+          >
           {/* Sticky Category Tabs with Pinned Settings Button */}
           <MenuCategoryHeader
             categories={allCategories}
@@ -228,6 +238,32 @@ export function MenuClientView({ categories, products, storeInfo }: MenuClientVi
 
           {/* Menu Content Container */}
           <div className="flex flex-col gap-8 pt-3.5 pb-36 sm:pb-40">
+            {/* Quick Wizard Mode Switcher Banner */}
+            <div className="px-4">
+              <button
+                type="button"
+                onClick={() => setIsWizardMode(true)}
+                className="w-full flex items-center justify-between p-4 rounded-2xl bg-primary/10 border border-primary/25 hover:bg-primary/15 transition-all text-left group shadow-xs cursor-pointer"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center shrink-0 shadow-xs">
+                    <Sparkles className="w-5 h-5" />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-base font-extrabold text-foreground group-hover:text-primary transition-colors">
+                      단계별 간편 주문 (위저드 UI)
+                    </span>
+                    <span className="text-xs font-medium text-muted-foreground">
+                      한 손 조작 모드 & 한 화면에 하나씩 집중 선택
+                    </span>
+                  </div>
+                </div>
+                <Badge variant="outline" className="border-primary/40 text-primary font-bold">
+                  시작하기
+                </Badge>
+              </button>
+            </div>
+
             {/* Featured / Popular Carousel Section */}
             <FeaturedMenuSection
               products={products}
@@ -290,7 +326,7 @@ export function MenuClientView({ categories, products, storeInfo }: MenuClientVi
     </AnimatePresence>
 
     {/* Fixed Bottom Action Controls: Staff Call + Cart Summary Pill in unified dynamic bar */}
-    {orderStatus !== "confirmed" && (
+    {orderStatus !== "confirmed" && !isWizardMode && (
       <div className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] inset-x-0 z-50 pointer-events-none px-4">
         <div className="mx-auto max-w-[768px] flex items-center gap-3 w-full">
           {storeInfo && storeInfo.orderType === "dine-in" && (

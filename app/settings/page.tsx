@@ -3,8 +3,13 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
-import { SettingsHeader, SettingsGroup, SettingsRow } from "@/components/settings";
-import { FontScaleSelector } from "@/components/settings/FontScaleSelector";
+import {
+  SettingsHeader,
+  SettingsGroup,
+  SettingsRow,
+  FontScaleSelector,
+  OneHandedModeSelector,
+} from "@/components/settings";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
@@ -30,6 +35,8 @@ export default function SettingsPage() {
     setHapticsEnabled,
     timeoutExtension,
     setTimeoutExtension,
+    voiceGuideEnabled,
+    setVoiceGuideEnabled,
     language,
     setLanguage,
     resetAll,
@@ -93,6 +100,9 @@ export default function SettingsPage() {
           <SettingsGroup>
             {/* Font Scale Control */}
             <FontScaleSelector />
+
+            {/* One-Handed Mode Control */}
+            <OneHandedModeSelector />
 
             <SettingsRow
               htmlFor="setting-high-contrast"
@@ -190,6 +200,26 @@ export default function SettingsPage() {
                     )
                   }
                   aria-label="알림 표시 시간 2배 연장"
+                />
+              }
+            />
+
+            <SettingsRow
+              htmlFor="setting-voice-guide"
+              label="음성 안내 (보이스오버 체험)"
+              description="주문 단계와 메뉴 정보를 브라우저 음성으로 들려줘요 (프로토타입)"
+              trailing={
+                <Checkbox
+                  id="setting-voice-guide"
+                  checked={voiceGuideEnabled}
+                  onCheckedChange={(checked) =>
+                    handleToggle(
+                      "음성 안내",
+                      !!checked,
+                      setVoiceGuideEnabled,
+                    )
+                  }
+                  aria-label="음성 안내 (보이스오버 체험)"
                 />
               }
             />

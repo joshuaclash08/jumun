@@ -1,4 +1,5 @@
 export type AppLanguage = "ko" | "en";
+export type OneHandedMode = "none" | "left" | "right";
 
 export interface AccessibilitySettings {
   language: AppLanguage;
@@ -8,6 +9,8 @@ export interface AccessibilitySettings {
   dyslexiaSpacing: boolean;
   hapticsEnabled: boolean;
   timeoutExtension: boolean;
+  oneHandedMode: OneHandedMode;
+  voiceGuideEnabled: boolean;
 }
 
 export const DEFAULT_ACCESSIBILITY_SETTINGS: AccessibilitySettings = {
@@ -18,4 +21,6 @@ export const DEFAULT_ACCESSIBILITY_SETTINGS: AccessibilitySettings = {
   dyslexiaSpacing: false,
   hapticsEnabled: true,
   timeoutExtension: false,
+  oneHandedMode: "none",
+  voiceGuideEnabled: false,
 };
