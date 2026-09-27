@@ -9,6 +9,7 @@ import type { AccessibilitySettings } from "@/lib/types";
 export function getSettings(): AccessibilitySettings {
   const state = useAccessibilityStore.getState();
   return {
+    theme: state.theme,
     language: state.language,
     highContrast: state.highContrast,
     fontScale: state.fontScale,
@@ -19,6 +20,7 @@ export function getSettings(): AccessibilitySettings {
     oneHandedMode: state.oneHandedMode,
     voiceGuideEnabled: state.voiceGuideEnabled,
     orderMode: state.orderMode,
+    menuLayout: state.menuLayout,
   };
 }
 

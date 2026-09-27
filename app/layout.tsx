@@ -1,29 +1,15 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
-import { Noto_Sans_KR } from "next/font/google";
 import { Providers } from "./providers";
 import { LiveRegionAnnouncer } from "@/components/a11y/LiveRegionAnnouncer";
 import { SkipLink } from "@/components/a11y/SkipLink";
 import { A11yToastContainer } from "@/components/flow/A11yToastContainer";
 import "./globals.css";
 
-// Self-hosted from public/fonts/ (the official Pretendard 1.3.9 release
-// distribution, not the npm package) -- see docs/tech-stack.md. weight is
-// required: omitting it renders the wrong weight specifically in
-// WebKit/Safari, and iOS Safari is an explicit target browser for this
-// product. Byte-identical to the npm package's copy (verified via md5),
-// hosted directly so the font source isn't tied to a node_modules path.
 const pretendard = localFont({
   src: "../public/fonts/PretendardVariable.woff2",
   variable: "--font-pretendard",
   weight: "45 920",
-  display: "swap",
-});
-
-const notoSansKR = Noto_Sans_KR({
-  subsets: ["latin"],
-  weight: ["400", "500", "700"],
-  variable: "--font-noto-sans-kr",
   display: "swap",
 });
 
@@ -40,16 +26,26 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#ffffff",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#17171c" },
+  ],
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ko" className={`${pretendard.variable} ${notoSansKR.variable} bg-background`} suppressHydrationWarning>
+    <html lang="ko" className={`${pretendard.variable} bg-background`} suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var k='jumun:accessibility-settings';var raw=localStorage.getItem(k);var isDark=false;if(raw){var p=JSON.parse(raw);if(p&&p.state){if(p.state.theme){isDark=p.state.theme==='dark';}else if(!p.state.hasSetTheme){isDark=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches;if(isDark){p.state.theme='dark';p.state.hasSetTheme=true;localStorage.setItem(k,JSON.stringify(p));}}}}else{isDark=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches;if(isDark){localStorage.setItem(k,JSON.stringify({state:{theme:'dark',hasSetTheme:true},version:0}));}}if(isDark){document.documentElement.classList.add('dark');}}catch(e){}})();`,
+          }}
+        />
+      </head>
       <body className="min-h-[100dvh] bg-background font-sans text-foreground antialiased selection:bg-primary/20 flex justify-center">
-        <div className="w-full max-w-[768px] min-h-[100dvh] bg-background text-foreground relative flex flex-col">
+        <div className="w-full max-w-[840px] min-h-[100dvh] bg-background text-foreground relative flex flex-col">
           <Providers>
-            <SkipLink targetId="main-content">본문으로 바로가기</SkipLink>
+            <SkipLink targetId="main-content" />
             {children}
             <LiveRegionAnnouncer />
             <A11yToastContainer />

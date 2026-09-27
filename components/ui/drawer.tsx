@@ -60,7 +60,7 @@ function DrawerContent({
         className={cn(
           "group/drawer-content fixed z-50 flex h-auto max-h-[92vh] min-h-0 flex-col bg-background text-base text-foreground shadow-floating overscroll-contain",
           "data-[vaul-drawer-direction=bottom]:left-1/2 data-[vaul-drawer-direction=bottom]:-translate-x-1/2",
-          "data-[vaul-drawer-direction=bottom]:w-full data-[vaul-drawer-direction=bottom]:max-w-[768px]",
+          "data-[vaul-drawer-direction=bottom]:w-full data-[vaul-drawer-direction=bottom]:max-w-[840px]",
           "data-[vaul-drawer-direction=bottom]:bottom-0 data-[vaul-drawer-direction=bottom]:mt-24",
           "data-[vaul-drawer-direction=bottom]:rounded-t-[28px] data-[vaul-drawer-direction=bottom]:border-t data-[vaul-drawer-direction=bottom]:border-border/60",
           "data-[vaul-drawer-direction=left]:inset-y-0 data-[vaul-drawer-direction=left]:left-0 data-[vaul-drawer-direction=left]:w-3/4 data-[vaul-drawer-direction=left]:rounded-r-2xl data-[vaul-drawer-direction=left]:border-r",
@@ -70,10 +70,10 @@ function DrawerContent({
         )}
         {...props}
       >
-        {/* Drag handle — 40px wide, vertically & horizontally centered, smooth pill */}
+        {/* Drag handle — 56~64px wide, vertically & horizontally centered, smooth pill */}
         <DrawerPrimitive.Handle
           data-slot="drawer-handle"
-          className="mx-auto my-3 hidden h-1.5 w-10 shrink-0 rounded-full bg-input cursor-grab active:cursor-grabbing group-data-[vaul-drawer-direction=bottom]/drawer-content:block"
+          className="mx-auto my-3 hidden h-1.5 w-14 sm:w-16 shrink-0 rounded-full bg-input cursor-grab active:cursor-grabbing group-data-[vaul-drawer-direction=bottom]/drawer-content:block"
         />
         {children}
       </DrawerPrimitive.Content>

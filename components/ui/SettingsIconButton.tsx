@@ -3,9 +3,10 @@
 import * as React from "react";
 import { Settings } from "lucide-react";
 import { IconNavButton } from "@/components/ui/IconNavButton";
+import { useTranslation } from "@/lib/i18n";
 
 export interface SettingsIconButtonProps {
-  /** Accessible label for screen readers. Defaults to "설정 열기". */
+  /** Accessible label for screen readers. Defaults to translated "openSettings". */
   label?: string;
   /** Target settings route. Defaults to "/settings". */
   href?: string;
@@ -19,15 +20,18 @@ export interface SettingsIconButtonProps {
  * with standard 44px touch target, smooth scale press feedback, and accessible labeling.
  */
 export function SettingsIconButton({
-  label = "설정 열기",
+  label,
   href = "/settings",
   className,
 }: SettingsIconButtonProps) {
+  const { t } = useTranslation("common");
+  const resolvedLabel = label ?? t("openSettings");
+
   return (
     <IconNavButton
       icon={<Settings className="size-5.5 stroke-[2.2]" aria-hidden="true" />}
       href={href}
-      label={label}
+      label={resolvedLabel}
       className={className}
     />
   );

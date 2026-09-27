@@ -4,13 +4,14 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import { IconNavButton } from "@/components/ui/IconNavButton";
+import { useTranslation } from "@/lib/i18n";
 
 export interface BackButtonProps {
   /** Target URL to navigate to. If omitted and onClick is not provided, defaults to router.back(). */
   href?: string;
   /** Custom click handler. If omitted and href is not provided, defaults to router.back(). */
   onClick?: () => void;
-  /** Accessible label for screen readers. Defaults to "뒤로 이동". */
+  /** Accessible label for screen readers. Defaults to translated "back". */
   label?: string;
   /** Additional CSS class names. */
   className?: string;
@@ -24,10 +25,12 @@ export interface BackButtonProps {
 export function BackButton({
   href,
   onClick,
-  label = "뒤로 이동",
+  label,
   className,
 }: BackButtonProps) {
   const router = useRouter();
+  const { t } = useTranslation("common");
+  const resolvedLabel = label ?? t("back");
 
   const handleClick = (e: React.MouseEvent) => {
     if (onClick) {
@@ -43,7 +46,7 @@ export function BackButton({
       icon={<ChevronLeft className="size-6 stroke-[2.5]" aria-hidden="true" />}
       href={href}
       onClick={href ? onClick : handleClick}
-      label={label}
+      label={resolvedLabel}
       className={className}
     />
   );

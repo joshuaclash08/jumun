@@ -3,6 +3,7 @@
 import * as React from "react";
 import { motion } from "motion/react";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
+import { useTranslation } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 interface DigitColumnProps {
@@ -60,14 +61,16 @@ export interface RollingPriceProps {
  */
 export function RollingPrice({
   value,
-  suffix = "원",
+  suffix,
   prefix,
   className,
   ariaLabel,
 }: RollingPriceProps) {
+  const { t } = useTranslation("common");
+  const effectiveSuffix = suffix !== undefined ? suffix : t("currency");
   const reduceMotion = useAccessibilityStore((state) => state.reducedMotion);
   const formatted = value.toLocaleString("ko-KR");
-  const fullLabel = `${prefix ? prefix + " " : ""}${formatted}${suffix ? suffix : ""}`;
+  const fullLabel = `${prefix ? prefix + " " : ""}${formatted}${effectiveSuffix ? effectiveSuffix : ""}`;
 
   return (
     <span
@@ -105,7 +108,7 @@ export function RollingPrice({
             );
           })}
         </span>
-        {suffix && <span className="ml-1">{suffix}</span>}
+        {effectiveSuffix && <span className="ml-1">{effectiveSuffix}</span>}
       </span>
     </span>
   );
