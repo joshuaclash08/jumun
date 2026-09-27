@@ -15,7 +15,15 @@ function SetupContent() {
   const rawReturnTo = searchParams.get("returnTo");
   const returnTo = sanitizeReturnTo(rawReturnTo);
   const reducedMotion = useAccessibilityStore((s) => s.reducedMotion);
+  const hydrateThemeFromSystem = useAccessibilityStore((s) => s.hydrateThemeFromSystem);
+  const hydrateLanguageFromSystem = useAccessibilityStore((s) => s.hydrateLanguageFromSystem);
   const { t } = useTranslation("setup");
+
+  // First-run gate (/setup): link system theme and language ONCE when user arrives without cookie.
+  React.useEffect(() => {
+    hydrateThemeFromSystem();
+    hydrateLanguageFromSystem();
+  }, [hydrateThemeFromSystem, hydrateLanguageFromSystem]);
 
   const markSetupDone = () => {
     try {

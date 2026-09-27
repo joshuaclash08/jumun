@@ -5,9 +5,11 @@ import { ThemeModeSelector } from "@/components/settings/ThemeModeSelector";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
 import { useOSDarkModePreference } from "@/hooks/useOSDarkModePreference";
 import { Providers } from "@/app/providers";
+import SetupPage from "@/app/setup/page";
 import { DEFAULT_ACCESSIBILITY_SETTINGS } from "@/lib/types";
 
 // Mock next/navigation for SetupGuard inside Providers
+let currentPathname = "/setup";
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
     push: vi.fn(),
@@ -17,7 +19,7 @@ vi.mock("next/navigation", () => ({
     replace: vi.fn(),
   }),
   useSearchParams: () => new URLSearchParams(),
-  usePathname: () => "/",
+  usePathname: () => currentPathname,
 }));
 
 describe("Theme System & ThemeModeSelector", () => {
@@ -27,12 +29,15 @@ describe("Theme System & ThemeModeSelector", () => {
   beforeEach(() => {
     listeners = [];
     matchesMock = false;
+    currentPathname = "/setup";
 
     // Reset store
     useAccessibilityStore.setState({
       ...DEFAULT_ACCESSIBILITY_SETTINGS,
       theme: "light",
+      language: "ko",
       hasSetTheme: false,
+      hasSetLanguage: false,
     });
 
     // Mock matchMedia
@@ -110,7 +115,7 @@ describe("Theme System & ThemeModeSelector", () => {
     expect(result.current).toBe(true);
   });
 
-  it("hydrates dark mode in Providers on first visit when OS preference is dark", () => {
+  it("hydrates dark mode on /setup first visit when OS preference is dark", () => {
     matchesMock = true;
 
     // User is on first visit: hasSetTheme is false
@@ -118,7 +123,7 @@ describe("Theme System & ThemeModeSelector", () => {
 
     render(
       <Providers>
-        <div>Content</div>
+        <SetupPage />
       </Providers>
     );
 
@@ -129,11 +134,11 @@ describe("Theme System & ThemeModeSelector", () => {
   });
 
   it("retains user manual theme choice even when OS media query changes or on next visits", () => {
-    // 1. Initial hydration from system: OS is dark
+    // 1. Initial hydration from system on /setup: OS is dark
     matchesMock = true;
     render(
       <Providers>
-        <div>Content</div>
+        <SetupPage />
       </Providers>
     );
     expect(useAccessibilityStore.getState().theme).toBe("dark");
@@ -153,5 +158,21 @@ describe("Theme System & ThemeModeSelector", () => {
     // 4. Must NOT overwrite user's manual choice!
     expect(useAccessibilityStore.getState().theme).toBe("light");
     expect(document.documentElement.classList.contains("dark")).toBe(false);
+  });
+
+  it("automatically sets language to English on /setup when system language is English", () => {
+    Object.defineProperty(navigator, "language", {
+      value: "en-US",
+      configurable: true,
+    });
+    Object.defineProperty(navigator, "languages", {
+      value: ["en-US", "en"],
+      configurable: true,
+    });
+
+    render(<SetupPage />);
+
+    expect(useAccessibilityStore.getState().language).toBe("en");
+    expect(useAccessibilityStore.getState().hasSetLanguage).toBe(true);
   });
 });

@@ -46,17 +46,28 @@ function DrawerOverlay({
   )
 }
 
+export interface DrawerContentProps
+  extends React.ComponentProps<typeof DrawerPrimitive.Content> {
+  handleVariant?: "auto" | "light" | "dark"
+  handleClassName?: string
+  hideHandle?: boolean
+}
+
 function DrawerContent({
   className,
   children,
+  handleVariant = "auto",
+  handleClassName,
+  hideHandle = false,
   ...props
-}: React.ComponentProps<typeof DrawerPrimitive.Content>) {
+}: DrawerContentProps) {
   return (
     <DrawerPortal data-slot="drawer-portal">
       <DrawerOverlay />
       <DrawerPrimitive.Content
         data-slot="drawer-content"
         data-lenis-prevent=""
+        data-handle-variant={handleVariant}
         className={cn(
           "group/drawer-content fixed z-50 flex h-auto max-h-[92vh] min-h-0 flex-col bg-background text-base text-foreground shadow-floating overscroll-contain",
           "data-[vaul-drawer-direction=bottom]:left-1/2 data-[vaul-drawer-direction=bottom]:-translate-x-1/2",
@@ -70,11 +81,22 @@ function DrawerContent({
         )}
         {...props}
       >
-        {/* Drag handle — 56~64px wide, vertically & horizontally centered, smooth pill */}
-        <DrawerPrimitive.Handle
-          data-slot="drawer-handle"
-          className="mx-auto my-3 hidden h-1.5 w-14 sm:w-16 shrink-0 rounded-full bg-input cursor-grab active:cursor-grabbing group-data-[vaul-drawer-direction=bottom]/drawer-content:block"
-        />
+        {/* Unified longer drag handle (64px wide pill) — floating at top-3 across all drawers */}
+        {!hideHandle && (
+          <DrawerPrimitive.Handle
+            data-slot="drawer-handle"
+            className={cn(
+              "!absolute top-3 left-1/2 -translate-x-1/2 z-40 !m-0 !w-16 sm:!w-20 !h-1.5 shrink-0 rounded-full cursor-grab active:cursor-grabbing backdrop-blur-md pointer-events-auto transition-colors duration-200",
+              // "auto": iOS-style adaptive grabber against white/gray sheet headers (dark charcoal with white specular highlight in light mode, frosted light in dark mode)
+              "group-data-[handle-variant=auto]/drawer-content:bg-neutral-800/60 dark:group-data-[handle-variant=auto]/drawer-content:bg-white/65 group-data-[handle-variant=auto]/drawer-content:shadow-[0_1px_1px_rgba(255,255,255,0.85),0_0_0_0.5px_rgba(0,0,0,0.12)] dark:group-data-[handle-variant=auto]/drawer-content:shadow-[0_1px_3px_rgba(0,0,0,0.6),0_0_0_0.5px_rgba(255,255,255,0.2)]",
+              // "light": light frosted glass pill with ambient drop shadow for dark photos/backgrounds
+              "group-data-[handle-variant=light]/drawer-content:bg-white/85 dark:group-data-[handle-variant=light]/drawer-content:bg-white/75 group-data-[handle-variant=light]/drawer-content:shadow-[0_1px_4px_rgba(0,0,0,0.6),0_0_0_0.5px_rgba(255,255,255,0.4)]",
+              // "dark": high-contrast dark graphite pill with specular rim highlight for white, light-gray, cream, or beige backgrounds
+              "group-data-[handle-variant=dark]/drawer-content:bg-neutral-900/70 dark:group-data-[handle-variant=dark]/drawer-content:bg-neutral-900/80 group-data-[handle-variant=dark]/drawer-content:shadow-[0_1px_1px_rgba(255,255,255,0.9),0_0_0_0.5px_rgba(0,0,0,0.18)]",
+              handleClassName
+            )}
+          />
+        )}
         {children}
       </DrawerPrimitive.Content>
     </DrawerPortal>
@@ -85,7 +107,7 @@ function DrawerHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="drawer-header"
-      className={cn("flex flex-col gap-1 p-5 text-left", className)}
+      className={cn("flex flex-col gap-1 px-5 pt-7 pb-3 text-left", className)}
       {...props}
     />
   )

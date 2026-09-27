@@ -106,7 +106,7 @@ export function QrScannerModal({ open, onOpenChange }: QrScannerModalProps) {
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent>
-        <DrawerHeader className="relative items-center pb-2 text-center">
+        <DrawerHeader className="relative items-center pt-7 pb-2 text-center">
           <div className="absolute top-3 left-3">
             <BackButton
               onClick={() => onOpenChange(false)}

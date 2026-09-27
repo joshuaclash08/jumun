@@ -38,7 +38,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var k='jumun:accessibility-settings';var raw=localStorage.getItem(k);var isDark=false;if(raw){var p=JSON.parse(raw);if(p&&p.state){if(p.state.theme){isDark=p.state.theme==='dark';}else if(!p.state.hasSetTheme){isDark=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches;if(isDark){p.state.theme='dark';p.state.hasSetTheme=true;localStorage.setItem(k,JSON.stringify(p));}}}}else{isDark=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches;if(isDark){localStorage.setItem(k,JSON.stringify({state:{theme:'dark',hasSetTheme:true},version:0}));}}if(isDark){document.documentElement.classList.add('dark');}}catch(e){}})();`,
+            __html: `(function(){try{var raw=localStorage.getItem('jumun:accessibility-settings');if(raw){var p=JSON.parse(raw);if(p&&p.state&&p.state.theme==='dark'){document.documentElement.classList.add('dark');}}}catch(e){}})();`,
           }}
         />
       </head>

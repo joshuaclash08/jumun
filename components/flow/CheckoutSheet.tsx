@@ -95,7 +95,7 @@ export function CheckoutSheet({ open, onOpenChange, onConfirm }: CheckoutSheetPr
     <Drawer open={open} onOpenChange={handleOpenChange}>
       <DrawerContent>
         <div className="relative flex flex-col max-h-[90vh] min-h-0 overflow-hidden">
-          <DrawerHeader className="relative grid grid-cols-[44px_1fr_44px] items-center px-4 py-3">
+          <DrawerHeader className="relative grid grid-cols-[44px_1fr_44px] items-center px-4 pt-7 pb-3">
             <BackButton
               onClick={() => handleOpenChange(false)}
               label={t("checkout.closeAria")}

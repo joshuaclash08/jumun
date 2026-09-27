@@ -13,10 +13,12 @@ import {
 
 interface AccessibilityStore extends AccessibilitySettings {
   hasSetTheme: boolean;
-  hydrateThemeFromSystem: (prefersDark: boolean) => void;
+  hydrateThemeFromSystem: (prefersDark?: boolean) => void;
   setTheme: (theme: AppTheme) => void;
   hasSetReducedMotion: boolean;
   hydrateReducedMotionFromSystem: (prefersReducedMotion: boolean) => void;
+  hasSetLanguage: boolean;
+  hydrateLanguageFromSystem: (systemLanguage?: string) => void;
   setLanguage: (language: AppLanguage) => void;
   setHighContrast: (highContrast: boolean) => void;
   setFontScale: (fontScale: number) => void;
@@ -41,12 +43,12 @@ export const useAccessibilityStore = create<AccessibilityStore>()(
       ...DEFAULT_ACCESSIBILITY_SETTINGS,
       hasSetTheme: false,
       hasSetReducedMotion: false,
+      hasSetLanguage: false,
 
-      // Seeds theme from the OS preference once, on a device's genuinely
-      // first visit only. Bright mode ('light') is the main default, but if
-      // the OS prefers dark mode on initial visit, sets 'dark'. Once set or
-      // manually changed by user, this is a no-op so returning visits keep
-      // user's saved preference without re-querying the API.
+      // Seeds theme from the OS preference once, during first-run /setup only.
+      // Bright mode ('light') is the main default, but if the OS prefers dark
+      // mode on initial visit, sets 'dark'. Once set or manually changed by user,
+      // this is a no-op so returning visits keep user's saved preference.
       hydrateThemeFromSystem: (prefersDark?: boolean) => {
         if (get().hasSetTheme) return;
         const isDark =
@@ -67,7 +69,30 @@ export const useAccessibilityStore = create<AccessibilityStore>()(
         set({ reducedMotion: prefersReducedMotion, hasSetReducedMotion: true });
       },
 
-      setLanguage: (language) => set({ language }),
+      // Seeds language from the OS/browser preference once, during first-run /setup only.
+      // If the OS/browser language is English, sets 'en'; otherwise defaults to 'ko'.
+      hydrateLanguageFromSystem: (systemLanguage?: string) => {
+        if (get().hasSetLanguage) return;
+        let isEn = false;
+        if (typeof systemLanguage === "string") {
+          isEn = /^en\b/i.test(systemLanguage);
+        } else if (typeof navigator !== "undefined") {
+          const langs = navigator.languages ?? [navigator.language];
+          for (const l of langs) {
+            if (typeof l === "string" && /^en\b/i.test(l)) {
+              isEn = true;
+              break;
+            }
+            if (typeof l === "string" && /^ko\b/i.test(l)) {
+              isEn = false;
+              break;
+            }
+          }
+        }
+        set({ language: isEn ? "en" : "ko", hasSetLanguage: true });
+      },
+
+      setLanguage: (language) => set({ language, hasSetLanguage: true }),
       setHighContrast: (highContrast) => set({ highContrast }),
       setFontScale: (fontScale) => set({ fontScale }),
       setReducedMotion: (reducedMotion) =>
@@ -117,6 +142,7 @@ export const useAccessibilityStore = create<AccessibilityStore>()(
           ...DEFAULT_ACCESSIBILITY_SETTINGS,
           hasSetTheme: false,
           hasSetReducedMotion: false,
+          hasSetLanguage: false,
         }),
     }),
     { name: "jumun:accessibility-settings" },

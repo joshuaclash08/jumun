@@ -57,7 +57,7 @@ export function CartDrawer({ open, onOpenChange, onCheckout }: CartDrawerProps) 
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent>
         <div className="relative flex flex-col max-h-[90vh] min-h-0 overflow-hidden">
-          <DrawerHeader className="relative grid grid-cols-[44px_1fr_44px] items-center px-4 py-3">
+          <DrawerHeader className="relative grid grid-cols-[44px_1fr_44px] items-center px-4 pt-7 pb-3">
             <BackButton
               onClick={() => onOpenChange(false)}
               label={t("cart.closeAria")}

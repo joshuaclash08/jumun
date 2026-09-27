@@ -37,6 +37,8 @@ function getToastVisual(toast: ToastItem) {
   }
 }
 
+const emptySubscribe = () => () => {};
+
 export function A11yToastContainer() {
   const { t } = useTranslation("common");
   const toasts = useToastStore((state) => state.toasts);
@@ -47,13 +49,13 @@ export function A11yToastContainer() {
   );
   const fontScale = useAccessibilityStore((state) => state.fontScale);
 
-  const [mounted, setMounted] = React.useState(false);
+  const mounted = React.useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  );
   const [isPaused, setIsPaused] = React.useState(false);
   const [bottomOffsetPx, setBottomOffsetPx] = React.useState<number | null>(null);
-
-  React.useEffect(() => {
-    setMounted(true);
-  }, []);
 
   // Dynamic clearance measurement: ensures the toast NEVER covers the bottom action bar
   // (StaffCallButton + CartSummaryPill, or StickyActionBar), adapting automatically

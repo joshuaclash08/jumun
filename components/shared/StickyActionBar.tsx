@@ -28,7 +28,7 @@ export function StickyActionBar({
     >
       <div
         className={cn(
-          "w-full pointer-events-auto flex flex-col pt-7 px-4 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] bg-gradient-to-t from-background via-background/95 to-transparent",
+          "w-full max-w-[560px] sm:max-w-[600px] mx-auto pointer-events-auto flex flex-col pt-7 px-5 sm:px-6 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] bg-gradient-to-t from-background via-background/95 to-transparent",
           className
         )}
       >

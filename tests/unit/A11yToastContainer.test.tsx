@@ -68,7 +68,8 @@ describe("A11yToastContainer Portal & Layering", () => {
     act(() => {
       useToastStore.getState().pushToast({
         id: "test-toast-clearance",
-        kind: "generic",
+        kind: "success",
+        variant: "delete",
         messageKo: "장바구니에서 삭제되었습니다.",
       });
     });

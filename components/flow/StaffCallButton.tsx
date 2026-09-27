@@ -182,7 +182,7 @@ export function StaffCallButton({
 
       <Drawer open={open} onOpenChange={handleOpenChange}>
         <DrawerContent>
-          <DrawerHeader className="relative items-center pb-2 pt-6 text-center">
+          <DrawerHeader className="relative items-center pb-2 pt-7 text-center">
             <div className="absolute top-3 left-3">
               <BackButton
                 onClick={handleCloseImmediately}

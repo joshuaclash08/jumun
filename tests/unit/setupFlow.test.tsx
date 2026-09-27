@@ -8,6 +8,7 @@ import {
   SETUP_PATH,
   sanitizeReturnTo,
 } from "@/lib/constants/setup";
+import { useAccessibilityStore } from "@/store/useAccessibilityStore";
 
 const mockPush = vi.fn();
 const mockReplace = vi.fn();
@@ -35,6 +36,16 @@ describe("Setup Onboarding Flow", () => {
     mockBack.mockClear();
     currentPathname = "/";
     mockSearchParams = new URLSearchParams();
+
+    Object.defineProperty(navigator, "language", {
+      value: "ko-KR",
+      configurable: true,
+    });
+    Object.defineProperty(navigator, "languages", {
+      value: ["ko-KR", "ko"],
+      configurable: true,
+    });
+    useAccessibilityStore.getState().resetAll();
   });
 
   describe("sanitizeReturnTo helper", () => {
