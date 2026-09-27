@@ -1,0 +1,18 @@
+{
+  "heroTitleLine1": "테이블에 폰을 대면",
+  "heroTitleLine2": "바로 주문할 수 있어요",
+  "heroSubtitle": "NFC 태그나 QR 코드를 스캔해 보세요",
+  "viewPrototype": "프로토타입 구경하기",
+  "selectStoreDirectly": "직접 매장 선택하기",
+  "availableStoresAria": "주문 가능한 매장 목록",
+  "qrScanner": {
+    "closeAria": "QR 스캐너 닫기",
+    "title": "테이블 QR 코드 스캔",
+    "desc": "테이블의 QR 코드를 사각형 프레임 안에 비춰주세요",
+    "cameraUnavailable": "현재 브라우저에서 카메라 기능에 접근할 수 없습니다.",
+    "cameraPermissionError": "카메라 권한을 허용하지 않았거나 장치를 찾을 수 없습니다.",
+    "sampleStoreButton": "샘플 매장(3번 테이블)으로 바로가기",
+    "waitingScan": "스캔 대기 중...",
+    "testWithSample": "샘플 매장(3번 테이블)으로 테스트"
+  }
+}

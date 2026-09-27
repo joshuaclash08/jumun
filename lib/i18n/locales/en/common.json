@@ -1,0 +1,19 @@
+{
+  "back": "Go back to previous screen",
+  "backHome": "Go to Home",
+  "loading": "Loading",
+  "close": "Close",
+  "confirm": "Confirm",
+  "cancel": "Cancel",
+  "delete": "Delete",
+  "openSettings": "Open settings",
+  "openSettingsAria": "Open accessibility & app settings",
+  "skipToContent": "Skip to main content",
+  "tableNumber": "Table {table}",
+  "takeout": "Takeout",
+  "itemCount": "{count} items",
+  "currency": "KRW",
+  "toastAlertAria": "Notification message",
+  "undoAria": "Undo recent action",
+  "undo": "Undo"
+}

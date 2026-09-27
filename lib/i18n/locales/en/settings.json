@@ -1,0 +1,88 @@
+{
+  "title": "Settings",
+  "screen": {
+    "sectionTitle": "Screen & Display Settings",
+    "theme": {
+      "title": "Theme",
+      "desc": "Choose between default Light mode and eye-friendly Dark mode",
+      "groupLabel": "Select theme",
+      "light": "Light Mode",
+      "dark": "Dark Mode"
+    },
+    "fontScale": {
+      "title": "Font Size",
+      "desc": "Adjust the base text size across the entire screen",
+      "groupLabel": "Select font size",
+      "normal": "Normal",
+      "large": "Large",
+      "xlarge": "Extra Large"
+    },
+    "oneHanded": {
+      "title": "One-Handed Mode",
+      "desc": "Aligns buttons and cards to one side for easier thumb reach",
+      "groupLabel": "Select one-handed layout direction",
+      "none": "Default",
+      "left": "Left-handed",
+      "right": "Right-handed"
+    },
+    "orderMode": {
+      "title": "Order Screen Layout",
+      "desc": "Browse the entire menu on one screen or select step-by-step with focus",
+      "groupLabel": "Select order screen layout",
+      "standard": "Standard Menu",
+      "wizard": "Step-by-Step"
+    },
+    "menuLayout": {
+      "title": "Menu Display Style",
+      "desc": "Choose between visual cards or a high-legibility row list",
+      "groupLabel": "Select menu display style",
+      "grid": "Cards (Default)",
+      "list": "List"
+    },
+    "highContrast": {
+      "label": "High Contrast Mode",
+      "desc": "Increases contrast ratio between text and background to 17:1 or higher"
+    },
+    "dyslexiaSpacing": {
+      "label": "Dyslexia-friendly Spacing",
+      "desc": "Increases letter, word, and line spacing to improve readability"
+    },
+    "reducedMotion": {
+      "label": "Reduce Motion",
+      "desc": "Completes page transitions and decorative animations immediately"
+    }
+  },
+  "feedback": {
+    "sectionTitle": "Feedback & Convenience",
+    "timeoutExtension": {
+      "label": "Double Notification Duration",
+      "desc": "Extends toast notification duration from 3 seconds to 7 seconds"
+    },
+    "voiceGuide": {
+      "label": "Voice Guide (VoiceOver Preview)",
+      "desc": "Reads out ordering steps and menu items via browser speech (Prototype)",
+      "descDetail": "Reads out step-by-step order steps and menu items via browser speech"
+    },
+    "paymentMethod": {
+      "label": "Manage Default Payment Method"
+    }
+  },
+  "languageAndReset": {
+    "sectionTitle": "Language & Reset",
+    "language": "Language",
+    "reset": "Reset Settings"
+  },
+  "accessibilityDetail": {
+    "title": "Accessibility"
+  },
+  "payment": {
+    "title": "Manage Payment Methods",
+    "methods": {
+      "card": "Credit / Debit Card",
+      "easyPay": "Easy Pay"
+    }
+  },
+  "actions": {
+    "complete": "Save Settings"
+  }
+}

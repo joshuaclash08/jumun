@@ -1,0 +1,18 @@
+{
+  "heroTitleLine1": "Tap your phone on the table",
+  "heroTitleLine2": "to start ordering right away",
+  "heroSubtitle": "Try scanning an NFC tag or QR code",
+  "viewPrototype": "Explore Prototype",
+  "selectStoreDirectly": "Select Store Manually",
+  "availableStoresAria": "Available stores list",
+  "qrScanner": {
+    "closeAria": "Close QR scanner",
+    "title": "Scan Table QR Code",
+    "desc": "Position the table QR code inside the frame",
+    "cameraUnavailable": "Camera is unavailable in this browser.",
+    "cameraPermissionError": "Camera permission denied or device not found.",
+    "sampleStoreButton": "Go to sample store (Table 3)",
+    "waitingScan": "Scanning...",
+    "testWithSample": "Test with sample store (Table 3)"
+  }
+}
