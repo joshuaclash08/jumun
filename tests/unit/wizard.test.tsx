@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { axe } from "vitest-axe";
 import { WizardOrderView } from "@/components/flow/WizardOrderView";
 import { MenuClientView } from "@/components/flow/MenuClientView";
+import { OneHandedContainer } from "@/components/layout/OneHandedContainer";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
 import { useCartStore } from "@/store/useCartStore";
 import type { MenuCategory, Product, StoreInfo } from "@/lib/types";
@@ -230,8 +231,10 @@ describe("WizardOrderView & One-Handed Layout", () => {
     expect(results).toHaveNoViolations();
   });
 
-  it("allows switching between standard menu and wizard mode in MenuClientView", async () => {
-    render(
+  it("does not render promotional wizard banner in standard menu, and renders WizardOrderView when orderMode is wizard", async () => {
+    // 1. In standard mode (default): no popup/banner
+    useAccessibilityStore.getState().setOrderMode("standard");
+    const { rerender } = render(
       <MenuClientView
         categories={mockCategories}
         products={mockProducts}
@@ -239,30 +242,78 @@ describe("WizardOrderView & One-Handed Layout", () => {
       />,
     );
 
-    // Find wizard trigger banner
-    const wizardTrigger = screen.getByRole("button", {
-      name: /단계별 간편 주문 \(위저드 UI\)/i,
-    });
-    expect(wizardTrigger).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /단계별 간편 주문/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /커피/i })).toBeInTheDocument();
 
-    // Click to enter wizard mode
-    fireEvent.click(wizardTrigger);
+    // 2. When orderMode is wizard (set via Settings)
+    useAccessibilityStore.getState().setOrderMode("wizard");
+    rerender(
+      <MenuClientView
+        categories={mockCategories}
+        products={mockProducts}
+        storeInfo={mockStoreInfo}
+      />,
+    );
 
-    // Now in wizard mode
+    // Wizard mode should render
     await waitFor(() => {
       expect(screen.getByText("어떤 메뉴를 드실까요?")).toBeInTheDocument();
     });
-    expect(screen.getByText("※ 프로토타입 음성 안내 알림")).toBeInTheDocument();
 
-    // Click exit wizard
-    const exitBtn = screen.getByRole("button", { name: /일반 메뉴판으로 나가기/i });
+    // 3. Clicking "일반 메뉴판" returns to standard catalog
+    const exitBtn = screen.getByRole("button", { name: /일반 메뉴판/i });
     fireEvent.click(exitBtn);
 
-    // Returned to standard catalog view
-    await waitFor(() => {
-      expect(
-        screen.getByRole("button", { name: /단계별 간편 주문 \(위저드 UI\)/i }),
-      ).toBeInTheDocument();
-    });
+    expect(useAccessibilityStore.getState().orderMode).toBe("standard");
+  });
+
+  it("renders OS keyboard style OneHandedContainer with flip and expand controls", async () => {
+    // 1. none mode
+    useAccessibilityStore.getState().setOneHandedMode("none");
+    const { rerender, container } = render(
+      <OneHandedContainer>
+        <div>Content Area</div>
+      </OneHandedContainer>,
+    );
+
+    expect(screen.queryByLabelText("한손 모드 방향 및 복귀 제어")).not.toBeInTheDocument();
+
+    // 2. left mode: rail on right with ArrowRight and Maximize2
+    useAccessibilityStore.getState().setOneHandedMode("left");
+    rerender(
+      <OneHandedContainer>
+        <div>Content Area</div>
+      </OneHandedContainer>,
+    );
+
+    expect(screen.getByLabelText("한손 모드 방향 및 복귀 제어")).toBeInTheDocument();
+    const toRightBtn = screen.getByRole("button", { name: "오른손 모드로 전환" });
+    const expandBtn = screen.getByRole("button", { name: "양손 전체 화면으로 복귀" });
+    expect(toRightBtn).toBeInTheDocument();
+    expect(expandBtn).toBeInTheDocument();
+
+    // Click flip to right
+    fireEvent.click(toRightBtn);
+    expect(useAccessibilityStore.getState().oneHandedMode).toBe("right");
+
+    // 3. right mode: rail on left with ArrowLeft
+    rerender(
+      <OneHandedContainer>
+        <div>Content Area</div>
+      </OneHandedContainer>,
+    );
+
+    const toLeftBtn = screen.getByRole("button", { name: "왼손 모드로 전환" });
+    expect(toLeftBtn).toBeInTheDocument();
+
+    // Click expand full
+    fireEvent.click(screen.getByRole("button", { name: "양손 전체 화면으로 복귀" }));
+    expect(useAccessibilityStore.getState().oneHandedMode).toBe("none");
+
+    // Axe check
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
   });
 });

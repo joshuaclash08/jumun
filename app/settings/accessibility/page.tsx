@@ -7,6 +7,7 @@ import {
   SettingsGroup,
   SettingsRow,
   OneHandedModeSelector,
+  OrderModeSelector,
 } from "@/components/settings";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
@@ -20,7 +21,6 @@ export default function AccessibilityDetailPage() {
     dyslexiaSpacing,
     setDyslexiaSpacing,
     hapticsEnabled,
-    setHapticsEnabled,
     timeoutExtension,
     setTimeoutExtension,
     voiceGuideEnabled,
@@ -44,6 +44,10 @@ export default function AccessibilityDetailPage() {
       <div className="flex flex-col gap-5 px-4 pt-5">
         <SettingsGroup>
           <OneHandedModeSelector />
+        </SettingsGroup>
+
+        <SettingsGroup>
+          <OrderModeSelector />
         </SettingsGroup>
 
         <SettingsGroup>
@@ -74,21 +78,6 @@ export default function AccessibilityDetailPage() {
                   handleToggle("난독증 친화 간격", !!checked, setDyslexiaSpacing)
                 }
                 aria-label="난독증 친화 간격"
-              />
-            }
-          />
-          <SettingsRow
-            htmlFor="detail-haptics"
-            label="진동 피드백"
-            description="담기, 삭제, 결제 시 손끝으로 진동을 전달해요"
-            trailing={
-              <Checkbox
-                id="detail-haptics"
-                checked={hapticsEnabled}
-                onCheckedChange={(checked) =>
-                  handleToggle("진동 피드백", !!checked, setHapticsEnabled)
-                }
-                aria-label="진동 피드백"
               />
             }
           />

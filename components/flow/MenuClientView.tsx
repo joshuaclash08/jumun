@@ -15,10 +15,12 @@ import { CartDrawer } from "./CartDrawer";
 import { CheckoutSheet } from "./CheckoutSheet";
 import { ConfirmationStep } from "./ConfirmationStep";
 import { WizardOrderView } from "./WizardOrderView";
+import { OneHandedContainer } from "@/components/layout/OneHandedContainer";
+import { useVoiceGuide } from "@/hooks/useVoiceGuide";
 import { useCartStore } from "@/store/useCartStore";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
-import { Sparkles } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { formatKRW } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 // docs/animation-guide.md §3A's wizard-transition recipe -- menu <-> receipt
 // is the one true "screen change" in this flow (everything else is a sheet
@@ -48,7 +50,13 @@ export function MenuClientView({ categories, products, storeInfo }: MenuClientVi
   const [isProductSheetOpen, setIsProductSheetOpen] = React.useState(false);
   const [isCartDrawerOpen, setIsCartDrawerOpen] = React.useState(false);
   const [isCheckoutSheetOpen, setIsCheckoutSheetOpen] = React.useState(false);
-  const [isWizardMode, setIsWizardMode] = React.useState(false);
+
+  const orderMode = useAccessibilityStore((state) => state.orderMode);
+  const setOrderMode = useAccessibilityStore((state) => state.setOrderMode);
+  const oneHandedMode = useAccessibilityStore((state) => state.oneHandedMode);
+  const isWizardMode = orderMode === "wizard";
+
+  const { speak } = useVoiceGuide();
 
   const [isStaffCallExpanded, setIsStaffCallExpanded] = React.useState(true);
   const lastScrollY = React.useRef(0);
@@ -150,6 +158,14 @@ export function MenuClientView({ categories, products, storeInfo }: MenuClientVi
 
   const handleCategorySelect = (id: string) => {
     setActiveCategoryId(id);
+    const cat = allCategories.find((c) => c.id === id);
+    if (cat) {
+      const count =
+        id === "popular"
+          ? products.slice(0, 4).length
+          : products.filter((p) => p.category === id).length;
+      speak(`${cat.labelKo} 카테고리, ${count}개 메뉴.`);
+    }
     const headerEl = document.getElementById("menu-category-header");
     const chromeHeight = headerEl?.getBoundingClientRect().height ?? 60;
     if (id === "popular") {
@@ -178,6 +194,7 @@ export function MenuClientView({ categories, products, storeInfo }: MenuClientVi
   };
 
   const handleProductClick = (product: Product) => {
+    speak(product.voiceDescriptionKo || `${product.nameKo}, ${formatKRW(product.price)}`);
     setSelectedProduct(product);
     setIsProductSheetOpen(true);
   };
@@ -192,179 +209,165 @@ export function MenuClientView({ categories, products, storeInfo }: MenuClientVi
     const isMotionDisabled = reduceMotion || process.env.NODE_ENV === "test";
 
     return (
-      <>
-      <AnimatePresence mode="wait">
-        {orderStatus === "confirmed" ? (
-          <motion.div
-            key="confirmation"
-            initial={isMotionDisabled ? undefined : screenVariants.initial}
-            animate={screenVariants.animate}
-            exit={isMotionDisabled ? undefined : screenVariants.exit}
-            transition={{ duration: isMotionDisabled ? 0 : 0.2, ease: "easeOut" }}
-          >
-            <ConfirmationStep onReset={resetOrder} />
-          </motion.div>
-        ) : isWizardMode ? (
-          <motion.div
-            key="wizard"
-            initial={isMotionDisabled ? undefined : screenVariants.initial}
-            animate={screenVariants.animate}
-            exit={isMotionDisabled ? undefined : screenVariants.exit}
-            transition={{ duration: isMotionDisabled ? 0 : 0.2, ease: "easeOut" }}
-            className="flex w-full flex-col relative"
-          >
-            <WizardOrderView
-              categories={categories}
-              products={products}
-              storeInfo={storeInfo}
-              onExitWizard={() => setIsWizardMode(false)}
-            />
-          </motion.div>
-        ) : (
-          <motion.div
-            key="menu"
-            initial={isMotionDisabled ? undefined : screenVariants.initial}
-            animate={screenVariants.animate}
-            exit={isMotionDisabled ? undefined : screenVariants.exit}
-            transition={{ duration: isMotionDisabled ? 0 : 0.2, ease: "easeOut" }}
-            className="flex w-full flex-col relative"
-          >
-          {/* Sticky Category Tabs with Pinned Settings Button */}
-          <MenuCategoryHeader
-            categories={allCategories}
-            activeCategoryId={activeCategoryId}
-            onCategorySelect={handleCategorySelect}
-          />
-
-          {/* Menu Content Container */}
-          <div className="flex flex-col gap-8 pt-3.5 pb-36 sm:pb-40">
-            {/* Quick Wizard Mode Switcher Banner */}
-            <div className="px-4">
-              <button
-                type="button"
-                onClick={() => setIsWizardMode(true)}
-                className="w-full flex items-center justify-between p-4 rounded-2xl bg-primary/10 border border-primary/25 hover:bg-primary/15 transition-all text-left group shadow-xs cursor-pointer"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center shrink-0 shadow-xs">
-                    <Sparkles className="w-5 h-5" />
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-base font-extrabold text-foreground group-hover:text-primary transition-colors">
-                      단계별 간편 주문 (위저드 UI)
-                    </span>
-                    <span className="text-xs font-medium text-muted-foreground">
-                      한 손 조작 모드 & 한 화면에 하나씩 집중 선택
-                    </span>
-                  </div>
-                </div>
-                <Badge variant="outline" className="border-primary/40 text-primary font-bold">
-                  시작하기
-                </Badge>
-              </button>
-            </div>
-
-            {/* Featured / Popular Carousel Section */}
-            <FeaturedMenuSection
-              products={products}
-              onProductClick={handleProductClick}
-            />
-
-            {/* Categorized Product Sections with Search Section at bottom */}
-            <div className="flex flex-col gap-10 px-4">
-              {categories
-                .map((category) => ({
-                  category,
-                  categoryProducts: products.filter((p) => p.category === category.id),
-                }))
-                .filter(({ categoryProducts }) => categoryProducts.length > 0)
-                .map(({ category, categoryProducts }, visibleIndex) => (
-                  <React.Fragment key={category.id}>
-                    {visibleIndex > 0 && <Separator />}
-                    <section
-                      id={`category-${category.id}`}
-                      className="flex flex-col gap-3.5 scroll-mt-[72px]"
-                      aria-labelledby={`heading-${category.id}`}
-                    >
-                      <div className="flex items-baseline gap-2 pb-1">
-                        <h2
-                          id={`heading-${category.id}`}
-                          className="text-2xl sm:text-[26px] font-black text-foreground tracking-tight"
-                          aria-label={`${category.labelKo}, 총 ${categoryProducts.length}개 메뉴`}
-                        >
-                          {category.labelKo}
-                        </h2>
-                        <span className="text-base font-bold text-muted-foreground tabular-nums" aria-hidden="true">
-                          {categoryProducts.length}개
-                        </span>
-                      </div>
-
-                      <div className={`grid ${categoryGridClass} gap-3 sm:gap-4`}>
-                        {categoryProducts.map((product) => (
-                          <ProductCard
-                            key={product.id}
-                            product={product}
-                            onProductClick={handleProductClick}
-                            layout={cardLayout}
-                          />
-                        ))}
-                      </div>
-                    </section>
-                  </React.Fragment>
-                ))}
-
-              {/* Bottom Search Section for quick menu lookup */}
-              <MenuSearchSection
-                products={products}
+      <OneHandedContainer>
+        <AnimatePresence mode="wait">
+          {orderStatus === "confirmed" ? (
+            <motion.div
+              key="confirmation"
+              initial={isMotionDisabled ? undefined : screenVariants.initial}
+              animate={screenVariants.animate}
+              exit={isMotionDisabled ? undefined : screenVariants.exit}
+              transition={{ duration: isMotionDisabled ? 0 : 0.2, ease: "easeOut" }}
+            >
+              <ConfirmationStep onReset={resetOrder} />
+            </motion.div>
+          ) : isWizardMode ? (
+            <motion.div
+              key="wizard"
+              initial={isMotionDisabled ? undefined : screenVariants.initial}
+              animate={screenVariants.animate}
+              exit={isMotionDisabled ? undefined : screenVariants.exit}
+              transition={{ duration: isMotionDisabled ? 0 : 0.2, ease: "easeOut" }}
+              className="flex w-full flex-col relative"
+            >
+              <WizardOrderView
                 categories={categories}
-                onProductClick={handleProductClick}
+                products={products}
+                storeInfo={storeInfo}
+                onExitWizard={() => setOrderMode("standard")}
               />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="menu"
+              initial={isMotionDisabled ? undefined : screenVariants.initial}
+              animate={screenVariants.animate}
+              exit={isMotionDisabled ? undefined : screenVariants.exit}
+              transition={{ duration: isMotionDisabled ? 0 : 0.2, ease: "easeOut" }}
+              className="flex w-full flex-col relative"
+            >
+              {/* Sticky Category Tabs with Pinned Settings Button */}
+              <MenuCategoryHeader
+                categories={allCategories}
+                activeCategoryId={activeCategoryId}
+                onCategorySelect={handleCategorySelect}
+              />
+
+              {/* Menu Content Container */}
+              <div className="flex flex-col gap-8 pt-3.5 pb-36 sm:pb-40">
+                {/* Featured / Popular Carousel Section */}
+                <FeaturedMenuSection
+                  products={products}
+                  onProductClick={handleProductClick}
+                />
+
+                {/* Categorized Product Sections with Search Section at bottom */}
+                <div className="flex flex-col gap-10 px-4">
+                  {categories
+                    .map((category) => ({
+                      category,
+                      categoryProducts: products.filter((p) => p.category === category.id),
+                    }))
+                    .filter(({ categoryProducts }) => categoryProducts.length > 0)
+                    .map(({ category, categoryProducts }, visibleIndex) => (
+                      <React.Fragment key={category.id}>
+                        {visibleIndex > 0 && <Separator />}
+                        <section
+                          id={`category-${category.id}`}
+                          className="flex flex-col gap-3.5 scroll-mt-[72px]"
+                          aria-labelledby={`heading-${category.id}`}
+                        >
+                          <div className="flex items-baseline gap-2 pb-1">
+                            <h2
+                              id={`heading-${category.id}`}
+                              className="text-2xl sm:text-[26px] font-black text-foreground tracking-tight"
+                              aria-label={`${category.labelKo}, 총 ${categoryProducts.length}개 메뉴`}
+                            >
+                              {category.labelKo}
+                            </h2>
+                            <span className="text-base font-bold text-muted-foreground tabular-nums" aria-hidden="true">
+                              {categoryProducts.length}개
+                            </span>
+                          </div>
+
+                          <div className={`grid ${categoryGridClass} gap-3 sm:gap-4`}>
+                            {categoryProducts.map((product) => (
+                              <ProductCard
+                                key={product.id}
+                                product={product}
+                                onProductClick={handleProductClick}
+                                layout={cardLayout}
+                              />
+                            ))}
+                          </div>
+                        </section>
+                      </React.Fragment>
+                    ))}
+
+                  {/* Bottom Search Section for quick menu lookup */}
+                  <MenuSearchSection
+                    products={products}
+                    categories={categories}
+                    onProductClick={handleProductClick}
+                  />
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Fixed Bottom Action Controls: Staff Call + Cart Summary Pill in unified dynamic bar */}
+        {orderStatus !== "confirmed" && !isWizardMode && (
+          <div className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] inset-x-0 z-50 pointer-events-none px-4">
+            <div className="mx-auto max-w-[768px] flex items-center w-full">
+              <div
+                className={cn(
+                  "flex items-center gap-3 w-full transition-all duration-200 pointer-events-auto",
+                  oneHandedMode === "left" && "w-[82%] sm:w-[84%] mr-auto",
+                  oneHandedMode === "right" && "w-[82%] sm:w-[84%] ml-auto"
+                )}
+              >
+                {storeInfo && storeInfo.orderType === "dine-in" && (
+                  <StaffCallButton
+                    storeInfo={storeInfo}
+                    isExpanded={isStaffCallExpanded}
+                  />
+                )}
+                <CartSummaryPill
+                  onClick={() => {
+                    setIsCartDrawerOpen(true);
+                    const itemsCount = useCartStore.getState().items.length;
+                    speak(`장바구니를 열었습니다. 총 ${itemsCount}개 메뉴.`);
+                  }}
+                  showLabel={!storeInfo || storeInfo.orderType !== "dine-in" || !isStaffCallExpanded}
+                />
+              </div>
             </div>
           </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+        )}
 
-    {/* Fixed Bottom Action Controls: Staff Call + Cart Summary Pill in unified dynamic bar */}
-    {orderStatus !== "confirmed" && !isWizardMode && (
-      <div className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] inset-x-0 z-50 pointer-events-none px-4">
-        <div className="mx-auto max-w-[768px] flex items-center gap-3 w-full">
-          {storeInfo && storeInfo.orderType === "dine-in" && (
-            <StaffCallButton
-              storeInfo={storeInfo}
-              isExpanded={isStaffCallExpanded}
-            />
-          )}
-          <CartSummaryPill
-            onClick={() => setIsCartDrawerOpen(true)}
-            showLabel={!storeInfo || storeInfo.orderType !== "dine-in" || !isStaffCallExpanded}
-          />
-        </div>
-      </div>
-    )}
+        <ProductDetailSheet
+          product={selectedProduct}
+          open={isProductSheetOpen}
+          onOpenChange={setIsProductSheetOpen}
+        />
 
-    <ProductDetailSheet
-      product={selectedProduct}
-      open={isProductSheetOpen}
-      onOpenChange={setIsProductSheetOpen}
-    />
+        <CartDrawer
+          open={isCartDrawerOpen}
+          onOpenChange={setIsCartDrawerOpen}
+          onCheckout={() => {
+            setIsCartDrawerOpen(false);
+            setIsCheckoutSheetOpen(true);
+          }}
+        />
 
-    <CartDrawer
-      open={isCartDrawerOpen}
-      onOpenChange={setIsCartDrawerOpen}
-      onCheckout={() => {
-        setIsCartDrawerOpen(false);
-        setIsCheckoutSheetOpen(true);
-      }}
-    />
-
-    <CheckoutSheet
-      open={isCheckoutSheetOpen}
-      onOpenChange={setIsCheckoutSheetOpen}
-      onConfirm={() => {
-        window.scrollTo({ top: 0, behavior: "instant" });
-      }}
-    />
-    </>
-  );
+        <CheckoutSheet
+          open={isCheckoutSheetOpen}
+          onOpenChange={setIsCheckoutSheetOpen}
+          onConfirm={() => {
+            window.scrollTo({ top: 0, behavior: "instant" });
+          }}
+        />
+      </OneHandedContainer>
+    );
 }

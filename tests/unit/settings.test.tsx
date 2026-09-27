@@ -63,21 +63,22 @@ describe("SettingsPage - Icon Removal & Checkbox Migration", () => {
 
     // Text labels
     expect(screen.getByText("화면 및 텍스트 상세 설정")).toBeInTheDocument();
+    expect(screen.getByText("주문 화면 방식")).toBeInTheDocument();
     expect(screen.getByText("글자 크기")).toBeInTheDocument();
     expect(screen.getByText("고대비 모드")).toBeInTheDocument();
     expect(screen.getByText("난독증 친화 간격")).toBeInTheDocument();
     expect(screen.getByText("애니메이션 줄이기")).toBeInTheDocument();
     expect(screen.getByText("피드백 및 편의")).toBeInTheDocument();
-    expect(screen.getByText("진동 피드백")).toBeInTheDocument();
+    expect(screen.queryByText("진동 피드백")).not.toBeInTheDocument();
     expect(screen.getByText("알림 표시 시간 2배 연장")).toBeInTheDocument();
     expect(screen.getByText("음성 안내 (보이스오버 체험)")).toBeInTheDocument();
     expect(screen.getByText("기본 결제 수단 관리")).toBeInTheDocument();
     expect(screen.getByText("언어 및 초기화")).toBeInTheDocument();
     expect(screen.getByText("설정 초기화")).toBeInTheDocument();
 
-    // Checkboxes should exist for toggleable items
+    // Checkboxes should exist for toggleable items (excluding haptics on web)
     const checkboxes = screen.getAllByRole("checkbox");
-    expect(checkboxes.length).toBe(6); // highContrast, dyslexiaSpacing, reducedMotion, hapticsEnabled, timeoutExtension, voiceGuideEnabled
+    expect(checkboxes.length).toBe(5); // highContrast, dyslexiaSpacing, reducedMotion, timeoutExtension, voiceGuideEnabled
   });
 
   it("toggles high contrast mode when clicking the checkbox or label row", () => {
@@ -104,7 +105,8 @@ describe("AccessibilityDetailPage & PaymentSettingsPage", () => {
   it("renders AccessibilityDetailPage with checkboxes and clean text", async () => {
     const { container } = render(<AccessibilityDetailPage />);
     expect(screen.getByRole("heading", { name: "접근성" })).toBeInTheDocument();
-    expect(screen.getAllByRole("checkbox").length).toBe(4); // voiceGuide, dyslexiaSpacing, haptics, timeoutExtension
+    expect(screen.queryByText("진동 피드백")).not.toBeInTheDocument();
+    expect(screen.getAllByRole("checkbox").length).toBe(3); // voiceGuide, dyslexiaSpacing, timeoutExtension
 
     const results = await axe(container);
     expect(results).toHaveNoViolations();

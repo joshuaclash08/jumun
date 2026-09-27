@@ -7,6 +7,7 @@ import {
   type AccessibilitySettings,
   type AppLanguage,
   type OneHandedMode,
+  type OrderMode,
 } from "@/lib/types";
 
 interface AccessibilityStore extends AccessibilitySettings {
@@ -21,6 +22,7 @@ interface AccessibilityStore extends AccessibilitySettings {
   setTimeoutExtension: (timeoutExtension: boolean) => void;
   setOneHandedMode: (oneHandedMode: OneHandedMode) => void;
   setVoiceGuideEnabled: (voiceGuideEnabled: boolean) => void;
+  setOrderMode: (orderMode: OrderMode) => void;
   applyPreset: (preset: "visual" | "hearing" | "reading" | "senior") => void;
   resetAll: () => void;
 }
@@ -52,6 +54,7 @@ export const useAccessibilityStore = create<AccessibilityStore>()(
       setTimeoutExtension: (timeoutExtension) => set({ timeoutExtension }),
       setOneHandedMode: (oneHandedMode) => set({ oneHandedMode }),
       setVoiceGuideEnabled: (voiceGuideEnabled) => set({ voiceGuideEnabled }),
+      setOrderMode: (orderMode) => set({ orderMode }),
       applyPreset: (preset) => {
         switch (preset) {
           case "visual":

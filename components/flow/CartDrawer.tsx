@@ -19,6 +19,7 @@ import { RollingPrice } from "@/components/ui/RollingPrice";
 import { BackButton } from "@/components/ui/BackButton";
 import { QuantityStepper } from "@/components/flow/QuantityStepper";
 import { StickyActionBar } from "@/components/shared/StickyActionBar";
+import { useVoiceGuide } from "@/hooks/useVoiceGuide";
 import { formatKRW } from "@/lib/format";
 
 interface CartDrawerProps {
@@ -32,11 +33,22 @@ export function CartDrawer({ open, onOpenChange, onCheckout }: CartDrawerProps) 
   const updateQuantity = useCartStore((state) => state.updateQuantity);
   const removeItem = useCartStore((state) => state.removeItem);
   const reduceMotion = useAccessibilityStore((state) => state.reducedMotion);
+  const { speak } = useVoiceGuide();
 
   const totalPrice = items.reduce(
     (sum, item) => sum + item.unitPrice * item.quantity,
     0
   );
+
+  React.useEffect(() => {
+    if (open) {
+      if (items.length === 0) {
+        speak("장바구니가 비어 있습니다.");
+      } else {
+        speak(`장바구니입니다. 총 ${items.length}개 메뉴, 합계 ${formatKRW(totalPrice)}입니다.`);
+      }
+    }
+  }, [open, items.length, totalPrice, speak]);
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
@@ -100,7 +112,10 @@ export function CartDrawer({ open, onOpenChange, onCheckout }: CartDrawerProps) 
                           <Button
                             variant="ghost"
                             size="xs"
-                            onClick={() => removeItem(item.id)}
+                            onClick={() => {
+                              speak(`${item.nameKo || '상품'} 메뉴를 삭제했습니다.`);
+                              removeItem(item.id);
+                            }}
                             className="shrink-0 text-base font-bold text-destructive hover:bg-destructive/10 hover:text-destructive gap-1 px-2.5 h-8 rounded-full"
                             aria-label={`${item.nameKo || '상품'} 장바구니에서 삭제`}
                           >
@@ -118,8 +133,14 @@ export function CartDrawer({ open, onOpenChange, onCheckout }: CartDrawerProps) 
                         <div className="flex items-center justify-between pt-1">
                           <QuantityStepper
                             value={item.quantity}
-                            onIncrement={() => updateQuantity(item.id, 1)}
-                            onDecrement={() => updateQuantity(item.id, -1)}
+                            onIncrement={() => {
+                              speak(`${item.nameKo || '상품'} 수량 ${item.quantity + 1}개`);
+                              updateQuantity(item.id, 1);
+                            }}
+                            onDecrement={() => {
+                              speak(`${item.nameKo || '상품'} 수량 ${item.quantity - 1}개`);
+                              updateQuantity(item.id, -1);
+                            }}
                             min={1}
                             size="sm"
                             itemLabel={item.nameKo || "상품"}
@@ -144,7 +165,10 @@ export function CartDrawer({ open, onOpenChange, onCheckout }: CartDrawerProps) 
               <Button
                 size="cta-full"
                 disabled={items.length === 0}
-                onClick={onCheckout}
+                onClick={() => {
+                  speak("주문 및 결제 화면으로 이동합니다.");
+                  onCheckout();
+                }}
               >
                 <RollingPrice
                   value={totalPrice}

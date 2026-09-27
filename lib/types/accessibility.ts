@@ -1,5 +1,6 @@
 export type AppLanguage = "ko" | "en";
 export type OneHandedMode = "none" | "left" | "right";
+export type OrderMode = "standard" | "wizard";
 
 export interface AccessibilitySettings {
   language: AppLanguage;
@@ -11,6 +12,7 @@ export interface AccessibilitySettings {
   timeoutExtension: boolean;
   oneHandedMode: OneHandedMode;
   voiceGuideEnabled: boolean;
+  orderMode: OrderMode;
 }
 
 export const DEFAULT_ACCESSIBILITY_SETTINGS: AccessibilitySettings = {
@@ -23,4 +25,5 @@ export const DEFAULT_ACCESSIBILITY_SETTINGS: AccessibilitySettings = {
   timeoutExtension: false,
   oneHandedMode: "none",
   voiceGuideEnabled: false,
+  orderMode: "standard",
 };

@@ -9,6 +9,7 @@ import {
   SettingsRow,
   FontScaleSelector,
   OneHandedModeSelector,
+  OrderModeSelector,
 } from "@/components/settings";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
@@ -104,6 +105,9 @@ export default function SettingsPage() {
             {/* One-Handed Mode Control */}
             <OneHandedModeSelector />
 
+            {/* Order Mode Control (Standard vs Wizard) */}
+            <OrderModeSelector />
+
             <SettingsRow
               htmlFor="setting-high-contrast"
               label="고대비 모드"
@@ -168,22 +172,6 @@ export default function SettingsPage() {
             피드백 및 편의
           </h2>
           <SettingsGroup>
-            <SettingsRow
-              htmlFor="setting-haptics"
-              label="진동 피드백"
-              description="담기, 삭제, 결제 시 손끝으로 햅틱 진동을 전달해요"
-              trailing={
-                <Checkbox
-                  id="setting-haptics"
-                  checked={hapticsEnabled}
-                  onCheckedChange={(checked) =>
-                    handleToggle("진동 피드백", !!checked, setHapticsEnabled)
-                  }
-                  aria-label="진동 피드백"
-                />
-              }
-            />
-
             <SettingsRow
               htmlFor="setting-timeout-extension"
               label="알림 표시 시간 2배 연장"

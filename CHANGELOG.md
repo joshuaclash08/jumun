@@ -8,6 +8,9 @@ This file is a history — entries are appended, never rewritten. For current-st
 
 ### Added
 
+- `components/layout/OneHandedContainer.tsx` — Mobile OS keyboard style One-Handed Layout container (emulating iOS, Android, and iPadOS one-handed keyboards): compresses content lane to ~82% width docked to the active hand, with a dedicated ~18% gutter rail housing a flip direction button (`ArrowLeft` / `ArrowRight`) and a full-width restore button (`Maximize2`). Works seamlessly across both standard catalog and wizard ordering views.
+- `components/settings/OrderModeSelector.tsx` — Segmented control to choose between `일반 메뉴판 둘러보기 (기본)` and `단계별 간편 주문 (1화면 1선택)`.
+- Global VoiceOver (TTS) integration across the entire application — Voice guidance now narrates category selection, product card click, option changes, cart drawer actions, checkout method updates, and final receipt confirmation across both standard and wizard order flows.
 - `components/flow/WizardOrderView.tsx` — 4-step Wizard ordering flow ("한 화면에 하나의 선택만 제시": Category → Product → Options & Checkout/Add More → Payment) tailored for cognitive clarity and motor impairment accessibility.
 - `components/settings/OneHandedModeSelector.tsx` — One-Handed Layout segmented control (`기본(양손)`, `왼손 모드`, `오른손 모드`) to bias interactive controls and action bars into the user's active thumb arc (designed for hemiplegic / stroke aftermath users).
 - `hooks/useVoiceGuide.ts` — Web Speech API (TTS) integration providing Korean speech narration for wizard steps, options, and actions with mute/unmute control.
@@ -15,10 +18,19 @@ This file is a history — entries are appended, never rewritten. For current-st
 
 ### Changed
 
-- `lib/types/accessibility.ts` & `store/useAccessibilityStore.ts` — Added `oneHandedMode` and `voiceGuideEnabled` state and setters.
-- `app/settings/page.tsx` & `app/settings/accessibility/page.tsx` — Added One-Handed Layout control and Voice Guide toggle.
-- `components/flow/MenuClientView.tsx` — Added banner launcher for Wizard mode and seamless switching between standard catalog and wizard ordering.
+- `components/flow/MenuClientView.tsx` — Wrapped entire ordering flow in `OneHandedContainer`, wired `orderMode` from accessibility store, removed promotional banner button (`단계별 간편 주문 시작하기`), and aligned fixed bottom action controls to match the one-handed content lane.
+- `components/flow/ProductDetailSheet.tsx` — Wired VoiceOver narration for item modal open, option toggles, quantity adjustments, and adding to cart.
+- `components/flow/CartDrawer.tsx` — Wired VoiceOver narration for drawer open, item deletion, quantity increments/decrements, and checkout proceed.
+- `components/flow/CheckoutSheet.tsx` — Wired VoiceOver narration for checkout sheet open, payment method toggles, and order placement.
+- `components/flow/ConfirmationStep.tsx` — Wired VoiceOver narration for order placement and receipt order number announcement.
+- `lib/types/accessibility.ts` & `store/useAccessibilityStore.ts` — Added `orderMode: "standard" | "wizard"` state and `setOrderMode` action.
+- `app/settings/page.tsx` & `app/settings/accessibility/page.tsx` — Added `OrderModeSelector` in settings, allowing users to enable step-by-step wizard mode directly from settings without popup clutter.
 - `vitest.setup.ts` — Added `IntersectionObserver` mock for headless JSDOM environments.
+
+### Removed
+
+- Removed "진동 피드백" (Haptics) toggle row from Web UI (`app/settings/page.tsx` and `app/settings/accessibility/page.tsx`) due to Apple WebKit blocking `navigator.vibrate` on iOS Safari, eliminating user confusion while preserving `useHaptics` hook internally as a silent abstraction for Phase 2 React Native.
+- Removed wizard promotional banner button from `MenuClientView.tsx` so users control their order mode cleanly from Settings.
 
 - `.gitignore` — excludes future build/dependency artifacts; excludes `legacy-reference/` from this repo's tracked history.
 - `plan.md` — master roadmap (Phase 1–4), Phase 1 scope boundary (in/out), documentation-set overview, and the standing working agreement (every change gets documented and committed).

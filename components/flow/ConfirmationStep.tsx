@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
+import { useVoiceGuide } from "@/hooks/useVoiceGuide";
 import { StickyActionBar } from "@/components/shared/StickyActionBar";
 import { formatKRW } from "@/lib/format";
 import { tablePath, takeoutPath } from "@/lib/routes";
@@ -90,10 +91,14 @@ export function ConfirmationStep({ onReset }: ConfirmationStepProps) {
   const router = useRouter();
   const lastReceipt = useCartStore((state) => state.lastReceipt);
   const reduceMotion = useAccessibilityStore((state) => state.reducedMotion);
+  const { speak } = useVoiceGuide();
 
   React.useEffect(() => {
     window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
-  }, []);
+    if (lastReceipt) {
+      speak(`주문이 완료되었습니다. 주문 번호는 ${lastReceipt.orderNumber}번 입니다.`);
+    }
+  }, [lastReceipt, speak]);
 
   React.useEffect(() => {
     if (reduceMotion || !lastReceipt) return;

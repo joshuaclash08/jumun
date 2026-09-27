@@ -18,6 +18,7 @@ export function getSettings(): AccessibilitySettings {
     timeoutExtension: state.timeoutExtension,
     oneHandedMode: state.oneHandedMode,
     voiceGuideEnabled: state.voiceGuideEnabled,
+    orderMode: state.orderMode,
   };
 }
 

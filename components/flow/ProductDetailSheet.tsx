@@ -19,6 +19,7 @@ import { RollingPrice } from "@/components/ui/RollingPrice";
 import { BackButton } from "@/components/ui/BackButton";
 import { QuantityStepper } from "@/components/flow/QuantityStepper";
 import { StickyActionBar } from "@/components/shared/StickyActionBar";
+import { useVoiceGuide } from "@/hooks/useVoiceGuide";
 import { generateUUID } from "@/lib/utils";
 import { formatKRW } from "@/lib/format";
 
@@ -46,6 +47,11 @@ function ProductDetailContent({
 }: ProductDetailContentProps) {
   const reduceMotion = useAccessibilityStore((state) => state.reducedMotion);
   const hapticsEnabled = useAccessibilityStore((state) => state.hapticsEnabled);
+  const { speak } = useVoiceGuide();
+
+  React.useEffect(() => {
+    speak(`${product.nameKo}, 기본 가격 ${formatKRW(product.price)}. 옵션과 수량을 선택해 주세요.`);
+  }, [product, speak]);
 
   // Initialize options selections
   const [selections, setSelections] = React.useState<Record<string, string[]>>(() => {
@@ -66,9 +72,11 @@ function ProductDetailContent({
     const isSingle = group.selectionType === "single";
     const maxSelections = group.maxSelections;
     const current = selections[group.id] || [];
+    const opt = group.options.find((o) => o.id === optionId);
 
     if (isSingle) {
       setSelections((prev) => ({ ...prev, [group.id]: [optionId] }));
+      if (opt) speak(`${opt.labelKo} 선택`);
       return;
     }
 
@@ -77,16 +85,19 @@ function ProductDetailContent({
         ...prev,
         [group.id]: (prev[group.id] || []).filter((id) => id !== optionId),
       }));
+      if (opt) speak(`${opt.labelKo} 선택 해제`);
       return;
     }
 
     if (maxSelections && current.length >= maxSelections) {
+      const msg = `최대 ${maxSelections}개까지 선택할 수 있어요.`;
       toast({
         kind: "error",
-        messageKo: `최대 ${maxSelections}개까지 선택할 수 있어요.`,
+        messageKo: msg,
         variant: "generic",
         hapticsEnabled,
       });
+      speak(msg);
       return;
     }
 
@@ -94,6 +105,7 @@ function ProductDetailContent({
       ...prev,
       [group.id]: [...(prev[group.id] || []), optionId],
     }));
+    if (opt) speak(`${opt.labelKo} 선택`);
   };
 
   const calculateUnitPrice = () => {
@@ -202,8 +214,16 @@ function ProductDetailContent({
                 {/* Tactile Stepper */}
                 <QuantityStepper
                   value={quantity}
-                  onIncrement={() => setQuantity((q) => Math.min(20, q + 1))}
-                  onDecrement={() => setQuantity((q) => Math.max(1, q - 1))}
+                  onIncrement={() => {
+                    const next = Math.min(20, quantity + 1);
+                    setQuantity(next);
+                    speak(`수량 ${next}개`);
+                  }}
+                  onDecrement={() => {
+                    const next = Math.max(1, quantity - 1);
+                    setQuantity(next);
+                    speak(`수량 ${next}개`);
+                  }}
                   min={1}
                   max={20}
                   itemLabel="주문"
@@ -309,6 +329,7 @@ export function ProductDetailSheet({
   onOpenChange,
 }: ProductDetailSheetProps) {
   const addItem = useCartStore((state) => state.addItem);
+  const { speak } = useVoiceGuide();
 
   if (!product) return null;
 
@@ -320,6 +341,7 @@ export function ProductDetailSheet({
           product={product}
           onClose={() => onOpenChange(false)}
           onAddToCart={(data) => {
+            speak(`${product.nameKo} ${data.quantity}개를 장바구니에 담았습니다.`);
             addItem({
               id: generateUUID(),
               productId: product.id,

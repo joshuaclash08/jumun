@@ -42,3 +42,4 @@ bun-debug.log*
 
 # Local reference material (kept on disk, not tracked in this repo's history)
 legacy-reference/
+toss*.PNG

@@ -20,6 +20,7 @@ import { RollingPrice } from "@/components/ui/RollingPrice";
 import { SelectionCard } from "./SelectionCard";
 import { BackButton } from "@/components/ui/BackButton";
 import { StickyActionBar } from "@/components/shared/StickyActionBar";
+import { useVoiceGuide } from "@/hooks/useVoiceGuide";
 import { formatKRW } from "@/lib/format";
 
 interface CheckoutSheetProps {
@@ -35,11 +36,18 @@ export function CheckoutSheet({ open, onOpenChange, onConfirm }: CheckoutSheetPr
   const [paymentMethod, setPaymentMethod] = React.useState<string>(defaultPaymentMethod);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
+  const { speak } = useVoiceGuide();
 
   const totalPrice = items.reduce(
     (sum, item) => sum + item.unitPrice * item.quantity,
     0
   );
+
+  React.useEffect(() => {
+    if (open) {
+      speak(`주문 및 결제 확인 화면입니다. 총 결제 금액은 ${formatKRW(totalPrice)}입니다.`);
+    }
+  }, [open, totalPrice, speak]);
 
   const handleOpenChange = (newOpen: boolean) => {
     if (!newOpen) {
@@ -51,7 +59,9 @@ export function CheckoutSheet({ open, onOpenChange, onConfirm }: CheckoutSheetPr
 
   const handleCheckout = async () => {
     if (!storeInfo) {
-      setErrorMessage("매장 정보가 확인되지 않았습니다. 다시 스캔해 주세요.");
+      const msg = "매장 정보가 확인되지 않았습니다. 다시 스캔해 주세요.";
+      setErrorMessage(msg);
+      speak(msg);
       return;
     }
 
@@ -64,12 +74,14 @@ export function CheckoutSheet({ open, onOpenChange, onConfirm }: CheckoutSheetPr
       setLastReceipt(receipt);
       setOrderStatus("confirmed");
       clearCart();
+      speak("주문과 결제가 완료되었습니다. 영수증이 발급되었습니다.");
       onOpenChange(false);
       onConfirm();
     } catch (err: unknown) {
       setOrderStatus("failed");
       const message = err instanceof Error ? err.message : "결제를 완료하지 못했어요.";
       setErrorMessage(message);
+      speak(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -182,14 +194,20 @@ export function CheckoutSheet({ open, onOpenChange, onConfirm }: CheckoutSheetPr
                 <div className="grid grid-cols-2 gap-2.5">
                   <SelectionCard
                     isSelected={paymentMethod === "card"}
-                    onClick={() => setPaymentMethod("card")}
+                    onClick={() => {
+                      setPaymentMethod("card");
+                      speak("신용 / 체크카드가 선택되었습니다.");
+                    }}
                     label="신용 / 체크카드"
                     icon={<CreditCard className="h-5 w-5" />}
                     reduceMotion={reduceMotion}
                   />
                   <SelectionCard
                     isSelected={paymentMethod === "easy-pay"}
-                    onClick={() => setPaymentMethod("easy-pay")}
+                    onClick={() => {
+                      setPaymentMethod("easy-pay");
+                      speak("간편 결제가 선택되었습니다.");
+                    }}
                     label="간편 결제"
                     icon={<Smartphone className="h-5 w-5" />}
                     reduceMotion={reduceMotion}
