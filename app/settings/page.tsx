@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
+import { Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "motion/react";
 import {
   SettingsHeader,
@@ -10,21 +11,22 @@ import {
   FontScaleSelector,
   OneHandedModeSelector,
   OrderModeSelector,
+  ThemeModeSelector,
+  MenuLayoutSelector,
 } from "@/components/settings";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
-import { toast } from "@/lib/services/A11yFeedbackService";
 import { StickyActionBar } from "@/components/shared/StickyActionBar";
 import { cn } from "@/lib/utils";
+import { SETUP_COMPLETED_KEY, SETUP_COMPLETED_COOKIE, sanitizeReturnTo } from "@/lib/constants/setup";
+import { useTranslation, SUPPORTED_LOCALES, translate, DEFAULT_LOCALE } from "@/lib/i18n";
 
-const LANGUAGES = [
-  { id: "ko" as const, label: "한국어" },
-  { id: "en" as const, label: "English" },
-];
-
-export default function SettingsPage() {
+function SettingsContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnTo = searchParams?.get?.("returnTo") ?? null;
+  const { t, language, setLanguage } = useTranslation("settings");
   const {
     highContrast,
     setHighContrast,
@@ -32,29 +34,30 @@ export default function SettingsPage() {
     setReducedMotion,
     dyslexiaSpacing,
     setDyslexiaSpacing,
-    hapticsEnabled,
-    setHapticsEnabled,
     timeoutExtension,
     setTimeoutExtension,
     voiceGuideEnabled,
     setVoiceGuideEnabled,
-    language,
-    setLanguage,
     resetAll,
   } = useAccessibilityStore();
 
+  const markSetupDone = () => {
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem(SETUP_COMPLETED_KEY, "true");
+        document.cookie = `${SETUP_COMPLETED_COOKIE}=true; path=/; max-age=31536000; SameSite=Lax`;
+      } catch (e) {
+        console.error("Failed to save setup status:", e);
+      }
+    }
+  };
+
   const handleToggle = (
-    name: string,
+    _name: string,
     next: boolean,
     setter: (val: boolean) => void,
   ) => {
     setter(next);
-    toast({
-      kind: "success",
-      messageKo: `${name} 설정이 ${next ? "켜졌습니다" : "꺼졌습니다"}.`,
-      variant: "generic",
-      hapticsEnabled,
-    });
   };
 
   const handleReset = () => {
@@ -70,19 +73,22 @@ export default function SettingsPage() {
     }
   };
 
-  const handleComplete = () => {
-    toast({
-      kind: "success",
-      messageKo: "설정이 안전하게 저장되었습니다.",
-      variant: "generic",
-      hapticsEnabled,
-    });
-    // Delay navigation so the screen reader finishes reading the live-region
-    // announcement before this page unmounts (router.back() was previously
-    // firing immediately, cutting the announcement off mid-sentence).
-    setTimeout(() => {
+  const handleBack = () => {
+    markSetupDone();
+    if (returnTo) {
+      router.replace(sanitizeReturnTo(returnTo));
+    } else {
       router.back();
-    }, 250);
+    }
+  };
+
+  const handleComplete = () => {
+    markSetupDone();
+    if (returnTo) {
+      router.replace(sanitizeReturnTo(returnTo));
+    } else {
+      router.back();
+    }
   };
 
   return (
@@ -90,15 +96,18 @@ export default function SettingsPage() {
       id="main-content"
       className="flex min-h-full flex-col bg-background pb-28 sm:pb-32"
     >
-      <SettingsHeader title="설정" />
+      <SettingsHeader title={t("title")} onBack={handleBack} />
 
       <div className="flex flex-col gap-6 px-4 pt-4">
         {/* ── 1. Screen & Typography Section ────────────────────────── */}
         <section className="flex flex-col gap-2.5">
           <h2 className="px-1 text-base font-extrabold text-foreground">
-            화면 및 텍스트 상세 설정
+            {t("screen.sectionTitle")}
           </h2>
           <SettingsGroup>
+            {/* Theme Mode Control (Light vs Dark) */}
+            <ThemeModeSelector />
+
             {/* Font Scale Control */}
             <FontScaleSelector />
 
@@ -108,58 +117,53 @@ export default function SettingsPage() {
             {/* Order Mode Control (Standard vs Wizard) */}
             <OrderModeSelector />
 
+            {/* Menu Display Style Control (Grid Cards vs Row List) */}
+            <MenuLayoutSelector />
+
             <SettingsRow
               htmlFor="setting-high-contrast"
-              label="고대비 모드"
-              description="텍스트와 배경의 대비를 17:1 이상으로 높여요"
+              label={t("screen.highContrast.label")}
+              description={t("screen.highContrast.desc")}
               trailing={
                 <Checkbox
                   id="setting-high-contrast"
                   checked={highContrast}
                   onCheckedChange={(checked) =>
-                    handleToggle("고대비 모드", !!checked, setHighContrast)
+                    handleToggle("high-contrast", !!checked, setHighContrast)
                   }
-                  aria-label="고대비 모드"
+                  aria-label={t("screen.highContrast.label")}
                 />
               }
             />
 
             <SettingsRow
               htmlFor="setting-dyslexia-spacing"
-              label="난독증 친화 간격"
-              description="글자, 단어, 줄 사이 간격을 넓혀 가독성을 높여요"
+              label={t("screen.dyslexiaSpacing.label")}
+              description={t("screen.dyslexiaSpacing.desc")}
               trailing={
                 <Checkbox
                   id="setting-dyslexia-spacing"
                   checked={dyslexiaSpacing}
                   onCheckedChange={(checked) =>
-                    handleToggle(
-                      "난독증 친화 간격",
-                      !!checked,
-                      setDyslexiaSpacing,
-                    )
+                    handleToggle("dyslexia-spacing", !!checked, setDyslexiaSpacing)
                   }
-                  aria-label="난독증 친화 간격"
+                  aria-label={t("screen.dyslexiaSpacing.label")}
                 />
               }
             />
 
             <SettingsRow
               htmlFor="setting-reduced-motion"
-              label="애니메이션 줄이기"
-              description="화면 전환 및 장식 애니메이션을 즉시 완료해요"
+              label={t("screen.reducedMotion.label")}
+              description={t("screen.reducedMotion.desc")}
               trailing={
                 <Checkbox
                   id="setting-reduced-motion"
                   checked={reducedMotion}
                   onCheckedChange={(checked) =>
-                    handleToggle(
-                      "애니메이션 줄이기",
-                      !!checked,
-                      setReducedMotion,
-                    )
+                    handleToggle("reduced-motion", !!checked, setReducedMotion)
                   }
-                  aria-label="애니메이션 줄이기"
+                  aria-label={t("screen.reducedMotion.label")}
                 />
               }
             />
@@ -169,52 +173,48 @@ export default function SettingsPage() {
         {/* ── 2. Feedback & Accessibility Details ───────────────────── */}
         <section className="flex flex-col gap-2.5">
           <h2 className="px-1 text-base font-extrabold text-foreground">
-            피드백 및 편의
+            {t("feedback.sectionTitle")}
           </h2>
           <SettingsGroup>
             <SettingsRow
               htmlFor="setting-timeout-extension"
-              label="알림 표시 시간 2배 연장"
-              description="알림 토스트가 화면에 머무는 시간을 3초에서 7초로 늘려요"
+              label={t("feedback.timeoutExtension.label")}
+              description={t("feedback.timeoutExtension.desc")}
               trailing={
                 <Checkbox
                   id="setting-timeout-extension"
                   checked={timeoutExtension}
                   onCheckedChange={(checked) =>
-                    handleToggle(
-                      "알림 시간 연장",
-                      !!checked,
-                      setTimeoutExtension,
-                    )
+                    handleToggle("timeout-extension", !!checked, setTimeoutExtension)
                   }
-                  aria-label="알림 표시 시간 2배 연장"
+                  aria-label={t("feedback.timeoutExtension.label")}
                 />
               }
             />
 
             <SettingsRow
               htmlFor="setting-voice-guide"
-              label="음성 안내 (보이스오버 체험)"
-              description="주문 단계와 메뉴 정보를 브라우저 음성으로 들려줘요 (프로토타입)"
+              label={t("feedback.voiceGuide.label")}
+              description={t("feedback.voiceGuide.desc")}
               trailing={
                 <Checkbox
                   id="setting-voice-guide"
                   checked={voiceGuideEnabled}
                   onCheckedChange={(checked) =>
-                    handleToggle(
-                      "음성 안내",
-                      !!checked,
-                      setVoiceGuideEnabled,
-                    )
+                    handleToggle("voice-guide", !!checked, setVoiceGuideEnabled)
                   }
-                  aria-label="음성 안내 (보이스오버 체험)"
+                  aria-label={t("feedback.voiceGuide.label")}
                 />
               }
             />
 
             <SettingsRow
-              label="기본 결제 수단 관리"
-              href="/settings/payment"
+              label={t("feedback.paymentMethod.label")}
+              href={
+                returnTo
+                  ? `/settings/payment?returnTo=${encodeURIComponent(returnTo)}`
+                  : "/settings/payment"
+              }
             />
           </SettingsGroup>
         </section>
@@ -222,19 +222,19 @@ export default function SettingsPage() {
         {/* ── 3. Language & Reset ───────────────────────────────────── */}
         <section className="flex flex-col gap-2.5">
           <h2 className="px-1 text-base font-extrabold text-foreground">
-            언어 및 초기화
+            {t("languageAndReset.sectionTitle")}
           </h2>
           <SettingsGroup>
             <div className="flex flex-col gap-3 px-5 py-4">
               <span className="text-base font-bold text-foreground">
-                언어 (Language)
+                {t("languageAndReset.language")}
               </span>
               <div className="grid grid-cols-2 gap-2 pt-1 bg-muted/40 p-1.5 rounded-[16px]">
-                {LANGUAGES.map((item) => {
-                  const isSelected = language === item.id;
+                {SUPPORTED_LOCALES.map((item) => {
+                  const isSelected = language === item.code;
                   return (
                     <motion.button
-                      key={item.id}
+                      key={item.code}
                       type="button"
                       whileTap={reducedMotion ? undefined : { scale: 0.96 }}
                       transition={{
@@ -243,13 +243,7 @@ export default function SettingsPage() {
                         damping: 25,
                       }}
                       onClick={() => {
-                        setLanguage(item.id);
-                        toast({
-                          kind: "success",
-                          messageKo: `언어가 ${item.label}로 설정되었습니다.`,
-                          variant: "generic",
-                          hapticsEnabled,
-                        });
+                        setLanguage(item.code);
                       }}
                       className={cn(
                         "flex h-11 items-center justify-center rounded-[12px] font-bold text-base transition-all outline-none",
@@ -258,7 +252,7 @@ export default function SettingsPage() {
                           : "text-muted-foreground hover:text-foreground hover:bg-background/60",
                       )}
                     >
-                      {item.label}
+                      {item.nativeName}
                     </motion.button>
                   );
                 })}
@@ -275,17 +269,37 @@ export default function SettingsPage() {
               onClick={handleReset}
               className="flex items-center justify-center rounded-full bg-destructive/10 border border-destructive/20 px-6 py-2.5 text-base font-bold text-destructive hover:bg-destructive/20 transition-colors"
             >
-              설정 초기화
+              {t("languageAndReset.reset")}
             </motion.button>
           </div>
         </section>
       </div>
 
-      <StickyActionBar className="max-w-[768px]">
+      <StickyActionBar className="max-w-[840px]">
         <Button size="cta-full" onClick={handleComplete}>
-          설정 완료
+          {t("actions.complete")}
         </Button>
       </StickyActionBar>
     </main>
+  );
+}
+
+export default function SettingsPage() {
+  const loadingLabel = translate(DEFAULT_LOCALE, "common.loading");
+
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-[100dvh] items-center justify-center bg-background">
+          <div
+            className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent"
+            role="status"
+            aria-label={loadingLabel}
+          />
+        </div>
+      }
+    >
+      <SettingsContent />
+    </Suspense>
   );
 }

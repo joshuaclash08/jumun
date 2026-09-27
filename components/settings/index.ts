@@ -5,3 +5,5 @@ export * from "./SettingsGroup";
 export * from "./FontScaleSelector";
 export * from "./OneHandedModeSelector";
 export * from "./OrderModeSelector";
+export * from "./ThemeModeSelector";
+export * from "./MenuLayoutSelector";

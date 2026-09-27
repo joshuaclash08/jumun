@@ -3,12 +3,12 @@
 import * as React from "react";
 import { motion } from "motion/react";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
-import { toast } from "@/lib/services/A11yFeedbackService";
 import { cn } from "@/lib/utils";
 
 export interface SegmentedControlOption<T extends string | number> {
   value: T;
   label: string;
+  icon?: React.ReactNode;
 }
 
 export interface SegmentedControlProps<T extends string | number> {
@@ -17,24 +17,22 @@ export interface SegmentedControlProps<T extends string | number> {
   options: SegmentedControlOption<T>[];
   value: T;
   onChange: (value: T) => void;
-  /** Builds the success toast message from the newly-selected option's label. */
-  getSuccessMessage: (label: string) => string;
+  /** Optional message builder for backwards compatibility (no toast is displayed) */
+  getSuccessMessage?: (label: string) => string;
 }
 
 /**
  * Shared segmented-control UI used by settings screens for small, closed-set
  * choices (font scale, language, ...). Selecting an option updates the value
- * and fires a success toast/announcement via A11yFeedbackService.
+ * immediately without intrusive toast notifications.
  */
 export function SegmentedControl<T extends string | number>({
   groupLabel,
   options,
   value,
   onChange,
-  getSuccessMessage,
 }: SegmentedControlProps<T>) {
   const reducedMotion = useAccessibilityStore((state) => state.reducedMotion);
-  const hapticsEnabled = useAccessibilityStore((state) => state.hapticsEnabled);
 
   return (
     <div
@@ -61,21 +59,16 @@ export function SegmentedControl<T extends string | number>({
             }}
             onClick={() => {
               onChange(item.value);
-              toast({
-                kind: "success",
-                messageKo: getSuccessMessage(item.label),
-                variant: "generic",
-                hapticsEnabled,
-              });
             }}
             className={cn(
-              "flex h-11 items-center justify-center rounded-[12px] font-bold text-base transition-all outline-none cursor-pointer",
+              "flex h-11 items-center justify-center gap-1.5 rounded-[12px] font-bold text-base transition-all outline-none cursor-pointer",
               isSelected
                 ? "bg-primary text-white shadow-sm"
                 : "text-muted-foreground hover:text-foreground hover:bg-background/60",
             )}
           >
-            {item.label}
+            {item.icon}
+            <span>{item.label}</span>
           </motion.button>
         );
       })}

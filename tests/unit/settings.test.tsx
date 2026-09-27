@@ -7,6 +7,7 @@ import PaymentSettingsPage from "@/app/settings/payment/page";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
 import { usePaymentStore } from "@/store/usePaymentStore";
+import { useToastStore } from "@/store/useToastStore";
 
 // Mock next/navigation
 vi.mock("next/navigation", () => ({
@@ -15,7 +16,10 @@ vi.mock("next/navigation", () => ({
     back: vi.fn(),
     forward: vi.fn(),
     refresh: vi.fn(),
+    replace: vi.fn(),
   }),
+  useSearchParams: () => new URLSearchParams(),
+  usePathname: () => "/settings",
 }));
 
 describe("Checkbox Component", () => {
@@ -63,7 +67,9 @@ describe("SettingsPage - Icon Removal & Checkbox Migration", () => {
 
     // Text labels
     expect(screen.getByText("화면 및 텍스트 상세 설정")).toBeInTheDocument();
+    expect(screen.getByText("화면 테마")).toBeInTheDocument();
     expect(screen.getByText("주문 화면 방식")).toBeInTheDocument();
+    expect(screen.getByText("메뉴 보기 방식")).toBeInTheDocument();
     expect(screen.getByText("글자 크기")).toBeInTheDocument();
     expect(screen.getByText("고대비 모드")).toBeInTheDocument();
     expect(screen.getByText("난독증 친화 간격")).toBeInTheDocument();
@@ -81,6 +87,20 @@ describe("SettingsPage - Icon Removal & Checkbox Migration", () => {
     expect(checkboxes.length).toBe(5); // highContrast, dyslexiaSpacing, reducedMotion, timeoutExtension, voiceGuideEnabled
   });
 
+  it("toggles menu layout mode between grid and list in settings", () => {
+    render(<SettingsPage />);
+
+    expect(useAccessibilityStore.getState().menuLayout).toBe("grid");
+
+    const listRadio = screen.getByRole("radio", { name: "리스트형" });
+    fireEvent.click(listRadio);
+    expect(useAccessibilityStore.getState().menuLayout).toBe("list");
+
+    const gridRadio = screen.getByRole("radio", { name: "카드형 (기본)" });
+    fireEvent.click(gridRadio);
+    expect(useAccessibilityStore.getState().menuLayout).toBe("grid");
+  });
+
   it("toggles high contrast mode when clicking the checkbox or label row", () => {
     render(<SettingsPage />);
 
@@ -92,6 +112,22 @@ describe("SettingsPage - Icon Removal & Checkbox Migration", () => {
 
     fireEvent.click(highContrastCheckbox);
     expect(useAccessibilityStore.getState().highContrast).toBe(false);
+  });
+
+  it("does NOT trigger any toast notification when toggling settings or changing options", () => {
+    useToastStore.setState({ toasts: [] });
+    render(<SettingsPage />);
+
+    // Toggle high contrast
+    const highContrastCheckbox = screen.getByRole("checkbox", { name: "고대비 모드" });
+    fireEvent.click(highContrastCheckbox);
+
+    // Click English language
+    const englishBtn = screen.getByRole("button", { name: "English" });
+    fireEvent.click(englishBtn);
+
+    // Verify no toasts were pushed
+    expect(useToastStore.getState().toasts).toHaveLength(0);
   });
 
   it("passes axe accessibility check with zero violations", async () => {
@@ -121,5 +157,72 @@ describe("AccessibilityDetailPage & PaymentSettingsPage", () => {
 
     const results = await axe(container);
     expect(results).toHaveNoViolations();
+  });
+});
+
+describe("Settings i18n English Mode", () => {
+  beforeEach(() => {
+    useAccessibilityStore.getState().resetAll();
+    useAccessibilityStore.getState().setLanguage("en");
+  });
+
+  it("renders SettingsPage in English when language is 'en'", async () => {
+    const { container } = render(<SettingsPage />);
+
+    expect(screen.getByText("Screen & Display Settings")).toBeInTheDocument();
+    expect(screen.getByText("Theme")).toBeInTheDocument();
+    expect(screen.getByText("Order Screen Layout")).toBeInTheDocument();
+    expect(screen.getByText("Font Size")).toBeInTheDocument();
+    expect(screen.getByText("High Contrast Mode")).toBeInTheDocument();
+    expect(screen.getByText("Dyslexia-friendly Spacing")).toBeInTheDocument();
+    expect(screen.getByText("Reduce Motion")).toBeInTheDocument();
+    expect(screen.getByText("Feedback & Convenience")).toBeInTheDocument();
+    expect(screen.getByText("Double Notification Duration")).toBeInTheDocument();
+    expect(screen.getByText("Voice Guide (VoiceOver Preview)")).toBeInTheDocument();
+    expect(screen.getByText("Manage Default Payment Method")).toBeInTheDocument();
+    expect(screen.getByText("Language & Reset")).toBeInTheDocument();
+    expect(screen.getByText("Reset Settings")).toBeInTheDocument();
+    expect(screen.getByText("Save Settings")).toBeInTheDocument();
+
+    // High contrast checkbox aria-label in English
+    const highContrastCheckbox = screen.getByRole("checkbox", { name: "High Contrast Mode" });
+    expect(highContrastCheckbox).toBeInTheDocument();
+
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
+  });
+
+  it("dynamically switches language between Korean and English upon button click", () => {
+    useAccessibilityStore.getState().setLanguage("ko");
+    render(<SettingsPage />);
+
+    expect(screen.getByText("화면 및 텍스트 상세 설정")).toBeInTheDocument();
+
+    const englishBtn = screen.getByRole("button", { name: "English" });
+    fireEvent.click(englishBtn);
+
+    expect(useAccessibilityStore.getState().language).toBe("en");
+    expect(screen.getByText("Screen & Display Settings")).toBeInTheDocument();
+
+    const koreanBtn = screen.getByRole("button", { name: "한국어" });
+    fireEvent.click(koreanBtn);
+
+    expect(useAccessibilityStore.getState().language).toBe("ko");
+    expect(screen.getByText("화면 및 텍스트 상세 설정")).toBeInTheDocument();
+  });
+
+  it("renders AccessibilityDetailPage and PaymentSettingsPage in English", async () => {
+    const { unmount } = render(<AccessibilityDetailPage />);
+    expect(screen.getByRole("heading", { name: "Accessibility" })).toBeInTheDocument();
+    expect(screen.getByText("Voice Guide (VoiceOver Preview)")).toBeInTheDocument();
+    expect(screen.getByText("Save Settings")).toBeInTheDocument();
+    unmount();
+
+    usePaymentStore.getState().setDefaultMethod("card");
+    render(<PaymentSettingsPage />);
+    expect(screen.getByRole("heading", { name: "Manage Payment Methods" })).toBeInTheDocument();
+    expect(screen.getByText("Credit / Debit Card")).toBeInTheDocument();
+    expect(screen.getByText("Easy Pay")).toBeInTheDocument();
+    expect(screen.getByText("Save Settings")).toBeInTheDocument();
   });
 });
