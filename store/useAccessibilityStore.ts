@@ -6,11 +6,15 @@ import {
   DEFAULT_ACCESSIBILITY_SETTINGS,
   type AccessibilitySettings,
   type AppLanguage,
+  type AppTheme,
   type OneHandedMode,
   type OrderMode,
 } from "@/lib/types";
 
 interface AccessibilityStore extends AccessibilitySettings {
+  hasSetTheme: boolean;
+  hydrateThemeFromSystem: (prefersDark: boolean) => void;
+  setTheme: (theme: AppTheme) => void;
   hasSetReducedMotion: boolean;
   hydrateReducedMotionFromSystem: (prefersReducedMotion: boolean) => void;
   setLanguage: (language: AppLanguage) => void;
@@ -23,6 +27,7 @@ interface AccessibilityStore extends AccessibilitySettings {
   setOneHandedMode: (oneHandedMode: OneHandedMode) => void;
   setVoiceGuideEnabled: (voiceGuideEnabled: boolean) => void;
   setOrderMode: (orderMode: OrderMode) => void;
+  setMenuLayout: (menuLayout: import("@/lib/types").MenuLayout) => void;
   applyPreset: (preset: "visual" | "hearing" | "reading" | "senior") => void;
   resetAll: () => void;
 }
@@ -34,7 +39,25 @@ export const useAccessibilityStore = create<AccessibilityStore>()(
   persist(
     (set, get) => ({
       ...DEFAULT_ACCESSIBILITY_SETTINGS,
+      hasSetTheme: false,
       hasSetReducedMotion: false,
+
+      // Seeds theme from the OS preference once, on a device's genuinely
+      // first visit only. Bright mode ('light') is the main default, but if
+      // the OS prefers dark mode on initial visit, sets 'dark'. Once set or
+      // manually changed by user, this is a no-op so returning visits keep
+      // user's saved preference without re-querying the API.
+      hydrateThemeFromSystem: (prefersDark?: boolean) => {
+        if (get().hasSetTheme) return;
+        const isDark =
+          typeof prefersDark === "boolean"
+            ? prefersDark
+            : (typeof window !== "undefined" &&
+               window.matchMedia?.("(prefers-color-scheme: dark)").matches) ?? false;
+        set({ theme: isDark ? "dark" : "light", hasSetTheme: true });
+      },
+
+      setTheme: (theme) => set({ theme, hasSetTheme: true }),
 
       // No-ops for a returning device (hasSetReducedMotion already true from a
       // prior explicit or system-seeded value) -- only applies on a genuinely
@@ -55,6 +78,7 @@ export const useAccessibilityStore = create<AccessibilityStore>()(
       setOneHandedMode: (oneHandedMode) => set({ oneHandedMode }),
       setVoiceGuideEnabled: (voiceGuideEnabled) => set({ voiceGuideEnabled }),
       setOrderMode: (orderMode) => set({ orderMode }),
+      setMenuLayout: (menuLayout) => set({ menuLayout }),
       applyPreset: (preset) => {
         switch (preset) {
           case "visual":
@@ -91,6 +115,8 @@ export const useAccessibilityStore = create<AccessibilityStore>()(
       resetAll: () =>
         set({
           ...DEFAULT_ACCESSIBILITY_SETTINGS,
+          hasSetTheme: false,
+          hasSetReducedMotion: false,
         }),
     }),
     { name: "jumun:accessibility-settings" },

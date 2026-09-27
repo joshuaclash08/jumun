@@ -6,12 +6,14 @@ describe("useAccessibilityStore", () => {
   beforeEach(() => {
     useAccessibilityStore.setState({
       ...DEFAULT_ACCESSIBILITY_SETTINGS,
+      hasSetTheme: false,
       hasSetReducedMotion: false,
     });
   });
 
   it("initializes with default accessibility settings", () => {
     const state = useAccessibilityStore.getState();
+    expect(state.theme).toBe("light");
     expect(state.highContrast).toBe(false);
     expect(state.fontScale).toBe(1);
     expect(state.reducedMotion).toBe(false);
@@ -21,6 +23,9 @@ describe("useAccessibilityStore", () => {
   });
 
   it("updates individual accessibility preferences", () => {
+    useAccessibilityStore.getState().setTheme("dark");
+    expect(useAccessibilityStore.getState().theme).toBe("dark");
+
     useAccessibilityStore.getState().setHighContrast(true);
     expect(useAccessibilityStore.getState().highContrast).toBe(true);
 
@@ -35,6 +40,39 @@ describe("useAccessibilityStore", () => {
 
     useAccessibilityStore.getState().setLanguage("en");
     expect(useAccessibilityStore.getState().language).toBe("en");
+  });
+
+  it("hydrates theme from system preference only on first visit and preserves user manual choice", () => {
+    // 1. Initial state has default bright mode ('light') and hasSetTheme is false
+    expect(useAccessibilityStore.getState().theme).toBe("light");
+    expect(useAccessibilityStore.getState().hasSetTheme).toBe(false);
+
+    // 2. First visit on a device with OS dark mode enabled -> hydrated to 'dark'
+    useAccessibilityStore.getState().hydrateThemeFromSystem(true);
+    expect(useAccessibilityStore.getState().theme).toBe("dark");
+    expect(useAccessibilityStore.getState().hasSetTheme).toBe(true);
+
+    // 3. Subsequent visits / OS preference changes do NOT overwrite the saved theme
+    useAccessibilityStore.getState().hydrateThemeFromSystem(false);
+    expect(useAccessibilityStore.getState().theme).toBe("dark");
+
+    // 4. User can explicitly change to 'light' in settings
+    useAccessibilityStore.getState().setTheme("light");
+    expect(useAccessibilityStore.getState().theme).toBe("light");
+
+    // 5. Subsequent system queries still do NOT overwrite user's explicit preference
+    useAccessibilityStore.getState().hydrateThemeFromSystem(true);
+    expect(useAccessibilityStore.getState().theme).toBe("light");
+  });
+
+  it("hydrates theme from system preference as light if OS is light mode on first visit", () => {
+    useAccessibilityStore.getState().hydrateThemeFromSystem(false);
+    expect(useAccessibilityStore.getState().theme).toBe("light");
+    expect(useAccessibilityStore.getState().hasSetTheme).toBe(true);
+
+    // After that, OS changes to dark mode do not overwrite
+    useAccessibilityStore.getState().hydrateThemeFromSystem(true);
+    expect(useAccessibilityStore.getState().theme).toBe("light");
   });
 
   it("hydrates reduced motion from system preference only on first visit", () => {
@@ -53,6 +91,7 @@ describe("useAccessibilityStore", () => {
   });
 
   it("applies accessibility presets and resets all correctly", () => {
+    useAccessibilityStore.getState().setTheme("dark");
     useAccessibilityStore.getState().applyPreset("visual");
     expect(useAccessibilityStore.getState().highContrast).toBe(true);
     expect(useAccessibilityStore.getState().fontScale).toBe(1.3);
@@ -63,6 +102,9 @@ describe("useAccessibilityStore", () => {
     expect(useAccessibilityStore.getState().reducedMotion).toBe(true);
 
     useAccessibilityStore.getState().resetAll();
+    expect(useAccessibilityStore.getState().theme).toBe("light");
+    expect(useAccessibilityStore.getState().hasSetTheme).toBe(false);
+    expect(useAccessibilityStore.getState().hasSetReducedMotion).toBe(false);
     expect(useAccessibilityStore.getState().highContrast).toBe(false);
     expect(useAccessibilityStore.getState().fontScale).toBe(1);
     expect(useAccessibilityStore.getState().dyslexiaSpacing).toBe(false);

@@ -2,15 +2,16 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-/* Jumun has no light/dark distinction -- it has a default theme and an
-   opt-in AAA/high-contrast mode (docs/design-system.md). */
+/* Jumun defaults to a bright mode theme with an opt-in/system-hydrated
+   Toss Dark theme and opt-in AAA high-contrast mode. */
+@custom-variant dark (&:where(.dark, .dark *));
 @custom-variant high-contrast (&:is(.high-contrast *));
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans:
-    var(--font-pretendard), var(--font-noto-sans-kr), -apple-system,
+    var(--font-pretendard), -apple-system,
     BlinkMacSystemFont, system-ui, "Apple SD Gothic Neo", sans-serif;
   --font-heading: var(--font-sans);
   --color-ring: var(--ring);
@@ -78,6 +79,36 @@
   --radius: 0.875rem;
 }
 
+/* Toss Dark Theme */
+.dark {
+  --background: #17171c; /* TDS dark base */
+  --foreground: #f2f4f6; /* TDS dark text-primary */
+  --card: #21232a; /* TDS dark surface */
+  --card-foreground: #f2f4f6;
+  --popover: #21232a;
+  --popover-foreground: #f2f4f6;
+  --primary: #3182f6; /* Toss Blue dark-adapted for AA contrast */
+  --primary-foreground: #ffffff;
+  --secondary: #1e2838; /* Toss dark tinted wash */
+  --secondary-foreground: #79adff;
+  --muted: #21232a; /* TDS dark bg-subtle */
+  --muted-foreground: #8b95a1; /* TDS dark text-secondary */
+  --accent: #1e2838;
+  --accent-foreground: #79adff;
+  --destructive: #f04452;
+  --success: #00c896;
+  --success-bg: #132a20;
+  --border: #2c2f37; /* TDS dark border-default */
+  --input: #383c46; /* TDS dark border-strong */
+  --ring: #3182f6;
+  --shadow-resting:
+    0 2px 8px rgba(0, 0, 0, 0.28), 0 1px 2px rgba(0, 0, 0, 0.20);
+  --shadow-layered:
+    0 8px 20px rgba(0, 0, 0, 0.42), 0 2px 6px rgba(0, 0, 0, 0.24);
+  --shadow-floating:
+    0 16px 36px rgba(0, 0, 0, 0.55), 0 4px 10px rgba(0, 0, 0, 0.35);
+}
+
 /* AAA / High-Contrast mode */
 .high-contrast {
   --background: #ffffff;
@@ -92,6 +123,21 @@
   --accent-foreground: #000000;
   --ring: #000000;
   --border: #000000;
+}
+
+.dark.high-contrast {
+  --background: #000000;
+  --foreground: #ffffff;
+  --card: #121212;
+  --card-foreground: #ffffff;
+  --popover: #000000;
+  --popover-foreground: #ffffff;
+  --primary: #5296ff;
+  --secondary-foreground: #ffffff;
+  --muted-foreground: #d1d6db;
+  --accent-foreground: #ffffff;
+  --ring: #ffffff;
+  --border: #ffffff;
 }
 
 .dyslexia-spacing,
