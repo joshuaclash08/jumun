@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { BackButton } from "@/components/ui/BackButton";
 import { tablePath } from "@/lib/routes";
+import { useTranslation } from "@/lib/i18n";
 
 interface QrScannerModalProps {
   open: boolean;
@@ -25,6 +26,8 @@ export function QrScannerModal({ open, onOpenChange }: QrScannerModalProps) {
   const videoRef = React.useRef<HTMLVideoElement>(null);
   const [cameraError, setCameraError] = React.useState<string | null>(null);
   const [isScanning, setIsScanning] = React.useState(false);
+  const { t } = useTranslation("landing");
+  const { t: tCommon } = useTranslation("common");
 
   React.useEffect(() => {
     let stream: MediaStream | null = null;
@@ -37,7 +40,7 @@ export function QrScannerModal({ open, onOpenChange }: QrScannerModalProps) {
 
       try {
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-          throw new Error("현재 브라우저에서 카메라 기능에 접근할 수 없습니다.");
+          throw new Error(t("qrScanner.cameraUnavailable"));
         }
 
         stream = await navigator.mediaDevices.getUserMedia({
@@ -82,7 +85,7 @@ export function QrScannerModal({ open, onOpenChange }: QrScannerModalProps) {
         const msg =
           err instanceof Error
             ? err.message
-            : "카메라 권한을 허용하지 않았거나 장치를 찾을 수 없습니다.";
+            : t("qrScanner.cameraPermissionError");
         setCameraError(msg);
         setIsScanning(false);
       }
@@ -98,7 +101,7 @@ export function QrScannerModal({ open, onOpenChange }: QrScannerModalProps) {
         cancelAnimationFrame(animationFrameId);
       }
     };
-  }, [open, router, onOpenChange]);
+  }, [open, router, onOpenChange, t]);
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
@@ -107,16 +110,18 @@ export function QrScannerModal({ open, onOpenChange }: QrScannerModalProps) {
           <div className="absolute top-3 left-3">
             <BackButton
               onClick={() => onOpenChange(false)}
-              label="QR 스캐너 닫기"
+              label={t("qrScanner.closeAria")}
             />
           </div>
 
           <div className="flex h-10 w-10 items-center justify-center rounded-[12px] bg-primary/10 text-primary mb-1 mt-1">
             <QrCode className="h-5 w-5" />
           </div>
-          <DrawerTitle className="text-lg font-extrabold text-foreground">테이블 QR 코드 스캔</DrawerTitle>
+          <DrawerTitle className="text-lg font-extrabold text-foreground">
+            {t("qrScanner.title")}
+          </DrawerTitle>
           <DrawerDescription className="text-base font-medium text-muted-foreground">
-            테이블의 QR 코드를 사각형 프레임 안에 비춰주세요
+            {t("qrScanner.desc")}
           </DrawerDescription>
         </DrawerHeader>
 
@@ -134,7 +139,7 @@ export function QrScannerModal({ open, onOpenChange }: QrScannerModalProps) {
                   router.push(tablePath("jumun-cafe-01", "3"));
                 }}
               >
-                샘플 매장(3번 테이블)으로 바로가기
+                {t("qrScanner.sampleStoreButton")}
               </Button>
             </div>
           ) : (
@@ -149,14 +154,14 @@ export function QrScannerModal({ open, onOpenChange }: QrScannerModalProps) {
               <div className="pointer-events-none absolute inset-8 rounded-[16px] border-2 border-primary border-dashed" />
               {isScanning && (
                 <div className="pointer-events-none absolute bottom-3 rounded-full bg-black/65 px-3 py-1 text-base font-semibold text-white">
-                  스캔 대기 중...
+                  {t("qrScanner.waitingScan")}
                 </div>
               )}
             </>
           )}
         </div>
 
-        <DrawerFooter className="flex flex-col gap-2 p-4 pt-5 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] bg-gradient-to-t from-background via-background/95 to-transparent backdrop-blur-[6px] [mask-image:linear-gradient(to_top,black_80%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_top,black_80%,transparent_100%)]">
+        <DrawerFooter className="flex flex-col gap-2 p-4 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] bg-background">
           <Button
             variant="default"
             size="lg"
@@ -166,14 +171,14 @@ export function QrScannerModal({ open, onOpenChange }: QrScannerModalProps) {
             }}
             className="w-full h-14 min-h-[56px] font-extrabold text-base rounded-[16px] bg-primary text-white shadow-none hover:bg-primary/95"
           >
-            샘플 매장(3번 테이블)으로 테스트
+            {t("qrScanner.testWithSample")}
           </Button>
           <Button
             variant="ghost"
             onClick={() => onOpenChange(false)}
             className="w-full h-12 min-h-[48px] font-bold text-muted-foreground rounded-[14px]"
           >
-            닫기
+            {tCommon("close")}
           </Button>
         </DrawerFooter>
       </DrawerContent>

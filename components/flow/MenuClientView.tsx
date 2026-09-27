@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Separator } from "@/components/ui/separator";
 import { MenuCategoryHeader } from "./MenuCategoryHeader";
 import { FeaturedMenuSection } from "./FeaturedMenuSection";
 import { ProductCard } from "./ProductCard";
@@ -21,6 +20,7 @@ import { useCartStore } from "@/store/useCartStore";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
 import { formatKRW } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/lib/i18n";
 
 // docs/animation-guide.md §3A's wizard-transition recipe -- menu <-> receipt
 // is the one true "screen change" in this flow (everything else is a sheet
@@ -38,9 +38,12 @@ interface MenuClientViewProps {
 }
 
 export function MenuClientView({ categories, products, storeInfo }: MenuClientViewProps) {
+  const { t } = useTranslation("menu");
+  const { t: tCommon } = useTranslation("common");
+
   const allCategories = React.useMemo<MenuCategory[]>(() => {
-    return [{ id: "popular", labelKo: "인기" }, ...categories];
-  }, [categories]);
+    return [{ id: "popular", labelKo: t("popularCategory") }, ...categories];
+  }, [categories, t]);
 
   const [activeCategoryId, setActiveCategoryId] = React.useState<string>(
     allCategories[0]?.id || "popular"
@@ -65,7 +68,7 @@ export function MenuClientView({ categories, products, storeInfo }: MenuClientVi
   const orderStatus = useCartStore((state) => state.orderStatus);
   const resetOrder = useCartStore((state) => state.resetOrder);
   const reduceMotion = useAccessibilityStore((state) => state.reducedMotion);
-  const fontScale = useAccessibilityStore((state) => state.fontScale);
+  const menuLayout = useAccessibilityStore((state) => state.menuLayout);
   const isProgrammaticScroll = React.useRef(false);
 
   React.useEffect(() => {
@@ -74,87 +77,77 @@ export function MenuClientView({ categories, products, storeInfo }: MenuClientVi
     }
   }, [storeInfo, setStoreInfo]);
 
-  // Staff-call button expand/collapse on scroll direction, plus a
-  // force-last-category fallback near the very bottom of the page (a short
-  // last section can end well above the IntersectionObserver band below and
-  // never itself cross it). Deliberately lightweight -- no per-category
-  // getBoundingClientRect here; that used to run on every scroll event for
-  // all 8 categories and is now the IntersectionObserver effect's job.
+  const scrollEndTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Deterministic Reading-Line Scrollspy + Staff-call expand/collapse
+  // Runs in a single requestAnimationFrame loop without conflicting IntersectionObserver
+  // callbacks. Guarantees monotonic category transitions (zero pill bouncing/jittering).
   React.useEffect(() => {
+    let ticking = false;
+
     const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      const scrollDiff = currentScrollY - lastScrollY.current;
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const currentScrollY = window.scrollY;
+          const scrollDiff = currentScrollY - lastScrollY.current;
 
-      if (currentScrollY <= 50) {
-        setIsStaffCallExpanded(true);
-      } else if (scrollDiff > 8) {
-        setIsStaffCallExpanded(false);
-      } else if (scrollDiff < -8) {
-        setIsStaffCallExpanded(true);
-      }
-      lastScrollY.current = currentScrollY;
+          if (currentScrollY <= 50) {
+            setIsStaffCallExpanded((prev) => (prev ? prev : true));
+          } else if (scrollDiff > 8) {
+            setIsStaffCallExpanded((prev) => (!prev ? prev : false));
+          } else if (scrollDiff < -8) {
+            setIsStaffCallExpanded((prev) => (prev ? prev : true));
+          }
+          lastScrollY.current = currentScrollY;
 
-      if (isProgrammaticScroll.current) return;
+          // Only compute scrollspy when not animating from a tab click
+          if (!isProgrammaticScroll.current) {
+            const isNearBottom =
+              window.innerHeight + window.scrollY >=
+              document.documentElement.scrollHeight - 60;
 
-      const isNearBottom =
-        window.innerHeight + window.scrollY >=
-        document.documentElement.scrollHeight - 70;
+            if (isNearBottom) {
+              const lastCategory = allCategories[allCategories.length - 1];
+              if (lastCategory) {
+                setActiveCategoryId((prev) => (prev === lastCategory.id ? prev : lastCategory.id));
+              }
+            } else {
+              const headerEl = document.getElementById("menu-category-header");
+              const headerHeight = headerEl?.offsetHeight ?? 60;
+              const readingLine = headerHeight + 24;
 
-      if (isNearBottom) {
-        const lastCategory = allCategories[allCategories.length - 1];
-        if (lastCategory) {
-          setActiveCategoryId((prev) => (prev === lastCategory.id ? prev : lastCategory.id));
-        }
+              let currentActiveId = allCategories[0]?.id || "popular";
+
+              for (let i = 0; i < allCategories.length; i++) {
+                const cat = allCategories[i];
+                const el = document.getElementById(`category-${cat.id}`);
+                if (!el) continue;
+                const rect = el.getBoundingClientRect();
+                if (rect.top <= readingLine) {
+                  currentActiveId = cat.id;
+                } else {
+                  break;
+                }
+              }
+
+              setActiveCategoryId((prev) => (prev === currentActiveId ? prev : currentActiveId));
+            }
+          }
+
+          ticking = false;
+        });
+        ticking = true;
       }
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [allCategories]);
-
-  // Category scrollspy via IntersectionObserver. rootMargin's top offset is
-  // measured live off the sticky #menu-category-header (not a hardcoded
-  // guess), since its height changes with fontScale. When several short
-  // sections cross the detection band in the same callback batch, only the
-  // entry with the largest intersectionRatio wins, and state updates are
-  // skipped when the winner already matches the current value -- this is
-  // what stops the active-tab flicker on short categories (see
-  // docs/archive/2026-08-16-ux-audit.md §2.1).
-  React.useEffect(() => {
-    const headerEl = document.getElementById("menu-category-header");
-    const chromeHeight = headerEl?.getBoundingClientRect().height ?? 60;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (isProgrammaticScroll.current) return;
-
-        let best: IntersectionObserverEntry | null = null;
-        for (const entry of entries) {
-          if (
-            entry.isIntersecting &&
-            (!best || entry.intersectionRatio > best.intersectionRatio)
-          ) {
-            best = entry;
-          }
-        }
-        if (!best) return;
-
-        const nextId = best.target.id.replace("category-", "");
-        setActiveCategoryId((prev) => (prev === nextId ? prev : nextId));
-      },
-      {
-        rootMargin: `-${Math.ceil(chromeHeight)}px 0px -60% 0px`,
-        threshold: [0, 0.25, 0.5, 0.75, 1],
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      if (scrollEndTimeoutRef.current) {
+        clearTimeout(scrollEndTimeoutRef.current);
       }
-    );
-
-    allCategories.forEach((cat) => {
-      const el = document.getElementById(`category-${cat.id}`);
-      if (el) observer.observe(el);
-    });
-
-    return () => observer.disconnect();
-  }, [allCategories, fontScale]);
+    };
+  }, [allCategories]);
 
   const handleCategorySelect = (id: string) => {
     setActiveCategoryId(id);
@@ -164,57 +157,114 @@ export function MenuClientView({ categories, products, storeInfo }: MenuClientVi
         id === "popular"
           ? products.slice(0, 4).length
           : products.filter((p) => p.category === id).length;
-      speak(`${cat.labelKo} 카테고리, ${count}개 메뉴.`);
+      speak(t("categoryVoice", { category: cat.labelKo, count }));
     }
+
+    isProgrammaticScroll.current = true;
+
+    const clearProgrammaticScroll = () => {
+      isProgrammaticScroll.current = false;
+      window.removeEventListener("scrollend", clearProgrammaticScroll);
+      document.removeEventListener("scrollend", clearProgrammaticScroll);
+      window.removeEventListener("wheel", clearProgrammaticScroll);
+      window.removeEventListener("touchmove", clearProgrammaticScroll);
+      if (scrollEndTimeoutRef.current) {
+        clearTimeout(scrollEndTimeoutRef.current);
+        scrollEndTimeoutRef.current = null;
+      }
+    };
+
+    window.addEventListener("scrollend", clearProgrammaticScroll, { once: true });
+    document.addEventListener("scrollend", clearProgrammaticScroll, { once: true });
+    window.addEventListener("wheel", clearProgrammaticScroll, { once: true, passive: true });
+    window.addEventListener("touchmove", clearProgrammaticScroll, { once: true, passive: true });
+
+    if (scrollEndTimeoutRef.current) clearTimeout(scrollEndTimeoutRef.current);
+    scrollEndTimeoutRef.current = setTimeout(clearProgrammaticScroll, 1500);
+
     const headerEl = document.getElementById("menu-category-header");
-    const chromeHeight = headerEl?.getBoundingClientRect().height ?? 60;
+    const chromeHeight = headerEl?.offsetHeight ?? 60;
     if (id === "popular") {
-      isProgrammaticScroll.current = true;
       window.scrollTo({
         top: 0,
         behavior: reduceMotion ? "instant" : "smooth",
       });
-      setTimeout(() => {
-        isProgrammaticScroll.current = false;
-      }, 500);
       return;
     }
     const element = document.getElementById(`category-${id}`);
     if (element) {
-      isProgrammaticScroll.current = true;
       const y = element.getBoundingClientRect().top + window.scrollY - chromeHeight - 8;
       window.scrollTo({
         top: Math.max(0, y),
         behavior: reduceMotion ? "instant" : "smooth",
       });
-      setTimeout(() => {
-        isProgrammaticScroll.current = false;
-      }, 500);
     }
   };
 
-  const handleProductClick = (product: Product) => {
-    speak(product.voiceDescriptionKo || `${product.nameKo}, ${formatKRW(product.price)}`);
-    setSelectedProduct(product);
-    setIsProductSheetOpen(true);
+  const lastFocusedProductCardRef = React.useRef<HTMLElement | null>(null);
+  const cartPillButtonRef = React.useRef<HTMLButtonElement | null>(null);
+
+  const handleProductClick = React.useCallback((product: Product) => {
+    lastFocusedProductCardRef.current = (document.activeElement as HTMLElement) || null;
+    setTimeout(() => {
+      speak(`${product.nameKo}, ${formatKRW(product.price)}`);
+    }, 0);
+    React.startTransition(() => {
+      setSelectedProduct(product);
+      setIsProductSheetOpen(true);
+    });
+  }, [speak]);
+
+  const handleProductSheetOpenChange = (open: boolean) => {
+    React.startTransition(() => {
+      setIsProductSheetOpen(open);
+    });
+    if (!open && lastFocusedProductCardRef.current) {
+      const trigger = lastFocusedProductCardRef.current;
+      setTimeout(() => {
+        trigger.focus();
+        lastFocusedProductCardRef.current = null;
+      }, 60);
+    }
   };
 
-  // At large font scale, a 2-column grid leaves too little width for long
-  // Korean product names (they'd clip or need a line-clamp again -- the exact
-  // thing the card redesign removed). Switching to a 1-column row layout
-  // gives names ~2.5x more horizontal room instead.
-    const isLargeFontScale = fontScale >= 1.15;
-    const categoryGridClass = isLargeFontScale ? "grid-cols-1" : "grid-cols-2";
-    const cardLayout = isLargeFontScale ? "row" : "grid";
+  const handleCartDrawerOpenChange = (open: boolean) => {
+    React.startTransition(() => {
+      setIsCartDrawerOpen(open);
+    });
+    if (!open) {
+      setTimeout(() => {
+        cartPillButtonRef.current?.focus();
+      }, 60);
+    }
+  };
+
+  const handleCheckoutSheetOpenChange = (open: boolean) => {
+    React.startTransition(() => {
+      setIsCheckoutSheetOpen(open);
+    });
+    if (!open) {
+      setTimeout(() => {
+        cartPillButtonRef.current?.focus();
+      }, 60);
+    }
+  };
+
+    // Support both 2-column Grid Cards and 1-column accessible Row List
+    const isListLayout = menuLayout === "list";
+    const categoryGridClass = isListLayout
+      ? "grid-cols-1 gap-y-3 sm:gap-y-3.5"
+      : "grid-cols-2 sm:grid-cols-3 gap-x-3.5 gap-y-6 sm:gap-x-4 sm:gap-y-8";
+    const cardLayout = isListLayout ? "row" : "grid";
     const isMotionDisabled = reduceMotion || process.env.NODE_ENV === "test";
 
     return (
       <OneHandedContainer>
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="wait" initial={false}>
           {orderStatus === "confirmed" ? (
             <motion.div
               key="confirmation"
-              initial={isMotionDisabled ? undefined : screenVariants.initial}
+              initial={isMotionDisabled ? false : screenVariants.initial}
               animate={screenVariants.animate}
               exit={isMotionDisabled ? undefined : screenVariants.exit}
               transition={{ duration: isMotionDisabled ? 0 : 0.2, ease: "easeOut" }}
@@ -224,7 +274,7 @@ export function MenuClientView({ categories, products, storeInfo }: MenuClientVi
           ) : isWizardMode ? (
             <motion.div
               key="wizard"
-              initial={isMotionDisabled ? undefined : screenVariants.initial}
+              initial={isMotionDisabled ? false : screenVariants.initial}
               animate={screenVariants.animate}
               exit={isMotionDisabled ? undefined : screenVariants.exit}
               transition={{ duration: isMotionDisabled ? 0 : 0.2, ease: "easeOut" }}
@@ -240,7 +290,7 @@ export function MenuClientView({ categories, products, storeInfo }: MenuClientVi
           ) : (
             <motion.div
               key="menu"
-              initial={isMotionDisabled ? undefined : screenVariants.initial}
+              initial={false}
               animate={screenVariants.animate}
               exit={isMotionDisabled ? undefined : screenVariants.exit}
               transition={{ duration: isMotionDisabled ? 0 : 0.2, ease: "easeOut" }}
@@ -262,7 +312,7 @@ export function MenuClientView({ categories, products, storeInfo }: MenuClientVi
                 />
 
                 {/* Categorized Product Sections with Search Section at bottom */}
-                <div className="flex flex-col gap-10 px-4">
+                <div className="flex flex-col gap-12 sm:gap-14 px-4">
                   {categories
                     .map((category) => ({
                       category,
@@ -270,38 +320,38 @@ export function MenuClientView({ categories, products, storeInfo }: MenuClientVi
                     }))
                     .filter(({ categoryProducts }) => categoryProducts.length > 0)
                     .map(({ category, categoryProducts }, visibleIndex) => (
-                      <React.Fragment key={category.id}>
-                        {visibleIndex > 0 && <Separator />}
-                        <section
-                          id={`category-${category.id}`}
-                          className="flex flex-col gap-3.5 scroll-mt-[72px]"
-                          aria-labelledby={`heading-${category.id}`}
-                        >
-                          <div className="flex items-baseline gap-2 pb-1">
-                            <h2
-                              id={`heading-${category.id}`}
-                              className="text-2xl sm:text-[26px] font-black text-foreground tracking-tight"
-                              aria-label={`${category.labelKo}, 총 ${categoryProducts.length}개 메뉴`}
-                            >
-                              {category.labelKo}
-                            </h2>
-                            <span className="text-base font-bold text-muted-foreground tabular-nums" aria-hidden="true">
-                              {categoryProducts.length}개
-                            </span>
-                          </div>
+                      <section
+                        key={category.id}
+                        id={`category-${category.id}`}
+                        role="tabpanel"
+                        aria-labelledby={`tab-${category.id}`}
+                        className="flex flex-col gap-3.5 scroll-mt-[72px]"
+                      >
+                        <div className="flex items-baseline gap-2 pb-1">
+                          <h2
+                            id={`heading-${category.id}`}
+                            className="text-2xl sm:text-[26px] font-black text-foreground tracking-tight"
+                            aria-label={t("categoryHeadingAria", { name: category.labelKo, count: categoryProducts.length })}
+                          >
+                            {category.labelKo}
+                          </h2>
+                          <span className="text-base font-bold text-muted-foreground tabular-nums" aria-hidden="true">
+                            {tCommon("itemCount", { count: categoryProducts.length })}
+                          </span>
+                        </div>
 
-                          <div className={`grid ${categoryGridClass} gap-3 sm:gap-4`}>
-                            {categoryProducts.map((product) => (
-                              <ProductCard
-                                key={product.id}
-                                product={product}
-                                onProductClick={handleProductClick}
-                                layout={cardLayout}
-                              />
-                            ))}
-                          </div>
-                        </section>
-                      </React.Fragment>
+                        <div className={`grid ${categoryGridClass}`}>
+                          {categoryProducts.map((product, pIndex) => (
+                            <ProductCard
+                              key={product.id}
+                              product={product}
+                              onProductClick={handleProductClick}
+                              layout={cardLayout}
+                              priority={visibleIndex === 0 && pIndex < 2}
+                            />
+                          ))}
+                        </div>
+                      </section>
                     ))}
 
                   {/* Bottom Search Section for quick menu lookup */}
@@ -318,8 +368,11 @@ export function MenuClientView({ categories, products, storeInfo }: MenuClientVi
 
         {/* Fixed Bottom Action Controls: Staff Call + Cart Summary Pill in unified dynamic bar */}
         {orderStatus !== "confirmed" && !isWizardMode && (
-          <div className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] inset-x-0 z-50 pointer-events-none px-4">
-            <div className="mx-auto max-w-[768px] flex items-center w-full">
+          <div
+            id="jumun-bottom-actions"
+            className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] inset-x-0 z-40 pointer-events-none px-4"
+          >
+            <div className="mx-auto max-w-[840px] flex items-center w-full">
               <div
                 className={cn(
                   "flex items-center gap-3 w-full transition-all duration-200 pointer-events-auto",
@@ -334,10 +387,15 @@ export function MenuClientView({ categories, products, storeInfo }: MenuClientVi
                   />
                 )}
                 <CartSummaryPill
+                  buttonRef={cartPillButtonRef}
                   onClick={() => {
-                    setIsCartDrawerOpen(true);
-                    const itemsCount = useCartStore.getState().items.length;
-                    speak(`장바구니를 열었습니다. 총 ${itemsCount}개 메뉴.`);
+                    setTimeout(() => {
+                      const itemsCount = useCartStore.getState().items.length;
+                      speak(t("cart.voiceOpened", { count: itemsCount }));
+                    }, 0);
+                    React.startTransition(() => {
+                      setIsCartDrawerOpen(true);
+                    });
                   }}
                   showLabel={!storeInfo || storeInfo.orderType !== "dine-in" || !isStaffCallExpanded}
                 />
@@ -349,12 +407,12 @@ export function MenuClientView({ categories, products, storeInfo }: MenuClientVi
         <ProductDetailSheet
           product={selectedProduct}
           open={isProductSheetOpen}
-          onOpenChange={setIsProductSheetOpen}
+          onOpenChange={handleProductSheetOpenChange}
         />
 
         <CartDrawer
           open={isCartDrawerOpen}
-          onOpenChange={setIsCartDrawerOpen}
+          onOpenChange={handleCartDrawerOpenChange}
           onCheckout={() => {
             setIsCartDrawerOpen(false);
             setIsCheckoutSheetOpen(true);
@@ -363,7 +421,7 @@ export function MenuClientView({ categories, products, storeInfo }: MenuClientVi
 
         <CheckoutSheet
           open={isCheckoutSheetOpen}
-          onOpenChange={setIsCheckoutSheetOpen}
+          onOpenChange={handleCheckoutSheetOpenChange}
           onConfirm={() => {
             window.scrollTo({ top: 0, behavior: "instant" });
           }}

@@ -22,6 +22,7 @@ import { BackButton } from "@/components/ui/BackButton";
 import { StickyActionBar } from "@/components/shared/StickyActionBar";
 import { useVoiceGuide } from "@/hooks/useVoiceGuide";
 import { formatKRW } from "@/lib/format";
+import { useTranslation } from "@/lib/i18n";
 
 interface CheckoutSheetProps {
   open: boolean;
@@ -30,6 +31,9 @@ interface CheckoutSheetProps {
 }
 
 export function CheckoutSheet({ open, onOpenChange, onConfirm }: CheckoutSheetProps) {
+  const { t } = useTranslation("menu");
+  const { t: tCommon } = useTranslation("common");
+  const { t: tSettings } = useTranslation("settings");
   const { items, storeInfo, setOrderStatus, setLastReceipt, clearCart } = useCartStore();
   const reduceMotion = useAccessibilityStore((state) => state.reducedMotion);
   const defaultPaymentMethod = usePaymentStore((state) => state.defaultMethod);
@@ -45,9 +49,9 @@ export function CheckoutSheet({ open, onOpenChange, onConfirm }: CheckoutSheetPr
 
   React.useEffect(() => {
     if (open) {
-      speak(`주문 및 결제 확인 화면입니다. 총 결제 금액은 ${formatKRW(totalPrice)}입니다.`);
+      speak(t("checkout.voiceIntro", { total: formatKRW(totalPrice) }));
     }
-  }, [open, totalPrice, speak]);
+  }, [open, totalPrice, speak, t]);
 
   const handleOpenChange = (newOpen: boolean) => {
     if (!newOpen) {
@@ -59,7 +63,7 @@ export function CheckoutSheet({ open, onOpenChange, onConfirm }: CheckoutSheetPr
 
   const handleCheckout = async () => {
     if (!storeInfo) {
-      const msg = "매장 정보가 확인되지 않았습니다. 다시 스캔해 주세요.";
+      const msg = t("checkout.missingStoreInfo");
       setErrorMessage(msg);
       speak(msg);
       return;
@@ -74,12 +78,12 @@ export function CheckoutSheet({ open, onOpenChange, onConfirm }: CheckoutSheetPr
       setLastReceipt(receipt);
       setOrderStatus("confirmed");
       clearCart();
-      speak("주문과 결제가 완료되었습니다. 영수증이 발급되었습니다.");
+      speak(t("checkout.voiceSuccess"));
       onOpenChange(false);
       onConfirm();
     } catch (err: unknown) {
       setOrderStatus("failed");
-      const message = err instanceof Error ? err.message : "결제를 완료하지 못했어요.";
+      const message = err instanceof Error ? err.message : t("checkout.failedPayment");
       setErrorMessage(message);
       speak(message);
     } finally {
@@ -94,16 +98,19 @@ export function CheckoutSheet({ open, onOpenChange, onConfirm }: CheckoutSheetPr
           <DrawerHeader className="relative grid grid-cols-[44px_1fr_44px] items-center px-4 py-3">
             <BackButton
               onClick={() => handleOpenChange(false)}
-              label="주문 및 결제 닫기"
+              label={t("checkout.closeAria")}
               className="-ml-1"
             />
-            <DrawerTitle className="text-lg sm:text-xl font-extrabold text-foreground text-center">주문 및 결제</DrawerTitle>
+            <DrawerTitle className="text-lg sm:text-xl font-extrabold text-foreground text-center">
+              {t("checkout.title")}
+            </DrawerTitle>
             <div className="w-11" aria-hidden="true" />
           </DrawerHeader>
 
           <div
             data-lenis-prevent=""
-            className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 py-4 pb-28 scrollbar-none"
+            tabIndex={-1}
+            className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 py-4 pb-28 scrollbar-none outline-none"
           >
             <div className="flex flex-col gap-6 pb-4">
               {/* Error Banner */}
@@ -118,14 +125,14 @@ export function CheckoutSheet({ open, onOpenChange, onConfirm }: CheckoutSheetPr
                     <span>{errorMessage}</span>
                   </div>
                   <p className="text-base opacity-90 font-medium">
-                    선택하신 장바구니 항목은 안전하게 유지됩니다. 다시 결제를 진행해 주세요.
+                    {t("checkout.errorNotice")}
                   </p>
                 </div>
               )}
 
               {/* 1. Dining Place — decided at entry (OrderTypeSelectView), read-only here */}
               <div className="flex flex-col gap-2.5">
-                <h3 className="text-base font-bold text-foreground">식사 장소</h3>
+                <h3 className="text-base font-bold text-foreground">{t("checkout.diningPlace")}</h3>
                 <div className="flex items-center gap-3 rounded-[18px] border-2 border-border bg-card p-3.5">
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
                     {storeInfo?.orderType === "dine-in" ? (
@@ -136,10 +143,10 @@ export function CheckoutSheet({ open, onOpenChange, onConfirm }: CheckoutSheetPr
                   </span>
                   <span className="flex flex-col">
                     <span className="text-base font-bold text-foreground">
-                      {storeInfo?.orderType === "dine-in" ? "매장 식사" : "포장하기"}
+                      {storeInfo?.orderType === "dine-in" ? t("checkout.dineIn") : t("checkout.takeout")}
                     </span>
                     <span className="text-base font-medium text-muted-foreground">
-                      {storeInfo?.orderType === "dine-in" ? `테이블 ${storeInfo.table}번` : "픽업대 수령"}
+                      {storeInfo?.orderType === "dine-in" ? tCommon("tableNumber", { table: storeInfo.table }) : t("checkout.pickupCounter")}
                     </span>
                   </span>
                 </div>
@@ -148,7 +155,9 @@ export function CheckoutSheet({ open, onOpenChange, onConfirm }: CheckoutSheetPr
               {/* 2. Order Summary */}
               <Card className="flex flex-col gap-3 p-4.5 rounded-[22px] shadow-resting border-border">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-base font-bold text-foreground">주문 내역 ({items.reduce((s, i) => s + i.quantity, 0)}개)</h3>
+                  <h3 className="text-base font-bold text-foreground">
+                    {t("checkout.orderSummary", { count: items.reduce((s, i) => s + i.quantity, 0) })}
+                  </h3>
                   <Badge variant="secondary" className="text-base font-bold px-2.5 py-0.5">
                     {storeInfo?.storeName}
                   </Badge>
@@ -179,10 +188,10 @@ export function CheckoutSheet({ open, onOpenChange, onConfirm }: CheckoutSheetPr
                 <Separator />
 
                 <div className="flex items-center justify-between pt-1 text-base font-bold">
-                  <span className="text-foreground">결제 예정 금액</span>
+                  <span className="text-foreground">{t("checkout.totalAmount")}</span>
                   <RollingPrice
                     value={totalPrice}
-                    suffix="원"
+                    suffix={tCommon("currency")}
                     className="text-primary text-xl font-black"
                   />
                 </div>
@@ -190,15 +199,15 @@ export function CheckoutSheet({ open, onOpenChange, onConfirm }: CheckoutSheetPr
 
               {/* 3. Payment Method */}
               <div className="flex flex-col gap-2.5">
-                <h3 className="text-base font-bold text-foreground">결제 수단</h3>
+                <h3 className="text-base font-bold text-foreground">{t("checkout.paymentMethod")}</h3>
                 <div className="grid grid-cols-2 gap-2.5">
                   <SelectionCard
                     isSelected={paymentMethod === "card"}
                     onClick={() => {
                       setPaymentMethod("card");
-                      speak("신용 / 체크카드가 선택되었습니다.");
+                      speak(t("checkout.cardSelectedVoice"));
                     }}
-                    label="신용 / 체크카드"
+                    label={tSettings("payment.methods.card")}
                     icon={<CreditCard className="h-5 w-5" />}
                     reduceMotion={reduceMotion}
                   />
@@ -206,9 +215,9 @@ export function CheckoutSheet({ open, onOpenChange, onConfirm }: CheckoutSheetPr
                     isSelected={paymentMethod === "easy-pay"}
                     onClick={() => {
                       setPaymentMethod("easy-pay");
-                      speak("간편 결제가 선택되었습니다.");
+                      speak(t("checkout.easyPaySelectedVoice"));
                     }}
-                    label="간편 결제"
+                    label={tSettings("payment.methods.easyPay")}
                     icon={<Smartphone className="h-5 w-5" />}
                     reduceMotion={reduceMotion}
                   />
@@ -227,18 +236,18 @@ export function CheckoutSheet({ open, onOpenChange, onConfirm }: CheckoutSheetPr
               {isSubmitting ? (
                 <>
                   <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
-                  결제 승인 처리 중...
+                  {t("checkout.processing")}
                 </>
               ) : errorMessage ? (
                 <RollingPrice
                   value={totalPrice}
-                  suffix="원 다시 결제하기"
+                  suffix={t("checkout.retrySuffix")}
                   className="font-extrabold text-base text-primary-foreground"
                 />
               ) : (
                 <RollingPrice
                   value={totalPrice}
-                  suffix="원 결제하기"
+                  suffix={t("checkout.paySuffix")}
                   className="font-extrabold text-base text-primary-foreground"
                 />
               )}

@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { ChevronDown, ChevronRight, Store } from "lucide-react";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
 import type { StoreListing } from "@/lib/types";
+import { useTranslation } from "@/lib/i18n";
 
 export interface StoreSelectorListProps {
   stores: StoreListing[];
@@ -18,6 +19,7 @@ export interface StoreSelectorListProps {
 export function StoreSelectorList({ stores }: StoreSelectorListProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const reduceMotion = useAccessibilityStore((state) => state.reducedMotion);
+  const { t } = useTranslation("landing");
 
   return (
     <div className="w-full max-w-md pt-1 pb-2">
@@ -35,7 +37,7 @@ export function StoreSelectorList({ stores }: StoreSelectorListProps) {
           </div>
           <div className="flex items-center gap-1.5">
             <span className="text-[15px] font-bold text-foreground">
-              직접 매장 선택하기
+              {t("selectStoreDirectly")}
             </span>
             <span className="text-xs font-semibold text-muted-foreground">
               ({stores.length})
@@ -67,7 +69,7 @@ export function StoreSelectorList({ stores }: StoreSelectorListProps) {
             }}
             className="overflow-hidden"
             role="region"
-            aria-label="주문 가능한 매장 목록"
+            aria-label={t("availableStoresAria")}
           >
             <div className="flex flex-col gap-2 pt-2.5">
               {stores.map((store) => (

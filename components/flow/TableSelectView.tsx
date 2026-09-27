@@ -9,17 +9,18 @@ import { SettingsIconButton } from "@/components/ui/SettingsIconButton";
 import { cn } from "@/lib/utils";
 import { orderPath, tablePath } from "@/lib/routes";
 import type { StoreListing } from "@/lib/types";
+import { useTranslation } from "@/lib/i18n";
 
 interface TableSelectViewProps {
   store: StoreListing;
 }
 
-// Dedicated table-selection screen, reached only after choosing dine-in on
-// OrderTypeSelectView. A real table roster doesn't exist yet (Phase 1 seed
-// data), so this offers every number up to the store's tableCount.
 export function TableSelectView({ store }: TableSelectViewProps) {
   const router = useRouter();
   const reduceMotion = useAccessibilityStore((state) => state.reducedMotion);
+  const { t } = useTranslation("orderFlow");
+  const { t: tCommon } = useTranslation("common");
+
   const tables = React.useMemo(
     () => Array.from({ length: store.tableCount }, (_, i) => String(i + 1)),
     [store.tableCount],
@@ -30,27 +31,26 @@ export function TableSelectView({ store }: TableSelectViewProps) {
       id="main-content"
       className="flex min-h-[100dvh] w-full flex-col bg-background text-foreground"
     >
-      <header className="sticky top-0 z-30 flex h-14 items-center justify-between px-4 bg-background/90 backdrop-blur-md">
+      <header className="sticky top-0 z-30 flex h-14 items-center justify-between px-4 bg-background border-b border-border/40">
         <BackButton
           href={orderPath(store.storeId)}
-          label="이전 화면으로 돌아가기"
+          label={tCommon("back")}
           className="-ml-1"
         />
         <SettingsIconButton className="-mr-1" />
       </header>
 
-
       <div className="flex flex-1 flex-col gap-6 px-5 pt-2 pb-[calc(2rem+env(safe-area-inset-bottom,0px))]">
         <div className="flex flex-col gap-1.5">
           <p className="text-base font-bold text-primary">{store.storeName}</p>
           <h1 className="text-2xl font-extrabold text-foreground leading-snug">
-            어느 테이블에 앉으셨나요?
+            {t("tableSelect.title")}
           </h1>
         </div>
 
         <div
           role="group"
-          aria-label="테이블 번호 선택"
+          aria-label={t("tableSelect.groupAria")}
           className="grid grid-cols-4 gap-2.5"
         >
           {tables.map((tableId) => (
@@ -60,7 +60,7 @@ export function TableSelectView({ store }: TableSelectViewProps) {
               whileTap={reduceMotion ? undefined : { scale: 0.94 }}
               transition={{ type: "spring", stiffness: 400, damping: 25 }}
               onClick={() => router.push(tablePath(store.storeId, tableId))}
-              aria-label={`${tableId}번 테이블`}
+              aria-label={t("tableSelect.tableAria", { tableId })}
               className={cn(
                 "flex h-16 min-h-[44px] items-center justify-center rounded-[16px] border-2 border-border bg-card font-extrabold text-lg text-foreground transition-all",
                 "hover:border-primary/40 hover:bg-muted/30 focus-visible:ring-2 focus-visible:ring-ring",

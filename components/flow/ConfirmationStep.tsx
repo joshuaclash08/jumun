@@ -14,6 +14,7 @@ import { StickyActionBar } from "@/components/shared/StickyActionBar";
 import { formatKRW } from "@/lib/format";
 import { tablePath, takeoutPath } from "@/lib/routes";
 import confetti from "canvas-confetti";
+import { useTranslation } from "@/lib/i18n";
 
 interface ConfirmationStepProps {
   onReset: () => void;
@@ -92,13 +93,14 @@ export function ConfirmationStep({ onReset }: ConfirmationStepProps) {
   const lastReceipt = useCartStore((state) => state.lastReceipt);
   const reduceMotion = useAccessibilityStore((state) => state.reducedMotion);
   const { speak } = useVoiceGuide();
+  const { t, language } = useTranslation("menu");
 
   React.useEffect(() => {
     window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
     if (lastReceipt) {
-      speak(`주문이 완료되었습니다. 주문 번호는 ${lastReceipt.orderNumber}번 입니다.`);
+      speak(t("receipt.voiceIntro", { orderNumber: lastReceipt.orderNumber }));
     }
-  }, [lastReceipt, speak]);
+  }, [lastReceipt, speak, t]);
 
   React.useEffect(() => {
     if (reduceMotion || !lastReceipt) return;
@@ -125,11 +127,14 @@ export function ConfirmationStep({ onReset }: ConfirmationStepProps) {
     router.push(href);
   };
 
-  const orderTypeLabel = lastReceipt.orderType === "dine-in" ? "매장 식사" : "포장하기";
-  const formattedTime = new Date(lastReceipt.placedAt).toLocaleTimeString("ko-KR", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const orderTypeLabel = lastReceipt.orderType === "dine-in" ? t("checkout.dineIn") : t("checkout.takeout");
+  const formattedTime = new Date(lastReceipt.placedAt).toLocaleTimeString(
+    language === "en" ? "en-US" : "ko-KR",
+    {
+      hour: "2-digit",
+      minute: "2-digit",
+    }
+  );
 
   return (
     <motion.div
@@ -148,13 +153,13 @@ export function ConfirmationStep({ onReset }: ConfirmationStepProps) {
           <FluidSuccessCheck size={72} />
 
           <h1 className="text-2xl sm:text-[26px] font-black text-foreground tracking-tight mt-0.5">
-            주문이 완료되었어요!
+            {t("receipt.completedTitle")}
           </h1>
 
           {/* Large Hero Order Number Display */}
           <div className="flex flex-col items-center gap-0.5 mt-1">
             <span className="text-xs sm:text-sm font-bold text-muted-foreground">
-              주문번호
+              {t("receipt.orderNumber")}
             </span>
             <span className="text-4xl sm:text-5xl font-black text-primary tabular-nums tracking-tight">
               {lastReceipt.orderNumber}
@@ -167,12 +172,12 @@ export function ConfirmationStep({ onReset }: ConfirmationStepProps) {
           <Card className="w-full p-4 sm:p-5 rounded-[22px] shadow-resting border-border/80 text-left bg-card">
             <div className="flex items-center justify-between pb-1">
               <div>
-                <h2 className="text-base font-extrabold text-foreground">주문 영수증</h2>
+                <h2 className="text-base font-extrabold text-foreground">{t("receipt.receiptTitle")}</h2>
                 <p className="text-sm font-medium text-muted-foreground mt-0.5">
                   {lastReceipt.store.storeName} ·{" "}
                   {lastReceipt.store.orderType === "dine-in"
-                    ? `${lastReceipt.store.table}번 테이블`
-                    : "포장"}{" "}
+                    ? t("receipt.tableInfo", { table: lastReceipt.store.table })
+                    : t("receipt.takeoutInfo")}{" "}
                   · {formattedTime}
                 </p>
               </div>
@@ -212,7 +217,7 @@ export function ConfirmationStep({ onReset }: ConfirmationStepProps) {
             <Separator className="my-2 bg-border/60" />
 
             <div className="pt-1 flex justify-between items-center text-base font-bold">
-              <span className="text-foreground">총 결제 금액</span>
+              <span className="text-foreground">{t("receipt.totalAmount")}</span>
               <span className="text-primary text-xl sm:text-2xl font-black tabular-nums tracking-tight">
                 {formatKRW(lastReceipt.total)}
               </span>
@@ -225,7 +230,7 @@ export function ConfirmationStep({ onReset }: ConfirmationStepProps) {
       <StickyActionBar>
         <motion.div variants={receiptItem}>
           <Button size="cta-full" className="max-w-sm mx-auto" onClick={handleNewOrder}>
-            새로운 주문하기
+            {t("receipt.newOrder")}
           </Button>
         </motion.div>
       </StickyActionBar>

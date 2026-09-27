@@ -4,6 +4,7 @@ import * as React from "react";
 import { Plus, Minus } from "lucide-react";
 import { motion } from "motion/react";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
+import { useTranslation } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 export interface QuantityStepperProps {
@@ -36,10 +37,12 @@ export function QuantityStepper({
   min = 1,
   max = 99,
   size = "md",
-  itemLabel = "주문",
+  itemLabel,
   className,
 }: QuantityStepperProps) {
   const reduceMotion = useAccessibilityStore((state) => state.reducedMotion);
+  const { t } = useTranslation("menu");
+  const effectiveLabel = itemLabel ?? t("productDetail.quantityLabel");
 
   const isSm = size === "sm";
   const isMin = value <= min;
@@ -48,7 +51,7 @@ export function QuantityStepper({
   return (
     <div
       role="group"
-      aria-label={`${itemLabel} 수량 조절`}
+      aria-label={t("layout.stepperAdjust", { item: effectiveLabel })}
       className={cn(
         "flex items-center rounded-full bg-muted/60 p-1 border border-border/50 shadow-2xs",
         isSm ? "h-9.5 gap-0.5" : "h-11 gap-1",
@@ -65,7 +68,7 @@ export function QuantityStepper({
           "flex items-center justify-center rounded-full text-foreground hover:bg-background disabled:opacity-30 transition-colors",
           isSm ? "h-8 w-8" : "h-9 w-9"
         )}
-        aria-label={`${itemLabel} 수량 1개 줄이기`}
+        aria-label={t("layout.stepperDecrease", { item: effectiveLabel })}
       >
         <Minus className={cn("stroke-[2.5]", isSm ? "h-3.5 w-3.5" : "h-4 w-4")} />
       </motion.button>
@@ -76,7 +79,7 @@ export function QuantityStepper({
           isSm ? "w-7 text-base" : "w-9 text-base"
         )}
         aria-live="polite"
-        aria-label={`현재 수량 ${value}개`}
+        aria-label={t("layout.stepperCurrent", { value })}
       >
         {value}
       </span>
@@ -91,7 +94,7 @@ export function QuantityStepper({
           "flex items-center justify-center rounded-full text-foreground hover:bg-background disabled:opacity-30 transition-colors",
           isSm ? "h-8 w-8" : "h-9 w-9"
         )}
-        aria-label={`${itemLabel} 수량 1개 늘리기`}
+        aria-label={t("layout.stepperIncrease", { item: effectiveLabel })}
       >
         <Plus className={cn("stroke-[2.5]", isSm ? "h-3.5 w-3.5" : "h-4 w-4")} />
       </motion.button>

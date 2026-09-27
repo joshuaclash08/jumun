@@ -17,6 +17,7 @@ import { useAccessibilityStore } from "@/store/useAccessibilityStore";
 import { toast } from "@/lib/services/A11yFeedbackService";
 import type { StoreInfo } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/lib/i18n";
 
 interface StaffCallButtonProps {
   storeInfo: Extract<StoreInfo, { orderType: "dine-in" }>;
@@ -65,9 +66,13 @@ export function StaffCallButton({
   className,
   isExpanded = true,
 }: StaffCallButtonProps) {
+  const { t } = useTranslation("menu");
+  const { t: tCommon } = useTranslation("common");
   const [open, setOpen] = React.useState(false);
   const [callStatus, setCallStatus] = React.useState<"idle" | "success">("idle");
+  const [hasRecentCall, setHasRecentCall] = React.useState(false);
   const autoCloseTimerRef = React.useRef<NodeJS.Timeout | null>(null);
+  const recentCallTimerRef = React.useRef<NodeJS.Timeout | null>(null);
 
   const reduceMotion = useAccessibilityStore((state) => state.reducedMotion);
   const hapticsEnabled = useAccessibilityStore((state) => state.hapticsEnabled);
@@ -78,11 +83,16 @@ export function StaffCallButton({
       if (autoCloseTimerRef.current) {
         clearTimeout(autoCloseTimerRef.current);
       }
+      if (recentCallTimerRef.current) {
+        clearTimeout(recentCallTimerRef.current);
+      }
     };
   }, []);
 
   const handleOpenChange = (isOpen: boolean) => {
-    setOpen(isOpen);
+    React.startTransition(() => {
+      setOpen(isOpen);
+    });
     if (!isOpen) {
       if (autoCloseTimerRef.current) {
         clearTimeout(autoCloseTimerRef.current);
@@ -95,11 +105,21 @@ export function StaffCallButton({
   };
 
   const handleConfirm = () => {
-    setCallStatus("success");
+    React.startTransition(() => {
+      setCallStatus("success");
+      setHasRecentCall(true);
+    });
+
+    if (recentCallTimerRef.current) {
+      clearTimeout(recentCallTimerRef.current);
+    }
+    recentCallTimerRef.current = setTimeout(() => {
+      setHasRecentCall(false);
+    }, 3500);
 
     toast({
       kind: "success",
-      messageKo: `${storeInfo.table}번 테이블로 직원을 호출했어요.`,
+      messageKo: t("staffCall.toastSuccess", { table: storeInfo.table }),
       variant: "staff-call",
       hapticsEnabled,
     });
@@ -119,19 +139,22 @@ export function StaffCallButton({
 
   return (
     <>
-      <motion.div
-        whileTap={reduceMotion ? undefined : { scale: 0.92 }}
-        transition={{ type: "spring", stiffness: 400, damping: 25 }}
-        className={cn("pointer-events-auto shrink-0", className)}
-      >
+      <div className={cn("pointer-events-auto shrink-0", className)}>
         <Button
           type="button"
           variant="outline"
           onClick={() => handleOpenChange(true)}
-          className="h-14 rounded-full bg-card/95 backdrop-blur-md hover:bg-muted text-foreground border border-border/80 shadow-[0_4px_16px_rgba(25,31,40,0.08)] flex items-center p-0 gap-0 cursor-pointer overflow-hidden transition-colors px-4"
-          aria-label="직원 호출하기"
+          className={cn(
+            "h-14 rounded-full bg-card hover:bg-muted text-foreground border border-border/80 shadow-[0_4px_16px_rgba(25,31,40,0.08)] flex items-center p-0 gap-0 cursor-pointer overflow-hidden active:scale-[0.92] transition-all px-4 focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2",
+            hasRecentCall && "border-primary/50 bg-primary/10 text-primary shadow-xs"
+          )}
+          aria-label={hasRecentCall ? "직원 호출 완료됨" : t("staffCall.callAria")}
         >
-          <Bell className="size-6 stroke-[1.9] shrink-0" aria-hidden="true" />
+          {hasRecentCall ? (
+            <Check className="size-6 stroke-[2.4] text-primary shrink-0" aria-hidden="true" />
+          ) : (
+            <Bell className="size-6 stroke-[1.9] shrink-0" aria-hidden="true" />
+          )}
           <motion.div
             initial={false}
             animate={{
@@ -145,12 +168,17 @@ export function StaffCallButton({
             className="overflow-hidden"
             aria-hidden={!isExpanded}
           >
-            <span className="block font-bold text-[15px] sm:text-base whitespace-nowrap text-foreground pl-2.5">
-              직원 호출
+            <span
+              className={cn(
+                "block font-bold text-[15px] sm:text-base whitespace-nowrap pl-2.5 transition-colors",
+                hasRecentCall ? "text-primary font-extrabold" : "text-foreground"
+              )}
+            >
+              {hasRecentCall ? "호출 완료" : t("staffCall.button")}
             </span>
           </motion.div>
         </Button>
-      </motion.div>
+      </div>
 
       <Drawer open={open} onOpenChange={handleOpenChange}>
         <DrawerContent>
@@ -158,7 +186,7 @@ export function StaffCallButton({
             <div className="absolute top-3 left-3">
               <BackButton
                 onClick={handleCloseImmediately}
-                label="직원 호출 닫기"
+                label={t("staffCall.closeAria")}
               />
             </div>
 
@@ -179,11 +207,11 @@ export function StaffCallButton({
                   <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary text-secondary-foreground font-bold text-sm mb-2">
                     <span>{storeInfo.storeName}</span>
                     <span className="opacity-40">•</span>
-                    <span>{storeInfo.table}번 테이블</span>
+                    <span>{tCommon("tableNumber", { table: storeInfo.table })}</span>
                   </div>
 
                   <DrawerTitle className="pt-0.5 text-2xl font-extrabold text-foreground tracking-tight">
-                    직원을 호출할까요?
+                    {t("staffCall.confirmTitle")}
                   </DrawerTitle>
                 </motion.div>
               ) : (
@@ -200,23 +228,23 @@ export function StaffCallButton({
                   </div>
 
                   <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-success-bg text-foreground font-bold text-sm mb-2">
-                    <span>{storeInfo.table}번 테이블</span>
+                    <span>{tCommon("tableNumber", { table: storeInfo.table })}</span>
                     <span className="opacity-40">•</span>
-                    <span>호출 완료</span>
+                    <span>{t("staffCall.called")}</span>
                   </div>
 
                   <DrawerTitle className="pt-0.5 text-2xl font-extrabold text-foreground tracking-tight">
-                    호출이 완료되었어요!
+                    {t("staffCall.successTitle")}
                   </DrawerTitle>
                   <DrawerDescription className="text-sm font-semibold text-muted-foreground mt-1 leading-relaxed">
-                    직원이 곧 테이블로 방문할게요.
+                    {t("staffCall.successDesc")}
                   </DrawerDescription>
                 </motion.div>
               )}
             </AnimatePresence>
           </DrawerHeader>
 
-          <DrawerFooter className="p-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] bg-gradient-to-t from-background via-background/95 to-transparent backdrop-blur-[6px]">
+          <DrawerFooter className="p-4 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] bg-background">
             <AnimatePresence mode="wait">
               {callStatus === "idle" ? (
                 <motion.div
@@ -234,7 +262,7 @@ export function StaffCallButton({
                     onClick={handleCloseImmediately}
                     className="w-full h-14 min-h-[56px] font-bold text-base rounded-[16px] border-0 shadow-none active:scale-[0.96] transition-all cursor-pointer"
                   >
-                    취소
+                    {tCommon("cancel")}
                   </Button>
                   <Button
                     type="button"
@@ -243,7 +271,7 @@ export function StaffCallButton({
                     onClick={handleConfirm}
                     className="w-full h-14 min-h-[56px] font-extrabold text-base rounded-[16px] shadow-none border-0 active:scale-[0.96] transition-all cursor-pointer"
                   >
-                    호출하기
+                    {t("staffCall.confirmButton")}
                   </Button>
                 </motion.div>
               ) : (
@@ -262,7 +290,7 @@ export function StaffCallButton({
                     onClick={handleCloseImmediately}
                     className="w-full h-14 min-h-[56px] font-extrabold text-base rounded-[16px] shadow-none border-0 active:scale-[0.96] transition-all cursor-pointer"
                   >
-                    확인
+                    {tCommon("confirm")}
                   </Button>
                 </motion.div>
               )}

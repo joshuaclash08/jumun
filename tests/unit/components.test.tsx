@@ -13,6 +13,7 @@ import { TableSelectView } from "@/components/flow/TableSelectView";
 import { BackButton } from "@/components/ui/BackButton";
 import { SettingsIconButton } from "@/components/ui/SettingsIconButton";
 import { QuantityStepper } from "@/components/flow/QuantityStepper";
+import { MenuCategoryHeader } from "@/components/flow/MenuCategoryHeader";
 import { FontScaleSelector } from "@/components/settings/FontScaleSelector";
 import { useCartStore } from "@/store/useCartStore";
 import { useToastStore } from "@/store/useToastStore";
@@ -67,12 +68,12 @@ describe("Component Accessibility & Rendering", () => {
     unitPrice: 4500,
   };
 
-  it("renders ProductCard with full voice-description accessible label and price", () => {
+  it("renders ProductCard with concise accessible label (name, price) and visible text", () => {
     render(<ProductCard product={sampleProduct} onClick={() => {}} />);
-    // ProductCard prefers the data's own voiceDescriptionKo sentence over the
-    // terse "name, price" fallback whenever it's present.
+    // ProductCard now uses concise accessible name (name, price) for VoiceOver/TalkBack
+    // without verbose description sentences that clutter screen reader navigation.
     const cardButton = screen.getByRole("button", {
-      name: sampleProduct.voiceDescriptionKo,
+      name: "아메리카노, 4,500원",
     });
     expect(cardButton).toBeInTheDocument();
     expect(screen.getByText("아메리카노")).toBeInTheDocument();
@@ -99,14 +100,10 @@ describe("Component Accessibility & Rendering", () => {
     );
 
     expect(screen.getByText("인기 메뉴")).toBeInTheDocument();
-    expect(screen.getByText("1")).toBeInTheDocument();
+    expect(screen.getByText("1개")).toBeInTheDocument();
 
-    // Accessible name is the full voice-description sentence plus a trailing
-    // rank announcement (e.g. "..., 인기 1위 메뉴") -- match both ends rather
-    // than requiring exact adjacency, since the description clause sits
-    // between the price and the rank suffix.
     const itemButton = screen.getByRole("button", {
-      name: /^아메리카노, 4,500원.*인기 1위 메뉴$/i,
+      name: "아메리카노, 4,500원, 인기 1위 메뉴",
     });
     fireEvent.click(itemButton);
     expect(clickedProduct).toEqual(sampleProduct);
@@ -172,7 +169,7 @@ describe("Component Accessibility & Rendering", () => {
       />
     );
 
-    const backLink = screen.getByRole("link", { name: "뒤로 이동" });
+    const backLink = screen.getByRole("link", { name: "이전 화면으로 돌아가기" });
     expect(backLink).toBeInTheDocument();
     // Dine-in back goes to the table picker, not the order-type picker --
     // see components/layout/HeaderBar.tsx's backHref comment.
@@ -196,7 +193,7 @@ describe("Component Accessibility & Rendering", () => {
       />
     );
 
-    const backLink = screen.getByRole("link", { name: "뒤로 이동" });
+    const backLink = screen.getByRole("link", { name: "이전 화면으로 돌아가기" });
     expect(backLink).toHaveAttribute("href", "/order/jumun-cafe-01");
     expect(screen.getByRole("link", { name: "설정 열기" })).toBeInTheDocument();
     expect(screen.getByText("주문 카페 1호점")).toBeInTheDocument();
@@ -431,6 +428,92 @@ describe("Component Accessibility & Rendering", () => {
     expect(screen.getByText("보통")).toBeInTheDocument();
     expect(screen.getByText("크게")).toBeInTheDocument();
     expect(screen.getByText("아주 크게")).toBeInTheDocument();
+  });
+
+  it("renders MenuCategoryHeader with WAI-ARIA tablist and handles roving tabindex arrow navigation", () => {
+    const categories = [
+      { id: "popular", labelKo: "인기" },
+      { id: "coffee", labelKo: "커피" },
+      { id: "dessert", labelKo: "디저트" },
+    ];
+    const onSelect = vi.fn();
+
+    render(
+      <MenuCategoryHeader
+        categories={categories}
+        activeCategoryId="popular"
+        onCategorySelect={onSelect}
+      />
+    );
+
+    const tablist = screen.getByRole("tablist", { name: "메뉴 카테고리" });
+    expect(tablist).toBeInTheDocument();
+
+    const tabs = screen.getAllByRole("tab");
+    expect(tabs).toHaveLength(3);
+
+    // Active tab has aria-selected="true" and tabIndex=0
+    expect(tabs[0]).toHaveAttribute("aria-selected", "true");
+    expect(tabs[0]).toHaveAttribute("tabindex", "0");
+    // Inactive tabs have tabIndex=-1
+    expect(tabs[1]).toHaveAttribute("aria-selected", "false");
+    expect(tabs[1]).toHaveAttribute("tabindex", "-1");
+    expect(tabs[2]).toHaveAttribute("aria-selected", "false");
+    expect(tabs[2]).toHaveAttribute("tabindex", "-1");
+
+    // ArrowRight navigates to next tab
+    fireEvent.keyDown(tabs[0], { key: "ArrowRight" });
+    expect(onSelect).toHaveBeenCalledWith("coffee");
+
+    // ArrowLeft wraps around to last tab
+    fireEvent.keyDown(tabs[0], { key: "ArrowLeft" });
+    expect(onSelect).toHaveBeenCalledWith("dessert");
+
+    // End key jumps to last tab
+    fireEvent.keyDown(tabs[0], { key: "End" });
+    expect(onSelect).toHaveBeenCalledWith("dessert");
+
+    // Home key jumps to first tab
+    fireEvent.keyDown(tabs[2], { key: "Home" });
+    expect(onSelect).toHaveBeenCalledWith("popular");
+  });
+
+  it("renders FeaturedMenuSection carousel with roving tabindex for card items", () => {
+    const products: Product[] = [
+      { ...sampleProduct, id: "p1", nameKo: "인기1", popularityRank: 1 },
+      { ...sampleProduct, id: "p2", nameKo: "인기2", popularityRank: 2 },
+    ];
+
+    render(<FeaturedMenuSection products={products} onProductClick={() => {}} />);
+
+    const carousel = screen.getByRole("region", { name: /인기 메뉴/ });
+    expect(carousel).toHaveAttribute("aria-roledescription", "캐러셀");
+
+    const cards = screen.getAllByRole("button", { name: /인기\d, 4,500원/ });
+    expect(cards).toHaveLength(2);
+
+    // First card has tabIndex=0, second has tabIndex=-1
+    expect(cards[0]).toHaveAttribute("tabindex", "0");
+    expect(cards[1]).toHaveAttribute("tabindex", "-1");
+
+    // ArrowRight moves focus to the second card
+    fireEvent.keyDown(cards[0], { key: "ArrowRight" });
+    expect(cards[1]).toHaveAttribute("tabindex", "0");
+    expect(cards[0]).toHaveAttribute("tabindex", "-1");
+  });
+
+  it("ensures ProductCard is a single button tab stop without outer wrapper tabindex", () => {
+    const { container } = render(<ProductCard product={sampleProduct} onClick={() => {}} />);
+
+    const button = screen.getByRole("button", { name: "아메리카노, 4,500원" });
+    expect(button).toBeInTheDocument();
+
+    // Verify button is the root interactive element and has no parent wrapper with tabindex
+    const focusableElements = container.querySelectorAll('[tabindex]:not([tabindex="-1"])');
+    // Only the button (or 0 if default button tab stop) should be focusable, no outer div with tabindex="0"
+    focusableElements.forEach((el) => {
+      expect(el.tagName.toLowerCase()).toBe("button");
+    });
   });
 });
 

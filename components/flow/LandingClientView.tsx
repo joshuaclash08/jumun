@@ -11,10 +11,13 @@ import { SettingsIconButton } from "@/components/ui/SettingsIconButton";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
 import { getAvailableStores } from "@/lib/services/StoreService";
 import type { StoreListing } from "@/lib/types";
+import { useTranslation } from "@/lib/i18n";
 
 export function LandingClientView() {
   const reduceMotion = useAccessibilityStore((state) => state.reducedMotion);
   const stores = React.useMemo<StoreListing[]>(() => getAvailableStores(), []);
+  const { t } = useTranslation("landing");
+  const { t: tCommon } = useTranslation("common");
 
   return (
     <main
@@ -23,7 +26,7 @@ export function LandingClientView() {
     >
       {/* ── Top Bar (Clean minimal settings trigger only) ───────── */}
       <div className="w-full max-w-md flex justify-end">
-        <SettingsIconButton label="접근성 및 앱 설정 열기" />
+        <SettingsIconButton label={tCommon("openSettingsAria")} />
       </div>
 
       {/* ── Hero Center Section (Ultra Minimalist) ──────────────── */}
@@ -35,12 +38,12 @@ export function LandingClientView() {
 
         {/* Minimalist Headline & Subtitle */}
         <h1 className="text-2xl sm:text-[28px] font-extrabold tracking-tight text-foreground leading-snug">
-          테이블에 폰을 대면
+          {t("heroTitleLine1")}
           <br />
-          바로 주문할 수 있어요
+          {t("heroTitleLine2")}
         </h1>
         <p className="text-sm sm:text-base text-muted-foreground font-medium mt-2">
-          NFC 태그나 QR 코드를 스캔해 보세요
+          {t("heroSubtitle")}
         </p>
 
         {/* Prototype Preview CTA Button */}
@@ -55,7 +58,7 @@ export function LandingClientView() {
             className="h-10 px-4 gap-1.5 font-semibold text-sm rounded-full bg-secondary/80 hover:bg-secondary text-secondary-foreground border border-border/50 shadow-none transition-all"
           >
             <Link href="/order/jumun-cafe-01">
-              <span>프로토타입 구경하기</span>
+              <span>{t("viewPrototype")}</span>
               <ChevronRight
                 className="h-3.5 w-3.5 text-muted-foreground"
                 aria-hidden="true"
@@ -70,4 +73,3 @@ export function LandingClientView() {
     </main>
   );
 }
-

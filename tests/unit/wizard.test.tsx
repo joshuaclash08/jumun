@@ -20,9 +20,11 @@ vi.mock("next/navigation", () => ({
 
 // Mock Next.js Image component
 vi.mock("next/image", () => ({
-  default: (props: any) => {
+  default: (props: React.ImgHTMLAttributes<HTMLImageElement> & { fill?: boolean; priority?: boolean }) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { fill, priority, ...domProps } = props;
     // eslint-disable-next-line @next/next/no-img-element
-    return <img {...props} alt={props.alt || ""} />;
+    return <img {...domProps} alt={domProps.alt || ""} />;
   },
 }));
 
@@ -95,7 +97,7 @@ describe("WizardOrderView & One-Handed Layout", () => {
     expect(useAccessibilityStore.getState().voiceGuideEnabled).toBe(true);
   });
 
-  it("renders Prototype VoiceOver notice banner explaining difference from native OS VoiceOver", () => {
+  it("renders audio controls and exit button in top bar", () => {
     render(
       <WizardOrderView
         categories={mockCategories}
@@ -105,14 +107,8 @@ describe("WizardOrderView & One-Handed Layout", () => {
       />,
     );
 
-    // Note banner should be present
-    expect(screen.getByText("※ 프로토타입 음성 안내 알림")).toBeInTheDocument();
-    expect(
-      screen.getByText(/본 웹 시연에서는 음성 합성\(TTS\)으로 동작을 체험할 수 있으며/i),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(/향후 실제 상용 앱에서는 스마트폰 OS 내장 VoiceOver \/ TalkBack과 네이티브로 정밀 연동됩니다/i),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "일반 메뉴판으로 나가기" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /음성 안내/i })).toBeInTheDocument();
   });
 
   it("applies one-handed layout classes properly for left, right, and none modes", () => {

@@ -21,6 +21,7 @@ import { QuantityStepper } from "@/components/flow/QuantityStepper";
 import { StickyActionBar } from "@/components/shared/StickyActionBar";
 import { useVoiceGuide } from "@/hooks/useVoiceGuide";
 import { formatKRW } from "@/lib/format";
+import { useTranslation } from "@/lib/i18n";
 
 interface CartDrawerProps {
   open: boolean;
@@ -29,6 +30,8 @@ interface CartDrawerProps {
 }
 
 export function CartDrawer({ open, onOpenChange, onCheckout }: CartDrawerProps) {
+  const { t } = useTranslation("menu");
+  const { t: tCommon } = useTranslation("common");
   const items = useCartStore((state) => state.items);
   const updateQuantity = useCartStore((state) => state.updateQuantity);
   const removeItem = useCartStore((state) => state.removeItem);
@@ -43,12 +46,12 @@ export function CartDrawer({ open, onOpenChange, onCheckout }: CartDrawerProps) 
   React.useEffect(() => {
     if (open) {
       if (items.length === 0) {
-        speak("장바구니가 비어 있습니다.");
+        speak(t("cart.voiceEmpty"));
       } else {
-        speak(`장바구니입니다. 총 ${items.length}개 메뉴, 합계 ${formatKRW(totalPrice)}입니다.`);
+        speak(t("cart.voiceIntro", { count: items.length, total: formatKRW(totalPrice) }));
       }
     }
-  }, [open, items.length, totalPrice, speak]);
+  }, [open, items.length, totalPrice, speak, t]);
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
@@ -57,16 +60,19 @@ export function CartDrawer({ open, onOpenChange, onCheckout }: CartDrawerProps) 
           <DrawerHeader className="relative grid grid-cols-[44px_1fr_44px] items-center px-4 py-3">
             <BackButton
               onClick={() => onOpenChange(false)}
-              label="장바구니 닫기"
+              label={t("cart.closeAria")}
               className="-ml-1"
             />
-            <DrawerTitle className="text-lg sm:text-xl font-extrabold text-foreground text-center">장바구니</DrawerTitle>
+            <DrawerTitle className="text-lg sm:text-xl font-extrabold text-foreground text-center">
+              {t("cart.title")}
+            </DrawerTitle>
             <div className="w-11" aria-hidden="true" />
           </DrawerHeader>
 
           <div
             data-lenis-prevent=""
-            className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 py-4 pb-28 scrollbar-none"
+            tabIndex={-1}
+            className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 py-4 pb-28 scrollbar-none outline-none"
           >
             {items.length === 0 ? (
               <div className="flex min-h-[260px] flex-col items-center justify-center gap-3 text-center py-6">
@@ -74,15 +80,15 @@ export function CartDrawer({ open, onOpenChange, onCheckout }: CartDrawerProps) 
                   <EmptyCartIllustration size={96} />
                 </div>
                 <div className="flex flex-col gap-1">
-                  <p className="text-lg font-bold text-foreground">장바구니가 비어 있어요</p>
-                  <p className="text-base font-medium text-muted-foreground">맛있는 메뉴를 골라 담아보세요</p>
+                  <p className="text-lg font-bold text-foreground">{t("cart.emptyTitle")}</p>
+                  <p className="text-base font-medium text-muted-foreground">{t("cart.emptyDesc")}</p>
                 </div>
                 <Button
                   variant="secondary"
                   className="mt-2 px-6 font-bold text-base rounded-[14px]"
                   onClick={() => onOpenChange(false)}
                 >
-                  메뉴 둘러보기
+                  {t("cart.browseMenu")}
                 </Button>
               </div>
             ) : (
@@ -113,19 +119,19 @@ export function CartDrawer({ open, onOpenChange, onCheckout }: CartDrawerProps) 
                             variant="ghost"
                             size="xs"
                             onClick={() => {
-                              speak(`${item.nameKo || '상품'} 메뉴를 삭제했습니다.`);
+                              speak(t("cart.voiceDeleted", { name: item.nameKo || item.productId }));
                               removeItem(item.id);
                             }}
                             className="shrink-0 text-base font-bold text-destructive hover:bg-destructive/10 hover:text-destructive gap-1 px-2.5 h-8 rounded-full"
-                            aria-label={`${item.nameKo || '상품'} 장바구니에서 삭제`}
+                            aria-label={t("cart.deleteAria", { name: item.nameKo || item.productId })}
                           >
                             <Trash2 className="h-3.5 w-3.5" />
-                            삭제
+                            {t("cart.delete")}
                           </Button>
                         </div>
 
                         <div className="text-base font-medium text-muted-foreground">
-                          단가 {formatKRW(item.unitPrice)}
+                          {t("cart.unitPrice", { price: formatKRW(item.unitPrice) })}
                         </div>
 
                         <Separator className="my-0.5" />
@@ -134,21 +140,21 @@ export function CartDrawer({ open, onOpenChange, onCheckout }: CartDrawerProps) 
                           <QuantityStepper
                             value={item.quantity}
                             onIncrement={() => {
-                              speak(`${item.nameKo || '상품'} 수량 ${item.quantity + 1}개`);
+                              speak(t("cart.voiceQuantity", { name: item.nameKo || item.productId, quantity: item.quantity + 1 }));
                               updateQuantity(item.id, 1);
                             }}
                             onDecrement={() => {
-                              speak(`${item.nameKo || '상품'} 수량 ${item.quantity - 1}개`);
+                              speak(t("cart.voiceQuantity", { name: item.nameKo || item.productId, quantity: item.quantity - 1 }));
                               updateQuantity(item.id, -1);
                             }}
                             min={1}
                             size="sm"
-                            itemLabel={item.nameKo || "상품"}
+                            itemLabel={item.nameKo || item.productId}
                           />
 
                           <RollingPrice
                             value={item.unitPrice * item.quantity}
-                            suffix="원"
+                            suffix={tCommon("currency")}
                             className="font-extrabold text-base text-foreground"
                           />
                         </div>
@@ -166,13 +172,13 @@ export function CartDrawer({ open, onOpenChange, onCheckout }: CartDrawerProps) 
                 size="cta-full"
                 disabled={items.length === 0}
                 onClick={() => {
-                  speak("주문 및 결제 화면으로 이동합니다.");
+                  speak(t("cart.voiceProceed"));
                   onCheckout();
                 }}
               >
                 <RollingPrice
                   value={totalPrice}
-                  suffix="원 주문하기"
+                  suffix={t("cart.orderButtonSuffix")}
                   className="font-extrabold text-base text-primary-foreground"
                 />
               </Button>

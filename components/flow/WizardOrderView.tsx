@@ -12,9 +12,6 @@ import {
   Smartphone,
   Plus,
   Minus,
-  Sparkles,
-  ShoppingBag,
-  Info,
   Loader2,
 } from "lucide-react";
 import type { MenuCategory, Product, StoreInfo, CartItem } from "@/lib/types";
@@ -27,8 +24,8 @@ import { OrderService } from "@/lib/services";
 import { toast } from "@/lib/services/A11yFeedbackService";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/lib/i18n";
 
 interface WizardOrderViewProps {
   categories: MenuCategory[];
@@ -43,14 +40,12 @@ export function WizardOrderView({
   storeInfo,
   onExitWizard,
 }: WizardOrderViewProps) {
+  const { t } = useTranslation("menu");
+  const { t: tCommon } = useTranslation("common");
+
   // Store hooks
-  const {
-    items,
-    addItem,
-    clearCart,
-    setOrderStatus,
-    setLastReceipt,
-  } = useCartStore();
+  const { items, addItem, clearCart, setOrderStatus, setLastReceipt } =
+    useCartStore();
 
   const {
     oneHandedMode,
@@ -63,42 +58,49 @@ export function WizardOrderView({
   const isMotionDisabled = reducedMotion || process.env.NODE_ENV === "test";
 
   const defaultPaymentMethod = usePaymentStore((state) => state.defaultMethod);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = React.useState<string>(
-    defaultPaymentMethod,
-  );
+  const [selectedPaymentMethod, setSelectedPaymentMethod] =
+    React.useState<string>(defaultPaymentMethod);
 
   // Voice guide hook
   const { speak, cancel } = useVoiceGuide();
 
   // Wizard state: 1 (Category), 2 (Product), 3 (Option), 4 (Checkout)
   const [step, setStep] = React.useState<1 | 2 | 3 | 4>(1);
-  const [selectedCategoryId, setSelectedCategoryId] = React.useState<string | null>(null);
-  const [selectedProduct, setSelectedProduct] = React.useState<Product | null>(null);
+  const [selectedCategoryId, setSelectedCategoryId] = React.useState<
+    string | null
+  >(null);
+  const [selectedProduct, setSelectedProduct] = React.useState<Product | null>(
+    null,
+  );
 
   // Option selections: groupId -> string[]
-  const [optionSelections, setOptionSelections] = React.useState<Record<string, string[]>>({});
+  const [optionSelections, setOptionSelections] = React.useState<
+    Record<string, string[]>
+  >({});
   const [quantity, setQuantity] = React.useState(1);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   // Step names for accessible progress
   const stepTitles = {
-    1: "카테고리 선택",
-    2: "메뉴 선택",
-    3: "옵션 선택",
-    4: "주문 및 결제",
+    1: t("wizard.stepName1"),
+    2: t("wizard.stepName2"),
+    3: t("wizard.stepName3"),
+    4: t("wizard.stepName4"),
   };
 
   // Announce step transitions
   React.useEffect(() => {
     if (step === 1) {
-      speak("1단계, 카테고리를 선택해 주세요.");
+      speak(t("wizard.step1Voice"));
     }
-  }, [step, speak]);
+  }, [step, speak, t]);
 
   // Filter products by selected category
   const filteredProducts = React.useMemo(() => {
     if (!selectedCategoryId) return [];
-    return products.filter((p) => p.category === selectedCategoryId && p.available !== false);
+    return products.filter(
+      (p) => p.category === selectedCategoryId && p.available !== false,
+    );
   }, [products, selectedCategoryId]);
 
   const selectedCategory = React.useMemo(() => {
@@ -125,7 +127,11 @@ export function WizardOrderView({
     const cat = categories.find((c) => c.id === categoryId);
     setSelectedCategoryId(categoryId);
     setStep(2);
-    speak(`${cat?.labelKo || "선택한"} 카테고리를 선택하셨습니다. 원하시는 메뉴를 골라주세요.`);
+    speak(
+      t("wizard.selectCategoryVoice", {
+        category: cat?.labelKo || "",
+      }),
+    );
   };
 
   // Step 2: Select Product
@@ -142,12 +148,19 @@ export function WizardOrderView({
     setQuantity(1);
     setStep(3);
     speak(
-      `${product.nameKo}, ${formatKRW(product.price)}를 선택하셨습니다. 옵션과 수량을 선택해 주세요.`,
+      t("wizard.selectProductVoice", {
+        product: product.nameKo,
+        price: formatKRW(product.price),
+      }),
     );
   };
 
   // Step 3: Toggle Option
-  const handleToggleOption = (groupId: string, optionId: string, selectionType: "single" | "multiple") => {
+  const handleToggleOption = (
+    groupId: string,
+    optionId: string,
+    selectionType: "single" | "multiple",
+  ) => {
     setOptionSelections((prev) => {
       const current = prev[groupId] || [];
       if (selectionType === "single") {
@@ -164,10 +177,12 @@ export function WizardOrderView({
   const buildCurrentCartItem = (): CartItem | null => {
     if (!selectedProduct) return null;
 
-    const selections = Object.entries(optionSelections).map(([groupId, optionIds]) => ({
-      groupId,
-      optionIds,
-    }));
+    const selections = Object.entries(optionSelections).map(
+      ([groupId, optionIds]) => ({
+        groupId,
+        optionIds,
+      }),
+    );
 
     const optionsSummaryParts: string[] = [];
     selectedProduct.optionGroups.forEach((group) => {
@@ -196,7 +211,7 @@ export function WizardOrderView({
     if (!item) return;
 
     addItem(item);
-    speak(`${item.nameKo}를 담았습니다. 추가하실 카테고리를 선택해 주세요.`);
+    speak(t("wizard.addMoreVoice", { product: item.nameKo || "" }));
     // Reset to step 1
     setSelectedProduct(null);
     setOptionSelections({});
@@ -210,7 +225,7 @@ export function WizardOrderView({
       addItem(item);
     }
     setStep(4);
-    speak("주문 내역을 확인하고 결제를 진행해 주세요.");
+    speak(t("wizard.checkoutVoice"));
   };
 
   // Step 4: Final Mock Payment
@@ -218,7 +233,7 @@ export function WizardOrderView({
     if (!storeInfo) {
       toast({
         kind: "error",
-        messageKo: "매장 정보가 확인되지 않았습니다.",
+        messageKo: t("wizard.missingStoreVoice"),
         variant: "generic",
         hapticsEnabled,
       });
@@ -228,7 +243,7 @@ export function WizardOrderView({
     if (items.length === 0) {
       toast({
         kind: "error",
-        messageKo: "장바구니에 담긴 메뉴가 없습니다.",
+        messageKo: t("wizard.emptyCartVoice"),
         variant: "generic",
         hapticsEnabled,
       });
@@ -244,10 +259,10 @@ export function WizardOrderView({
       setLastReceipt(receipt);
       setOrderStatus("confirmed");
       clearCart();
-      speak("주문과 결제가 성공적으로 완료되었습니다. 영수증이 발급되었습니다.");
+      speak(t("wizard.paymentSuccessVoice"));
     } catch (err: unknown) {
       setOrderStatus("failed");
-      const msg = err instanceof Error ? err.message : "결제에 실패했습니다.";
+      const msg = err instanceof Error ? err.message : t("wizard.paymentFailedVoice");
       toast({
         kind: "error",
         messageKo: msg,
@@ -260,7 +275,10 @@ export function WizardOrderView({
   };
 
   // Total amount in cart for step 4
-  const cartTotal = items.reduce((sum, it) => sum + it.unitPrice * it.quantity, 0);
+  const cartTotal = items.reduce(
+    (sum, it) => sum + it.unitPrice * it.quantity,
+    0,
+  );
 
   // One-Handed Layout Container Classes
   const oneHandedAlignClass = React.useMemo(() => {
@@ -276,17 +294,17 @@ export function WizardOrderView({
   return (
     <div className="flex flex-col min-h-screen bg-background pb-32">
       {/* ── Top Bar: Prototype VoiceOver Notice & Audio Controls ── */}
-      <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-md border-b border-border/40 px-4 py-3">
-        <div className="max-w-[768px] mx-auto flex flex-col gap-2.5">
+      <div className="sticky top-0 z-30 bg-background border-b border-border/40 px-4 py-3">
+        <div className="max-w-[840px] mx-auto flex flex-col gap-2.5">
           <div className="flex items-center justify-between gap-2">
             <button
               type="button"
               onClick={onExitWizard}
               className="inline-flex items-center gap-1.5 text-sm font-bold text-muted-foreground hover:text-foreground transition-colors p-1 -ml-1 rounded-lg"
-              aria-label="일반 메뉴판으로 나가기"
+              aria-label={t("wizard.exitAria")}
             >
               <ArrowLeft className="w-4 h-4" />
-              <span>일반 메뉴판</span>
+              <span>{t("wizard.exitText")}</span>
             </button>
 
             {/* Quick Audio Guide Toggle */}
@@ -296,7 +314,7 @@ export function WizardOrderView({
                 const nextState = !voiceGuideEnabled;
                 setVoiceGuideEnabled(nextState);
                 if (nextState) {
-                  speak("음성 안내가 켜졌습니다.", { force: true });
+                  speak(t("wizard.voiceTurnedOn"), { force: true });
                 } else {
                   cancel();
                 }
@@ -307,49 +325,45 @@ export function WizardOrderView({
                   ? "bg-primary/10 text-primary border-primary/30"
                   : "bg-muted/50 text-muted-foreground border-border/60 hover:text-foreground",
               )}
-              aria-label={`음성 안내 ${voiceGuideEnabled ? "끄기" : "켜기"}`}
+              aria-label={t("wizard.voiceToggleAria", { action: voiceGuideEnabled ? t("wizard.voiceTurnOff") : t("wizard.voiceTurnOn") })}
             >
               {voiceGuideEnabled ? (
                 <>
                   <Volume2 className="w-3.5 h-3.5 text-primary animate-pulse" />
-                  <span>음성 켜짐</span>
+                  <span>{t("wizard.voiceOn")}</span>
                 </>
               ) : (
                 <>
                   <VolumeX className="w-3.5 h-3.5 text-muted-foreground" />
-                  <span>음성 꺼짐</span>
+                  <span>{t("wizard.voiceOff")}</span>
                 </>
               )}
             </button>
-          </div>
-
-          {/* Prototype VoiceOver Disclaimer Banner */}
-          <div
-            role="note"
-            className="flex items-start gap-2.5 rounded-2xl bg-blue-500/10 border border-blue-500/20 p-3 text-xs leading-relaxed text-blue-900 dark:text-blue-200"
-          >
-            <Info className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-            <div className="flex flex-col gap-0.5">
-              <span className="font-extrabold text-primary">※ 프로토타입 음성 안내 알림</span>
-              <p className="text-muted-foreground font-medium">
-                본 웹 시연에서는 음성 합성(TTS)으로 동작을 체험할 수 있으며, 향후 실제 상용 앱에서는 스마트폰 OS 내장 VoiceOver / TalkBack과 네이티브로 정밀 연동됩니다.
-              </p>
-            </div>
           </div>
         </div>
       </div>
 
       {/* ── Main Wizard Step Area ── */}
       <div className="w-full px-4 pt-4">
-        <div className={cn("flex flex-col transition-all duration-300", oneHandedAlignClass)}>
+        <div
+          className={cn(
+            "flex flex-col transition-all duration-300",
+            oneHandedAlignClass,
+          )}
+        >
           {/* Progress Indicator */}
           <div className="flex items-center justify-between pb-3 border-b border-border/50">
             <span className="text-xs font-bold tracking-wider text-primary uppercase">
-              {stepTitles[step]} (Step {step}/4)
+              {t("wizard.stepIndicator", { title: stepTitles[step], step })}
             </span>
             {oneHandedMode !== "none" && (
-              <Badge variant="outline" className="text-[11px] font-semibold text-muted-foreground">
-                {oneHandedMode === "left" ? "왼손 한손 조작" : "오른손 한손 조작"}
+              <Badge
+                variant="outline"
+                className="text-[11px] font-semibold text-muted-foreground"
+              >
+                {oneHandedMode === "left"
+                  ? t("wizard.leftHand")
+                  : t("wizard.rightHand")}
               </Badge>
             )}
           </div>
@@ -367,10 +381,10 @@ export function WizardOrderView({
               >
                 <div>
                   <h1 className="text-2xl font-black text-foreground tracking-tight">
-                    어떤 메뉴를 드실까요?
+                    {t("wizard.step1Title")}
                   </h1>
                   <p className="text-sm font-medium text-muted-foreground mt-1">
-                    원하시는 종류의 카테고리를 하나 선택해 주세요.
+                    {t("wizard.step1Desc")}
                   </p>
                 </div>
 
@@ -387,7 +401,7 @@ export function WizardOrderView({
                           {cat.labelKo}
                         </span>
                         <span className="text-xs font-medium text-muted-foreground">
-                          {products.filter((p) => p.category === cat.id).length}개 메뉴 준비됨
+                          {t("wizard.itemsPrepared", { count: products.filter((p) => p.category === cat.id).length })}
                         </span>
                       </div>
                       <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all">
@@ -414,19 +428,19 @@ export function WizardOrderView({
                     type="button"
                     onClick={() => {
                       setStep(1);
-                      speak("카테고리 선택으로 돌아갑니다.");
+                      speak(t("wizard.backToCategoryVoice"));
                     }}
                     className="p-1 -ml-1 text-muted-foreground hover:text-foreground transition-colors"
-                    aria-label="카테고리 다시 선택하기"
+                    aria-label={t("wizard.backToCategoryAria")}
                   >
                     <ArrowLeft className="w-5 h-5" />
                   </button>
                   <div>
                     <h1 className="text-2xl font-black text-foreground tracking-tight">
-                      {selectedCategory?.labelKo} 메뉴 선택
+                      {t("wizard.step2Title", { category: selectedCategory?.labelKo || "" })}
                     </h1>
                     <p className="text-sm font-medium text-muted-foreground mt-0.5">
-                      드실 메뉴를 하나 골라주세요.
+                      {t("wizard.step2Desc")}
                     </p>
                   </div>
                 </div>
@@ -480,10 +494,10 @@ export function WizardOrderView({
                     type="button"
                     onClick={() => {
                       setStep(2);
-                      speak("메뉴 선택으로 돌아갑니다.");
+                      speak(t("wizard.backToMenuVoice"));
                     }}
                     className="p-1 -ml-1 text-muted-foreground hover:text-foreground transition-colors"
-                    aria-label="메뉴 다시 선택하기"
+                    aria-label={t("wizard.backToMenuAria")}
                   >
                     <ArrowLeft className="w-5 h-5" />
                   </button>
@@ -492,7 +506,7 @@ export function WizardOrderView({
                       {selectedProduct.nameKo}
                     </h1>
                     <p className="text-sm font-medium text-muted-foreground mt-0.5">
-                      옵션과 수량을 확인해 주세요.
+                      {t("wizard.step3Desc")}
                     </p>
                   </div>
                 </div>
@@ -509,7 +523,9 @@ export function WizardOrderView({
                     />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h2 className="text-base font-bold text-foreground">{selectedProduct.nameKo}</h2>
+                    <h2 className="text-base font-bold text-foreground">
+                      {selectedProduct.nameKo}
+                    </h2>
                     <span className="text-base font-extrabold text-primary">
                       {formatKRW(currentUnitPrice * quantity)}
                     </span>
@@ -522,10 +538,15 @@ export function WizardOrderView({
                   return (
                     <div key={group.id} className="flex flex-col gap-2.5">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm font-bold text-foreground">{group.labelKo}</span>
+                        <span className="text-sm font-bold text-foreground">
+                          {group.labelKo}
+                        </span>
                         {group.required && (
-                          <Badge variant="secondary" className="text-[11px] font-semibold">
-                            필수
+                          <Badge
+                            variant="secondary"
+                            className="text-[11px] font-semibold"
+                          >
+                            {t("productDetail.requiredBadge")}
                           </Badge>
                         )}
                       </div>
@@ -538,8 +559,12 @@ export function WizardOrderView({
                               key={opt.id}
                               type="button"
                               onClick={() => {
-                                handleToggleOption(group.id, opt.id, group.selectionType);
-                                speak(`${opt.labelKo} 옵션이 선택되었습니다.`);
+                                handleToggleOption(
+                                  group.id,
+                                  opt.id,
+                                  group.selectionType,
+                                );
+                                speak(t("wizard.optionSelectedVoice", { option: opt.labelKo }));
                               }}
                               className={cn(
                                 "flex flex-col items-center justify-center p-3.5 rounded-xl border-2 transition-all font-bold text-sm",
@@ -564,7 +589,9 @@ export function WizardOrderView({
 
                 {/* Quantity Stepper */}
                 <div className="flex items-center justify-between p-4 rounded-2xl bg-card border border-border/70">
-                  <span className="text-base font-bold text-foreground">주문 수량</span>
+                  <span className="text-base font-bold text-foreground">
+                    {t("wizard.orderQuantity")}
+                  </span>
                   <div className="flex items-center gap-3">
                     <button
                       type="button"
@@ -572,10 +599,10 @@ export function WizardOrderView({
                       onClick={() => {
                         const next = Math.max(1, quantity - 1);
                         setQuantity(next);
-                        speak(`수량 ${next}개`);
+                        speak(t("wizard.quantityVoice", { count: next }));
                       }}
                       className="w-11 h-11 rounded-full border border-border flex items-center justify-center text-foreground disabled:opacity-30 active:scale-95 transition-all"
-                      aria-label="수량 줄이기"
+                      aria-label={t("wizard.decreaseQuantityAria")}
                     >
                       <Minus className="w-5 h-5" />
                     </button>
@@ -588,10 +615,10 @@ export function WizardOrderView({
                       onClick={() => {
                         const next = Math.min(10, quantity + 1);
                         setQuantity(next);
-                        speak(`수량 ${next}개`);
+                        speak(t("wizard.quantityVoice", { count: next }));
                       }}
                       className="w-11 h-11 rounded-full border border-border flex items-center justify-center text-foreground disabled:opacity-30 active:scale-95 transition-all"
-                      aria-label="수량 늘리기"
+                      aria-label={t("wizard.increaseQuantityAria")}
                     >
                       <Plus className="w-5 h-5" />
                     </button>
@@ -605,14 +632,14 @@ export function WizardOrderView({
                     onClick={handleProceedToCheckout}
                     className="h-14 text-base font-black bg-primary text-white hover:bg-primary/90 rounded-2xl shadow-sm cursor-pointer"
                   >
-                    이 메뉴 바로 결제하기 ({formatKRW(currentUnitPrice * quantity)})
+                    {t("wizard.directPayButton", { price: formatKRW(currentUnitPrice * quantity) })}
                   </Button>
                   <Button
                     variant="outline"
                     onClick={handleAddMoreItems}
                     className="h-13 text-base font-bold rounded-2xl border-2 border-border/80 hover:bg-muted/60 cursor-pointer"
                   >
-                    담고 다른 메뉴 더 고르기
+                    {t("wizard.addMoreButton")}
                   </Button>
                 </div>
               </motion.div>
@@ -633,19 +660,19 @@ export function WizardOrderView({
                     type="button"
                     onClick={() => {
                       setStep(3);
-                      speak("옵션 선택으로 돌아갑니다.");
+                      speak(t("wizard.backToOptionVoice"));
                     }}
                     className="p-1 -ml-1 text-muted-foreground hover:text-foreground transition-colors"
-                    aria-label="이전 화면으로 돌아가기"
+                    aria-label={tCommon("back")}
                   >
                     <ArrowLeft className="w-5 h-5" />
                   </button>
                   <div>
                     <h1 className="text-2xl font-black text-foreground tracking-tight">
-                      주문 및 결제 확인
+                      {t("wizard.step4Title")}
                     </h1>
                     <p className="text-sm font-medium text-muted-foreground mt-0.5">
-                      담긴 메뉴와 결제 수단을 확인해 주세요.
+                      {t("wizard.step4Desc")}
                     </p>
                   </div>
                 </div>
@@ -653,28 +680,37 @@ export function WizardOrderView({
                 {/* Store and Table Details */}
                 <div className="p-4 rounded-2xl bg-muted/40 border border-border/60 flex items-center justify-between text-sm">
                   <span className="font-bold text-foreground">
-                    {storeInfo?.storeName || "주문 매장"}
+                    {storeInfo?.storeName || t("wizard.defaultStore")}
                   </span>
                   <Badge variant="outline" className="font-bold">
                     {storeInfo?.orderType === "dine-in"
-                      ? `${storeInfo.table}번 테이블`
-                      : "포장 주문"}
+                      ? tCommon("tableNumber", { table: storeInfo.table })
+                      : t("wizard.takeoutOrder")}
                   </Badge>
                 </div>
 
                 {/* Item List Summary */}
                 <div className="flex flex-col gap-2.5">
-                  <span className="text-sm font-bold text-foreground">주문 메뉴 목록</span>
+                  <span className="text-sm font-bold text-foreground">
+                    {t("wizard.orderedMenuList")}
+                  </span>
                   <div className="flex flex-col gap-2 rounded-2xl bg-card border border-border/70 p-4 divide-y divide-border/40">
                     {items.map((it) => (
-                      <div key={it.id} className="pt-2 first:pt-0 flex items-center justify-between">
+                      <div
+                        key={it.id}
+                        className="pt-2 first:pt-0 flex items-center justify-between"
+                      >
                         <div className="flex flex-col">
-                          <span className="text-base font-bold text-foreground">{it.nameKo}</span>
+                          <span className="text-base font-bold text-foreground">
+                            {it.nameKo}
+                          </span>
                           {it.optionsSummary && (
-                            <span className="text-xs text-muted-foreground">{it.optionsSummary}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {it.optionsSummary}
+                            </span>
                           )}
                           <span className="text-xs font-semibold text-muted-foreground mt-0.5">
-                            수량 {it.quantity}개
+                            {t("wizard.itemQuantity", { quantity: it.quantity })}
                           </span>
                         </div>
                         <span className="text-base font-extrabold text-foreground tabular-nums">
@@ -684,7 +720,9 @@ export function WizardOrderView({
                     ))}
 
                     <div className="pt-3 flex items-center justify-between">
-                      <span className="text-base font-black text-foreground">총 결제 금액</span>
+                      <span className="text-base font-black text-foreground">
+                        {t("receipt.totalAmount")}
+                      </span>
                       <span className="text-xl font-black text-primary tabular-nums">
                         {formatKRW(cartTotal)}
                       </span>
@@ -694,11 +732,17 @@ export function WizardOrderView({
 
                 {/* Payment Method Selector */}
                 <div className="flex flex-col gap-2.5">
-                  <span className="text-sm font-bold text-foreground">결제 수단</span>
+                  <span className="text-sm font-bold text-foreground">
+                    {t("checkout.paymentMethod")}
+                  </span>
                   <div className="grid grid-cols-2 gap-2">
                     {[
-                      { id: "credit_card", label: "신용/체크카드", icon: CreditCard },
-                      { id: "toss_pay", label: "토스페이", icon: Smartphone },
+                      {
+                        id: "credit_card",
+                        label: t("wizard.creditCard"),
+                        icon: CreditCard,
+                      },
+                      { id: "toss_pay", label: t("wizard.tossPay"), icon: Smartphone },
                     ].map((method) => {
                       const isSelected = selectedPaymentMethod === method.id;
                       const Icon = method.icon;
@@ -708,7 +752,7 @@ export function WizardOrderView({
                           type="button"
                           onClick={() => {
                             setSelectedPaymentMethod(method.id);
-                            speak(`${method.label}가 선택되었습니다.`);
+                            speak(t("wizard.payMethodSelectedVoice", { method: method.label }));
                           }}
                           className={cn(
                             "flex items-center gap-2.5 p-3.5 rounded-xl border-2 transition-all font-bold text-sm",
@@ -735,10 +779,10 @@ export function WizardOrderView({
                   {isSubmitting ? (
                     <div className="flex items-center gap-2">
                       <Loader2 className="w-5 h-5 animate-spin" />
-                      <span>결제 처리 중...</span>
+                      <span>{t("wizard.paymentProcessing")}</span>
                     </div>
                   ) : (
-                    <span>총 {formatKRW(cartTotal)} 결제하기</span>
+                    <span>{t("wizard.payTotalButton", { total: formatKRW(cartTotal) })}</span>
                   )}
                 </Button>
               </motion.div>

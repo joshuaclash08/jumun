@@ -9,36 +9,35 @@ import { BackButton } from "@/components/ui/BackButton";
 import { SettingsIconButton } from "@/components/ui/SettingsIconButton";
 import { tablePath, takeoutPath } from "@/lib/routes";
 import type { StoreListing } from "@/lib/types";
+import { useTranslation } from "@/lib/i18n";
 
 interface OrderTypeSelectViewProps {
   store: StoreListing;
 }
 
-// Entry step 2 of 2 for a manually-selected store: dine-in routes on to the
-// dedicated table-selection screen, takeout skips straight to the menu since
-// there's no table to resolve (docs/decisions/0014).
 export function OrderTypeSelectView({ store }: OrderTypeSelectViewProps) {
   const router = useRouter();
   const reduceMotion = useAccessibilityStore((state) => state.reducedMotion);
+  const { t } = useTranslation("orderFlow");
+  const { t: tCommon } = useTranslation("common");
 
   return (
     <main
       id="main-content"
       className="flex min-h-[100dvh] w-full flex-col bg-background text-foreground"
     >
-      <header className="sticky top-0 z-30 flex h-14 items-center justify-between px-4 bg-background/90 backdrop-blur-md">
-        <BackButton href="/" label="홈으로 이동" className="-ml-1" />
+      <header className="sticky top-0 z-30 flex h-14 items-center justify-between px-4 bg-background border-b border-border/40">
+        <BackButton href="/" label={tCommon("backHome")} className="-ml-1" />
         <SettingsIconButton className="-mr-1" />
       </header>
-
 
       <div className="flex flex-1 flex-col justify-center gap-6 px-5 pb-[calc(2rem+env(safe-area-inset-bottom,0px))]">
         <div className="flex flex-col gap-1.5">
           <p className="text-base font-bold text-primary">{store.storeName}</p>
           <h1 className="text-2xl font-extrabold text-foreground leading-snug">
-            매장에서 드시나요,
+            {t("orderType.titleLine1")}
             <br />
-            포장하시나요?
+            {t("orderType.titleLine2")}
           </h1>
         </div>
 
@@ -46,14 +45,14 @@ export function OrderTypeSelectView({ store }: OrderTypeSelectViewProps) {
           <SelectionCard
             isSelected={false}
             onClick={() => router.push(tablePath(store.storeId))}
-            label="매장 식사"
+            label={t("orderType.dineIn")}
             icon={<Utensils className="h-5 w-5" />}
             reduceMotion={reduceMotion}
           />
           <SelectionCard
             isSelected={false}
             onClick={() => router.push(takeoutPath(store.storeId))}
-            label="포장하기"
+            label={t("orderType.takeout")}
             icon={<ShoppingBag className="h-5 w-5" />}
             reduceMotion={reduceMotion}
           />

@@ -1,18 +1,23 @@
+"use client";
+
 import Link from "next/link";
 import { EmptyCartIllustration } from "@/components/ui/TossIllustrations";
+import { useTranslation } from "@/lib/i18n";
 
 interface InvalidOrderLinkNoticeProps {
   title?: string;
   description?: string;
 }
 
-// Shared "this order link doesn't resolve" empty state -- reused by the
-// order-type entry screen and the table-selection screen, since both can be
-// reached with an invalid/unknown storeId.
 export function InvalidOrderLinkNotice({
-  title = "주문 링크를 찾지 못했어요",
-  description = "테이블의 QR 코드나 NFC 태그를 다시 스캔해 주시거나, 샘플 매장으로 이동해 보세요.",
+  title,
+  description,
 }: InvalidOrderLinkNoticeProps) {
+  const { t } = useTranslation("orderFlow");
+
+  const resolvedTitle = title ?? t("invalidLink.title");
+  const resolvedDesc = description ?? t("invalidLink.desc");
+
   return (
     <main
       id="main-content"
@@ -20,16 +25,16 @@ export function InvalidOrderLinkNotice({
     >
       <EmptyCartIllustration size={96} />
       <div className="flex flex-col gap-1.5 max-w-sm">
-        <h1 className="text-2xl font-extrabold text-foreground">{title}</h1>
+        <h1 className="text-2xl font-extrabold text-foreground">{resolvedTitle}</h1>
         <p className="text-base font-medium text-muted-foreground leading-relaxed">
-          {description}
+          {resolvedDesc}
         </p>
       </div>
       <Link
         href="/order/jumun-cafe-01"
         className="mt-3 inline-flex h-14 items-center justify-center rounded-[14px] bg-primary px-6 font-bold text-primary-foreground shadow-none transition-transform active:scale-[0.96]"
       >
-        샘플 매장 열기
+        {t("invalidLink.openSample")}
       </Link>
     </main>
   );

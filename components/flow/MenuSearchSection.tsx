@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "motion/react";
 import type { MenuCategory, Product } from "@/lib/types";
 import { ProductCard } from "@/components/flow/ProductCard";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
+import { useTranslation } from "@/lib/i18n";
 
 interface MenuSearchSectionProps {
   products: Product[];
@@ -18,6 +19,8 @@ export function MenuSearchSection({
   categories,
   onProductClick,
 }: MenuSearchSectionProps) {
+  const { t } = useTranslation("menu");
+  const { t: tCommon } = useTranslation("common");
   const reduceMotion = useAccessibilityStore((state) => state.reducedMotion);
   const [query, setQuery] = React.useState("");
   const inputRef = React.useRef<HTMLInputElement>(null);
@@ -60,7 +63,7 @@ export function MenuSearchSection({
           id="menu-search-heading"
           className="text-lg font-extrabold text-foreground leading-snug"
         >
-          원하는 메뉴를 못 찾으시겠나요?
+          {t("search.title")}
         </h2>
       </div>
 
@@ -76,15 +79,15 @@ export function MenuSearchSection({
           inputMode="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          aria-label="메뉴 검색"
-          placeholder="메뉴 검색"
+          aria-label={t("search.placeholder")}
+          placeholder={t("search.placeholder")}
           className="h-14 w-full rounded-[18px] border border-border bg-background pl-12 pr-11 text-base font-medium text-foreground placeholder:text-muted-foreground focus-visible:border-primary transition-all [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden"
         />
         {query && (
           <button
             type="button"
             onClick={handleClear}
-            aria-label="검색어 지우기"
+            aria-label={t("search.clearAria")}
             className="absolute right-1.5 flex h-11 w-11 items-center justify-center rounded-full text-muted-foreground transition-colors"
           >
             <span className="flex h-7 w-7 items-center justify-center rounded-full bg-muted hover:bg-muted/80 hover:text-foreground transition-colors">
@@ -106,10 +109,10 @@ export function MenuSearchSection({
           >
             <div className="flex items-center justify-between px-1">
               <span className="text-base font-bold text-foreground">
-                검색 결과
+                {t("search.results")}
               </span>
               <span className="text-base font-semibold text-primary">
-                {filteredProducts.length}개
+                {tCommon("itemCount", { count: filteredProducts.length })}
               </span>
             </div>
 
@@ -126,14 +129,14 @@ export function MenuSearchSection({
             ) : (
               <div className="flex flex-col items-center justify-center py-8 text-center gap-2">
                 <p className="text-base font-bold text-foreground">
-                  &lsquo;{trimmedQuery}&rsquo;에 대한 메뉴를 찾지 못했어요
+                  {t("search.noResults", { query: trimmedQuery })}
                 </p>
                 <button
                   type="button"
                   onClick={handleClear}
                   className="mt-2 rounded-[14px] bg-background border border-border px-4 py-2 text-base font-bold text-primary hover:bg-muted transition-colors"
                 >
-                  검색어 지우기
+                  {t("search.clearButton")}
                 </button>
               </div>
             )}
