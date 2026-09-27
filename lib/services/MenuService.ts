@@ -67,15 +67,21 @@ function validateProducts(raw: unknown): Product[] {
 
 const PRODUCTS: Product[] = validateProducts(menuData.products);
 
-const MOCK_LATENCY_MS = 200;
+const MOCK_LATENCY_MS = 0;
 
 function delay(ms: number): Promise<void> {
+  if (ms <= 0) return Promise.resolve();
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 export async function getCategories(): Promise<MenuCategory[]> {
   await delay(MOCK_LATENCY_MS);
   return CATEGORIES;
+}
+
+export async function getAllProducts(): Promise<Product[]> {
+  await delay(MOCK_LATENCY_MS);
+  return PRODUCTS;
 }
 
 export async function getProductsByCategory(categoryId: ProductCategory): Promise<Product[]> {

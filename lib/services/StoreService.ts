@@ -34,9 +34,10 @@ function validateStores(raw: unknown): StoreListing[] {
 const STORES = validateStores(storeData.stores);
 const STORES_BY_ID = new Map(STORES.map((store) => [store.storeId, store]));
 
-const MOCK_LATENCY_MS = 200;
+const MOCK_LATENCY_MS = 0;
 
 function delay(ms: number): Promise<void> {
+  if (ms <= 0) return Promise.resolve();
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 

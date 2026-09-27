@@ -17,6 +17,24 @@ const nextConfig: NextConfig = {
     ...localIps,
   ],
   devIndicators: false,
+  images: {
+    formats: ["image/avif", "image/webp"],
+    minimumCacheTTL: 60 * 60 * 24 * 30, // 30 days
+  },
+  async redirects() {
+    return [
+      {
+        source: "/setting",
+        destination: "/settings",
+        permanent: true,
+      },
+      {
+        source: "/setting/:path*",
+        destination: "/settings/:path*",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;
