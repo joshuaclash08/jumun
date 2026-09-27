@@ -26,18 +26,26 @@ describe("useToastStore", () => {
     expect(state.toasts[0]).toEqual(sampleToast);
   });
 
-  it("appends multiple toasts in order", () => {
+  it("immediately preempts/replaces existing toast when a new one arrives", () => {
     useToastStore.getState().pushToast(sampleToast);
-    useToastStore.getState().pushToast({
+    const newToast: ToastItem = {
       id: "toast-2",
       messageKo: "직원을 호출했어요.",
       kind: "success",
       variant: "staff-call",
-    });
+    };
+    useToastStore.getState().pushToast(newToast);
 
     const state = useToastStore.getState();
-    expect(state.toasts).toHaveLength(2);
-    expect(state.toasts.map((t) => t.id)).toEqual(["toast-1", "toast-2"]);
+    expect(state.toasts).toHaveLength(1);
+    expect(state.toasts[0]).toEqual(newToast);
+  });
+
+  it("clears all toasts with clearAll", () => {
+    useToastStore.getState().pushToast(sampleToast);
+    expect(useToastStore.getState().toasts).toHaveLength(1);
+    useToastStore.getState().clearAll();
+    expect(useToastStore.getState().toasts).toHaveLength(0);
   });
 
   it("dismisses a toast by id", () => {

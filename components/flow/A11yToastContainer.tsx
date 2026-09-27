@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useToastStore } from "@/store/useToastStore";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
+import { useTranslation } from "@/lib/i18n";
 import { motion, AnimatePresence } from "motion/react";
 import { Check, Bell, Trash2, ShoppingBag, TriangleAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -36,79 +37,154 @@ function getToastVisual(toast: ToastItem) {
 }
 
 export function A11yToastContainer() {
+  const { t } = useTranslation("common");
   const toasts = useToastStore((state) => state.toasts);
   const dismissToast = useToastStore((state) => state.dismissToast);
   const reducedMotion = useAccessibilityStore((state) => state.reducedMotion);
   const timeoutExtension = useAccessibilityStore(
     (state) => state.timeoutExtension
   );
+  const fontScale = useAccessibilityStore((state) => state.fontScale);
 
-  // Auto-dismiss logic
+  const [isPaused, setIsPaused] = React.useState(false);
+  const [bottomOffsetPx, setBottomOffsetPx] = React.useState<number | null>(null);
+
+  // Dynamic clearance measurement: ensures the toast NEVER covers the bottom action bar
+  // (StaffCallButton + CartSummaryPill, or StickyActionBar), adapting automatically
+  // to font scale, viewport size, and safe area insets.
   React.useEffect(() => {
-    if (toasts.length === 0) return;
+    const updateOffset = () => {
+      const bottomActionsEl = document.getElementById("jumun-bottom-actions");
+      const stickyActionBarEl = document.querySelector("[data-sticky-action-bar]");
+      const targetEl = bottomActionsEl || stickyActionBarEl;
 
-    const currentToast = toasts[toasts.length - 1];
+      if (targetEl) {
+        const rect = targetEl.getBoundingClientRect();
+        // Distance from bottom of viewport to the TOP of the target action bar + 14px clearance margin
+        const clearance = Math.max(0, window.innerHeight - rect.top + 14);
+        setBottomOffsetPx(clearance);
+      } else {
+        setBottomOffsetPx(null);
+      }
+    };
+
+    updateOffset();
+    window.addEventListener("resize", updateOffset, { passive: true });
+    window.addEventListener("scroll", updateOffset, { passive: true });
+
+    const observer = new MutationObserver(updateOffset);
+    observer.observe(document.body, { childList: true, subtree: true, attributes: true });
+
+    return () => {
+      window.removeEventListener("resize", updateOffset);
+      window.removeEventListener("scroll", updateOffset);
+      observer.disconnect();
+    };
+  }, [fontScale, toasts.length]);
+
+  // Current active toast
+  const currentToast = toasts.length > 0 ? toasts[toasts.length - 1] : null;
+
+  // Auto-dismiss timer logic: pause on hover / hold
+  React.useEffect(() => {
+    if (!currentToast || isPaused) return;
+
     const duration = timeoutExtension ? 7000 : 3200;
-
     const timer = setTimeout(() => {
       dismissToast(currentToast.id);
     }, duration);
 
     return () => clearTimeout(timer);
-  }, [toasts, dismissToast, timeoutExtension]);
-
-  if (toasts.length === 0) return null;
-
-  const currentToast = toasts[toasts.length - 1];
-  const { icon } = getToastVisual(currentToast);
+  }, [currentToast, dismissToast, timeoutExtension, isPaused]);
 
   return (
     <div
-      className="fixed top-[calc(env(safe-area-inset-top,0px)+1rem)] left-1/2 -translate-x-1/2 z-50 flex justify-center pointer-events-none px-4 w-full max-w-[768px]"
+      style={{
+        bottom:
+          bottomOffsetPx !== null && bottomOffsetPx > 0
+            ? `${bottomOffsetPx}px`
+            : "calc(env(safe-area-inset-bottom, 0px) + 1.5rem)",
+      }}
+      className="fixed left-1/2 -translate-x-1/2 z-50 flex justify-center pointer-events-none px-4 w-full max-w-[840px] transition-[bottom] duration-200 ease-out"
       role="region"
-      aria-label="알림 메시지"
+      aria-label={t("toastAlertAria")}
+      aria-live="off"
     >
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={currentToast.id}
-          initial={{ y: -20, opacity: 0, scale: 0.94 }}
-          animate={{ y: 0, opacity: 1, scale: 1 }}
-          exit={{ y: -16, opacity: 0, scale: 0.94 }}
-          transition={{
-            type: "spring",
-            stiffness: 500,
-            damping: 32,
-            duration: reducedMotion ? 0 : undefined,
-          }}
-          className={cn(
-            "pointer-events-auto flex max-w-md items-center gap-2.5 rounded-full bg-[#191F28]/95 px-4.5 py-2.5 text-white shadow-[0_10px_28px_rgba(25,31,40,0.22)] border border-white/10"
-          )}
-        >
-          {/* Subtle Accent Icon */}
-          <div className="shrink-0 flex items-center justify-center" aria-hidden="true">
-            {icon}
-          </div>
-
-          {/* Toast Message Text */}
-          <span className="text-base font-semibold text-white/95 leading-none">
-            {currentToast.messageKo}
-          </span>
-
-          {/* Optional Inline Undo Action */}
-          {currentToast.onUndo && (
-            <button
-              type="button"
-              onClick={() => {
-                currentToast.onUndo?.();
+      {/* 
+        CRITICAL: AnimatePresence must ALWAYS remain mounted.
+        Do NOT early-return null from the component, or AnimatePresence is torn down
+        synchronously before the exit animation can run!
+      */}
+      <AnimatePresence mode="popLayout">
+        {currentToast && (
+          <motion.div
+            key={currentToast.id}
+            layout
+            initial={
+              reducedMotion
+                ? false
+                : { scale: 0, opacity: 0 }
+            }
+            animate={{
+              scale: 1,
+              opacity: 1,
+            }}
+            exit={
+              reducedMotion
+                ? { opacity: 0 }
+                : { scale: 0, opacity: 0 }
+            }
+            transition={
+              reducedMotion
+                ? { duration: 0 }
+                : {
+                    type: "spring",
+                    stiffness: 420,
+                    damping: 22,
+                    mass: 0.8,
+                  }
+            }
+            drag="y"
+            dragConstraints={{ top: 0, bottom: 0 }}
+            dragElastic={{ top: 0.2, bottom: 0.8 }}
+            onDragEnd={(_, info) => {
+              if (Math.abs(info.offset.y) > 20 || Math.abs(info.velocity.y) > 200) {
                 dismissToast(currentToast.id);
-              }}
-              className="ml-1 shrink-0 text-base font-bold text-primary hover:text-primary/80 transition-colors focus-visible:underline"
-              aria-label="방금 실행한 작업 취소"
-            >
-              취소
-            </button>
-          )}
-        </motion.div>
+              }
+            }}
+            onMouseEnter={() => setIsPaused(true)}
+            onMouseLeave={() => setIsPaused(false)}
+            className={cn(
+              "pointer-events-auto flex max-w-md items-center gap-2.5 rounded-full bg-[#191F28] px-4.5 py-2.5 text-white shadow-[0_12px_32px_rgba(25,31,40,0.25)] border border-white/10 cursor-grab active:cursor-grabbing select-none"
+            )}
+          >
+            {/* Subtle Accent Icon */}
+            <div className="shrink-0 flex items-center justify-center" aria-hidden="true">
+              {getToastVisual(currentToast).icon}
+            </div>
+
+            {/* Toast Message Text */}
+            <span className="text-base font-semibold text-white/95 leading-none">
+              {currentToast.messageKo}
+            </span>
+
+            {/* Optional Inline Undo Action */}
+            {currentToast.onUndo && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  currentToast.onUndo?.();
+                  dismissToast(currentToast.id);
+                }}
+                className="ml-1 shrink-0 min-h-[32px] px-2 flex items-center justify-center rounded-[8px] text-base font-bold text-primary hover:text-primary/80 transition-colors focus-visible:underline"
+                aria-label={t("undoAria")}
+              >
+                {t("undo")}
+              </button>
+            )}
+          </motion.div>
+        )}
       </AnimatePresence>
     </div>
   );

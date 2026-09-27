@@ -7,6 +7,7 @@ interface ToastStoreState {
   toasts: ToastItem[];
   pushToast: (toast: ToastItem) => void;
   dismissToast: (id: string) => void;
+  clearAll: () => void;
 }
 
 // Toast state lives on its own store, decoupled from useCartStore -- toasts
@@ -16,9 +17,15 @@ interface ToastStoreState {
 export const useToastStore = create<ToastStoreState>()((set) => ({
   toasts: [],
 
+  // Instant Preemption: When a new toast arrives, replace any existing toast
+  // immediately so the user gets real-time feedback without waiting for previous toasts.
   pushToast: (toast) =>
-    set((state) => ({ toasts: [...state.toasts, toast] })),
+    set({ toasts: [toast] }),
 
   dismissToast: (id) =>
     set((state) => ({ toasts: state.toasts.filter((toast) => toast.id !== id) })),
+
+  clearAll: () =>
+    set({ toasts: [] }),
 }));
+

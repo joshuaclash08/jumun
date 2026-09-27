@@ -2,7 +2,8 @@
 
 import { create } from "zustand";
 import type { CartItem, OrderReceipt, OrderStatus, StoreInfo } from "@/lib/types";
-import { toast } from "@/lib/services/A11yFeedbackService";
+import { toast, announce } from "@/lib/services/A11yFeedbackService";
+import { vibrate, HAPTIC_PATTERNS } from "@/hooks/useHaptics";
 import { useAccessibilityStore } from "./useAccessibilityStore";
 
 interface CartStore {
@@ -48,12 +49,13 @@ export const useCartStore = create<CartStore>()((set, get) => ({
 
   addItem: (item) => {
     const { items, history } = get();
-    toast({
-      kind: "success",
-      messageKo: `${item.nameKo || "상품"} ${item.quantity}잔이 장바구니에 담겼습니다.`,
-      variant: "cart",
-      hapticsEnabled: hapticsEnabled(),
-    });
+    // Non-intrusive feedback: announce for screen readers and vibrate haptically
+    // without popping up an intrusive visual toast over the category header.
+    // Visual reward is delivered directly via CartSummaryPill's bouncy badge pop.
+    announce(`${item.nameKo || "상품"} ${item.quantity}잔이 장바구니에 담겼습니다.`);
+    if (hapticsEnabled()) {
+      vibrate(HAPTIC_PATTERNS.success);
+    }
     set({ items: [...items, item], history: pushHistory(history, items) });
   },
 
