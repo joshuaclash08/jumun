@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { createPortal } from "react-dom";
 import { useToastStore } from "@/store/useToastStore";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
 import { useTranslation } from "@/lib/i18n";
@@ -46,17 +47,29 @@ export function A11yToastContainer() {
   );
   const fontScale = useAccessibilityStore((state) => state.fontScale);
 
+  const [mounted, setMounted] = React.useState(false);
   const [isPaused, setIsPaused] = React.useState(false);
   const [bottomOffsetPx, setBottomOffsetPx] = React.useState<number | null>(null);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Dynamic clearance measurement: ensures the toast NEVER covers the bottom action bar
   // (StaffCallButton + CartSummaryPill, or StickyActionBar), adapting automatically
   // to font scale, viewport size, and safe area insets.
   React.useEffect(() => {
     const updateOffset = () => {
+      // Prioritize sticky action bar inside an active/open drawer if present
+      const drawerContents = document.querySelectorAll("[data-slot='drawer-content']");
+      const activeDrawer = drawerContents.length > 0 ? drawerContents[drawerContents.length - 1] : null;
+      const drawerActionBar = activeDrawer?.querySelector("[data-sticky-action-bar]");
+
+      // Otherwise fall back to the main page's bottom actions or sticky action bar
       const bottomActionsEl = document.getElementById("jumun-bottom-actions");
       const stickyActionBarEl = document.querySelector("[data-sticky-action-bar]");
-      const targetEl = bottomActionsEl || stickyActionBarEl;
+
+      const targetEl = drawerActionBar || (activeDrawer ? null : (bottomActionsEl || stickyActionBarEl));
 
       if (targetEl) {
         const rect = targetEl.getBoundingClientRect();
@@ -97,7 +110,11 @@ export function A11yToastContainer() {
     return () => clearTimeout(timer);
   }, [currentToast, dismissToast, timeoutExtension, isPaused]);
 
-  return (
+  if (!mounted) {
+    return null;
+  }
+
+  return createPortal(
     <div
       style={{
         bottom:
@@ -105,7 +122,7 @@ export function A11yToastContainer() {
             ? `${bottomOffsetPx}px`
             : "calc(env(safe-area-inset-bottom, 0px) + 1.5rem)",
       }}
-      className="fixed left-1/2 -translate-x-1/2 z-50 flex justify-center pointer-events-none px-4 w-full max-w-[840px] transition-[bottom] duration-200 ease-out"
+      className="fixed left-1/2 -translate-x-1/2 z-[100] flex justify-center pointer-events-none px-4 w-full max-w-[840px] transition-[bottom] duration-200 ease-out"
       role="region"
       aria-label={t("toastAlertAria")}
       aria-live="off"
@@ -186,6 +203,7 @@ export function A11yToastContainer() {
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </div>,
+    document.body
   );
 }
