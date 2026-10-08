@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach, vi } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import { axe } from "vitest-axe";
 import { WizardOrderView } from "@/components/flow/WizardOrderView";
 import { MenuClientView } from "@/components/flow/MenuClientView";
@@ -148,7 +148,9 @@ describe("WizardOrderView & One-Handed Layout", () => {
     expect(container.querySelector(".mx-auto")).toBeInTheDocument();
 
     // 2. Left mode
-    useAccessibilityStore.getState().setOneHandedMode("left");
+    act(() => {
+      useAccessibilityStore.getState().setOneHandedMode("left");
+    });
     rerender(
       <WizardOrderView
         categories={mockCategories}
@@ -160,7 +162,9 @@ describe("WizardOrderView & One-Handed Layout", () => {
     expect(container.querySelector(".mr-auto.self-start")).toBeInTheDocument();
 
     // 3. Right mode
-    useAccessibilityStore.getState().setOneHandedMode("right");
+    act(() => {
+      useAccessibilityStore.getState().setOneHandedMode("right");
+    });
     rerender(
       <WizardOrderView
         categories={mockCategories}
@@ -332,7 +336,9 @@ describe("WizardOrderView & One-Handed Layout", () => {
     expect(screen.getByRole("heading", { name: /^커피/ })).toBeInTheDocument();
 
     // 2. When orderMode is wizard (set via Settings)
-    useAccessibilityStore.getState().setOrderMode("wizard");
+    act(() => {
+      useAccessibilityStore.getState().setOrderMode("wizard");
+    });
     rerender(
       <MenuClientView
         categories={mockCategories}
@@ -348,14 +354,18 @@ describe("WizardOrderView & One-Handed Layout", () => {
 
     // 3. Clicking "일반 메뉴판" returns to standard catalog
     const exitBtn = screen.getByRole("button", { name: /일반 메뉴판/i });
-    fireEvent.click(exitBtn);
+    act(() => {
+      fireEvent.click(exitBtn);
+    });
 
     expect(useAccessibilityStore.getState().orderMode).toBe("standard");
   });
 
   it("renders OS keyboard style OneHandedContainer with flip and expand controls", async () => {
     // 1. none mode
-    useAccessibilityStore.getState().setOneHandedMode("none");
+    act(() => {
+      useAccessibilityStore.getState().setOneHandedMode("none");
+    });
     const { rerender, container } = render(
       <OneHandedContainer>
         <div>Content Area</div>
@@ -365,7 +375,9 @@ describe("WizardOrderView & One-Handed Layout", () => {
     expect(screen.queryByLabelText("한손 모드 방향 및 복귀 제어")).not.toBeInTheDocument();
 
     // 2. left mode: rail on right with ArrowRight and Maximize2
-    useAccessibilityStore.getState().setOneHandedMode("left");
+    act(() => {
+      useAccessibilityStore.getState().setOneHandedMode("left");
+    });
     rerender(
       <OneHandedContainer>
         <div>Content Area</div>
@@ -379,10 +391,15 @@ describe("WizardOrderView & One-Handed Layout", () => {
     expect(expandBtn).toBeInTheDocument();
 
     // Click flip to right
-    fireEvent.click(toRightBtn);
+    act(() => {
+      fireEvent.click(toRightBtn);
+    });
     expect(useAccessibilityStore.getState().oneHandedMode).toBe("right");
 
     // 3. right mode: rail on left with ArrowLeft
+    act(() => {
+      useAccessibilityStore.getState().setOneHandedMode("right");
+    });
     rerender(
       <OneHandedContainer>
         <div>Content Area</div>
@@ -393,7 +410,9 @@ describe("WizardOrderView & One-Handed Layout", () => {
     expect(toLeftBtn).toBeInTheDocument();
 
     // Click expand full
-    fireEvent.click(screen.getByRole("button", { name: "양손 전체 화면으로 복귀" }));
+    act(() => {
+      fireEvent.click(screen.getByRole("button", { name: "양손 전체 화면으로 복귀" }));
+    });
     expect(useAccessibilityStore.getState().oneHandedMode).toBe("none");
 
     // Axe check
