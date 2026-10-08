@@ -87,14 +87,7 @@ function SettingsContent() {
     }
   };
 
-  const handleComplete = () => {
-    markSetupDone();
-    if (returnTo) {
-      router.replace(sanitizeReturnTo(returnTo));
-    } else {
-      router.back();
-    }
-  };
+  const handleComplete = handleBack;
 
   return (
     <main

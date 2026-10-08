@@ -47,7 +47,7 @@ export function HeaderBar({ storeInfo }: HeaderBarProps) {
         {storeInfo.orderType === "dine-in" ? (
           <Link
             href={changeHref}
-            className="inline-flex items-center gap-1 sm:gap-1.5 rounded-full bg-secondary hover:bg-secondary/80 active:scale-95 transition-all px-2.5 sm:px-3 py-1 text-base font-extrabold text-secondary-foreground border border-secondary shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="inline-flex items-center gap-1 sm:gap-1.5 rounded-full bg-secondary hover:bg-secondary/80 active:scale-95 transition-all px-2.5 sm:px-3 py-1 text-base font-extrabold text-secondary-foreground border border-secondary shadow-2xs"
             aria-label={changeAriaLabel}
             title={changeAriaLabel}
           >
@@ -62,7 +62,7 @@ export function HeaderBar({ storeInfo }: HeaderBarProps) {
         ) : (
           <Link
             href={changeHref}
-            className="inline-flex items-center gap-1 sm:gap-1.5 rounded-full bg-muted hover:bg-muted/80 active:scale-95 transition-all px-2.5 sm:px-3 py-1 text-base font-extrabold text-muted-foreground hover:text-foreground border border-border/60 shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="inline-flex items-center gap-1 sm:gap-1.5 rounded-full bg-muted hover:bg-muted/80 active:scale-95 transition-all px-2.5 sm:px-3 py-1 text-base font-extrabold text-muted-foreground hover:text-foreground border border-border/60 shadow-2xs"
             aria-label={changeAriaLabel}
             title={changeAriaLabel}
           >
