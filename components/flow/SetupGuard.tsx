@@ -50,6 +50,17 @@ export function SetupGuard({ children }: { children: ReactNode }) {
   );
 
   const shouldRenderChildren = isExempt || isSetupDone;
+  const [timedOut, setTimedOut] = React.useState(false);
+
+  // Safety net: If client redirect takes longer than 1.5s or stalls on slow/old devices,
+  // fail open and render children immediately rather than trapping the visitor in a permanent spinner.
+  useEffect(() => {
+    if (shouldRenderChildren) return;
+    const timer = setTimeout(() => {
+      setTimedOut(true);
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, [shouldRenderChildren]);
 
   useEffect(() => {
     if (isExempt) return;
@@ -72,10 +83,10 @@ export function SetupGuard({ children }: { children: ReactNode }) {
     }
   }, [pathname, router, isExempt]);
 
-  // While redirecting on first-time visit, show minimal spinner
-  if (!shouldRenderChildren) {
+  // While redirecting on first-time visit, show minimal spinner unless timed out
+  if (!shouldRenderChildren && !timedOut) {
     return (
-      <div className="flex min-h-[100dvh] items-center justify-center bg-background">
+      <div className="flex min-h-[100vh] min-h-[100dvh] items-center justify-center bg-background">
         <div
           className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent"
           role="status"

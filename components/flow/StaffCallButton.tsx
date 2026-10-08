@@ -1,18 +1,18 @@
 "use client";
 
 import * as React from "react";
-import { motion, AnimatePresence } from "motion/react";
+import { motion } from "motion/react";
 import { Bell, Check } from "lucide-react";
 import {
   Drawer,
+  DrawerTrigger,
   DrawerContent,
   DrawerHeader,
-  DrawerTitle,
-  DrawerDescription,
+  DrawerBody,
   DrawerFooter,
+  DrawerTitle,
 } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
-import { BackButton } from "@/components/ui/BackButton";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
 import { toast } from "@/lib/services/A11yFeedbackService";
 import type { StoreInfo } from "@/lib/types";
@@ -25,41 +25,14 @@ interface StaffCallButtonProps {
   isExpanded?: boolean;
 }
 
-/**
- * Toss TDS Outline Bell Icon with soft-tint circular surface. Icon-sized use
- * of the accent color, not small text, so accent/secondary tokens apply
- * directly (no Status-Color Exception Rule concern here).
- */
-function TossOutlineBellIcon({ className }: { className?: string }) {
-  return (
-    <div
-      className={cn(
-        "flex h-16 w-16 items-center justify-center rounded-full bg-secondary text-secondary-foreground select-none",
-        className,
-      )}
-    >
-      <Bell className="size-8 stroke-[1.8]" aria-hidden="true" />
-    </div>
-  );
-}
-
-/**
- * Toss TDS Outline Success Check Icon -- large icon-sized use of --success,
- * which is fine per the Status-Color Exception Rule (icon/large-surface
- * only, never small text).
- */
-function TossOutlineCheckIcon({ className }: { className?: string }) {
-  return (
-    <div
-      className={cn(
-        "flex h-16 w-16 items-center justify-center rounded-full bg-success-bg text-success select-none",
-        className,
-      )}
-    >
-      <Check className="size-8 stroke-[2.2]" aria-hidden="true" />
-    </div>
-  );
-}
+const STAFF_CALL_OPTIONS = [
+  { id: "wipes", labelKey: "staffCall.options.wipes" },
+  { id: "plates", labelKey: "staffCall.options.plates" },
+  { id: "cutlery", labelKey: "staffCall.options.cutlery" },
+  { id: "apron", labelKey: "staffCall.options.apron" },
+  { id: "receipt", labelKey: "staffCall.options.receipt" },
+  { id: "staff", labelKey: "staffCall.options.staff" },
+] as const;
 
 export function StaffCallButton({
   storeInfo,
@@ -67,22 +40,17 @@ export function StaffCallButton({
   isExpanded = true,
 }: StaffCallButtonProps) {
   const { t } = useTranslation("menu");
-  const { t: tCommon } = useTranslation("common");
   const [open, setOpen] = React.useState(false);
-  const [callStatus, setCallStatus] = React.useState<"idle" | "success">("idle");
+  const [selectedOptions, setSelectedOptions] = React.useState<string[]>([]);
   const [hasRecentCall, setHasRecentCall] = React.useState(false);
-  const autoCloseTimerRef = React.useRef<NodeJS.Timeout | null>(null);
   const recentCallTimerRef = React.useRef<NodeJS.Timeout | null>(null);
 
   const reduceMotion = useAccessibilityStore((state) => state.reducedMotion);
   const hapticsEnabled = useAccessibilityStore((state) => state.hapticsEnabled);
 
-  // Clear timers on unmount
+  // Clear timer on unmount
   React.useEffect(() => {
     return () => {
-      if (autoCloseTimerRef.current) {
-        clearTimeout(autoCloseTimerRef.current);
-      }
       if (recentCallTimerRef.current) {
         clearTimeout(recentCallTimerRef.current);
       }
@@ -90,25 +58,25 @@ export function StaffCallButton({
   }, []);
 
   const handleOpenChange = (isOpen: boolean) => {
-    React.startTransition(() => {
-      setOpen(isOpen);
-    });
+    setOpen(isOpen);
     if (!isOpen) {
-      if (autoCloseTimerRef.current) {
-        clearTimeout(autoCloseTimerRef.current);
-      }
-      // Reset call status after sheet slide down transition completes
-      setTimeout(() => {
-        setCallStatus("idle");
-      }, 300);
+      setSelectedOptions([]);
     }
   };
 
+  const toggleOption = (id: string) => {
+    setSelectedOptions((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
   const handleConfirm = () => {
-    React.startTransition(() => {
-      setCallStatus("success");
-      setHasRecentCall(true);
-    });
+    // Release focus from the button inside DrawerFooter before closing
+    ;(document.activeElement as HTMLElement)?.blur();
+
+    // Close drawer immediately upon confirmation
+    setOpen(false);
+    setHasRecentCall(true);
 
     if (recentCallTimerRef.current) {
       clearTimeout(recentCallTimerRef.current);
@@ -117,187 +85,137 @@ export function StaffCallButton({
       setHasRecentCall(false);
     }, 3500);
 
+    // Toast message adapting to selected items
+    const selectedLabels = selectedOptions.map((id) =>
+      t(`staffCall.options.${id}` as Parameters<typeof t>[0])
+    );
+
+    const message =
+      selectedLabels.length > 0
+        ? t("staffCall.toastItemsSuccess", {
+            table: storeInfo.table,
+            items: selectedLabels.join(", "),
+          })
+        : t("staffCall.toastSuccess", { table: storeInfo.table });
+
     toast({
       kind: "success",
-      messageKo: t("staffCall.toastSuccess", { table: storeInfo.table }),
+      messageKo: message,
       variant: "staff-call",
       hapticsEnabled,
     });
 
-    // Auto dismiss after 2.4s
-    if (autoCloseTimerRef.current) {
-      clearTimeout(autoCloseTimerRef.current);
-    }
-    autoCloseTimerRef.current = setTimeout(() => {
-      handleOpenChange(false);
-    }, 2400);
-  };
-
-  const handleCloseImmediately = () => {
-    handleOpenChange(false);
+    setSelectedOptions([]);
   };
 
   return (
-    <>
+    <Drawer open={open} onOpenChange={handleOpenChange}>
       <div className={cn("pointer-events-auto shrink-0", className)}>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => handleOpenChange(true)}
-          className={cn(
-            "h-14 rounded-full bg-card hover:bg-muted text-foreground border border-border/80 shadow-[0_4px_16px_rgba(25,31,40,0.08)] flex items-center p-0 gap-0 cursor-pointer overflow-hidden active:scale-[0.92] transition-all px-4 focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2",
-            hasRecentCall && "border-primary/50 bg-primary/10 text-primary shadow-xs"
-          )}
-          aria-label={hasRecentCall ? "직원 호출 완료됨" : t("staffCall.callAria")}
-        >
-          {hasRecentCall ? (
-            <Check className="size-6 stroke-[2.4] text-primary shrink-0" aria-hidden="true" />
-          ) : (
-            <Bell className="size-6 stroke-[1.9] shrink-0" aria-hidden="true" />
-          )}
-          <motion.div
-            initial={false}
-            animate={{
-              width: isExpanded ? "auto" : 0,
-              opacity: isExpanded ? 1 : 0,
-            }}
-            transition={{
-              duration: reduceMotion ? 0 : 0.28,
-              ease: [0.16, 1, 0.3, 1],
-            }}
-            className="overflow-hidden"
-            aria-hidden={!isExpanded}
+        <DrawerTrigger asChild>
+          <Button
+            type="button"
+            className={cn(
+              "h-14 rounded-full flex items-center p-0 gap-0 cursor-pointer overflow-hidden active:scale-[0.92] transition-all px-4 focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2",
+              // High contrast against canvas in both light and dark modes
+              !hasRecentCall &&
+                "bg-[#191F28] text-white hover:bg-neutral-800 shadow-[0_4px_16px_rgba(25,31,40,0.22)] border border-neutral-700/30 dark:bg-white dark:text-[#191F28] dark:hover:bg-neutral-100 dark:shadow-[0_4px_16px_rgba(0,0,0,0.45)] dark:border-white/20",
+              // Active / Recent Call state: vibrant Toss Blue
+              hasRecentCall &&
+                "border-primary bg-primary text-white shadow-[0_4px_16px_rgba(0,100,255,0.35)]"
+            )}
+            aria-label={hasRecentCall ? t("staffCall.called") : t("staffCall.callAria")}
           >
-            <span
-              className={cn(
-                "block font-bold text-[15px] sm:text-base whitespace-nowrap pl-2.5 transition-colors",
-                hasRecentCall ? "text-primary font-extrabold" : "text-foreground"
-              )}
+            {hasRecentCall ? (
+              <Check className="size-6 stroke-[2.4] text-white shrink-0" aria-hidden="true" />
+            ) : (
+              <Bell className="size-6 stroke-[1.9] text-white dark:text-[#191F28] shrink-0" aria-hidden="true" />
+            )}
+            <motion.div
+              initial={false}
+              animate={{
+                width: isExpanded ? "auto" : 0,
+                opacity: isExpanded ? 1 : 0,
+              }}
+              transition={{
+                duration: reduceMotion ? 0 : 0.28,
+                ease: [0.16, 1, 0.3, 1],
+              }}
+              className="overflow-hidden"
+              aria-hidden={!isExpanded}
             >
-              {hasRecentCall ? "호출 완료" : t("staffCall.button")}
-            </span>
-          </motion.div>
-        </Button>
+              <span
+                className={cn(
+                  "block font-bold text-[15px] sm:text-base whitespace-nowrap pl-2.5 transition-colors",
+                  hasRecentCall ? "text-white font-extrabold" : "text-white dark:text-[#191F28]"
+                )}
+              >
+                {hasRecentCall ? t("staffCall.called") : t("staffCall.button")}
+              </span>
+            </motion.div>
+          </Button>
+        </DrawerTrigger>
       </div>
 
-      <Drawer open={open} onOpenChange={handleOpenChange}>
-        <DrawerContent>
-          <DrawerHeader className="relative items-center pb-2 pt-7 text-center">
-            <div className="absolute top-3 left-3">
-              <BackButton
-                onClick={handleCloseImmediately}
-                label={t("staffCall.closeAria")}
-              />
-            </div>
+      <DrawerContent className="bg-[#F8F9FA] dark:bg-[#121316] border-border/40">
+        <DrawerHeader className="px-5 pt-7 pb-2 text-left">
+          <DrawerTitle className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">
+            {t("staffCall.heading")}
+          </DrawerTitle>
+        </DrawerHeader>
 
-            <AnimatePresence mode="wait">
-              {callStatus === "idle" ? (
-                <motion.div
-                  key="idle-view"
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -6 }}
-                  transition={{ duration: 0.18, ease: "easeOut" }}
-                  className="flex flex-col items-center w-full mt-2"
+        <DrawerBody className="px-5 py-3">
+          <div
+            className="grid grid-cols-3 gap-2.5"
+            role="group"
+            aria-label={t("staffCall.title")}
+          >
+            {STAFF_CALL_OPTIONS.map((opt) => {
+              const isSelected = selectedOptions.includes(opt.id);
+              const label = t(opt.labelKey as Parameters<typeof t>[0]);
+              return (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => toggleOption(opt.id)}
+                  aria-pressed={isSelected}
+                  className={cn(
+                    "relative flex min-h-[64px] h-16 w-full items-center justify-center rounded-[16px] px-1.5 py-3 text-base transition-all cursor-pointer select-none",
+                    reduceMotion ? "" : "active:scale-[0.96]",
+                    isSelected
+                      ? "border-2 border-primary bg-primary/10 text-primary shadow-2xs font-extrabold"
+                      : "border-0 bg-[#F2F4F6] dark:bg-[#202124] text-foreground font-bold hover:bg-[#E5E8EB] dark:hover:bg-[#2A2B2E]"
+                  )}
                 >
-                  <div className="mb-3">
-                    <TossOutlineBellIcon />
-                  </div>
+                  <span className="break-keep text-center leading-snug">{label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </DrawerBody>
 
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary text-secondary-foreground font-bold text-sm mb-2">
-                    <span>{storeInfo.storeName}</span>
-                    <span className="opacity-40">•</span>
-                    <span>{tCommon("tableNumber", { table: storeInfo.table })}</span>
-                  </div>
-
-                  <DrawerTitle className="pt-0.5 text-2xl font-extrabold text-foreground tracking-tight">
-                    {t("staffCall.confirmTitle")}
-                  </DrawerTitle>
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="success-view"
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.2, ease: "easeOut" }}
-                  className="flex flex-col items-center w-full mt-2"
-                >
-                  <div className="mb-3">
-                    <TossOutlineCheckIcon />
-                  </div>
-
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-success-bg text-foreground font-bold text-sm mb-2">
-                    <span>{tCommon("tableNumber", { table: storeInfo.table })}</span>
-                    <span className="opacity-40">•</span>
-                    <span>{t("staffCall.called")}</span>
-                  </div>
-
-                  <DrawerTitle className="pt-0.5 text-2xl font-extrabold text-foreground tracking-tight">
-                    {t("staffCall.successTitle")}
-                  </DrawerTitle>
-                  <DrawerDescription className="text-sm font-semibold text-muted-foreground mt-1 leading-relaxed">
-                    {t("staffCall.successDesc")}
-                  </DrawerDescription>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </DrawerHeader>
-
-          <DrawerFooter className="p-4 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] bg-background">
-            <AnimatePresence mode="wait">
-              {callStatus === "idle" ? (
-                <motion.div
-                  key="idle-buttons"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.15 }}
-                  className="grid grid-cols-2 gap-3 w-full"
-                >
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="lg"
-                    onClick={handleCloseImmediately}
-                    className="w-full h-14 min-h-[56px] font-bold text-base rounded-[16px] border-0 shadow-none active:scale-[0.96] transition-all cursor-pointer"
-                  >
-                    {tCommon("cancel")}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="default"
-                    size="lg"
-                    onClick={handleConfirm}
-                    className="w-full h-14 min-h-[56px] font-extrabold text-base rounded-[16px] shadow-none border-0 active:scale-[0.96] transition-all cursor-pointer"
-                  >
-                    {t("staffCall.confirmButton")}
-                  </Button>
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="success-buttons"
-                  initial={{ opacity: 0, y: 4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.15 }}
-                  className="w-full"
-                >
-                  <Button
-                    type="button"
-                    variant="default"
-                    size="lg"
-                    onClick={handleCloseImmediately}
-                    className="w-full h-14 min-h-[56px] font-extrabold text-base rounded-[16px] shadow-none border-0 active:scale-[0.96] transition-all cursor-pointer"
-                  >
-                    {tCommon("confirm")}
-                  </Button>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </DrawerFooter>
-        </DrawerContent>
-      </Drawer>
-    </>
+        <DrawerFooter className="grid grid-cols-2 gap-3 px-5 pb-5 pt-2 bg-transparent">
+          <Button
+            type="button"
+            variant="secondary"
+            size="lg"
+            onClick={() => handleOpenChange(false)}
+            aria-label={t("staffCall.close")}
+            className="w-full h-14 min-h-[56px] font-bold text-base rounded-[16px] border-0 bg-[#F2F4F6] dark:bg-[#202124] text-foreground hover:bg-[#E5E8EB] dark:hover:bg-[#2A2B2E] shadow-none cursor-pointer"
+          >
+            {t("staffCall.close")}
+          </Button>
+          <Button
+            type="button"
+            variant="default"
+            size="lg"
+            onClick={handleConfirm}
+            aria-label={t("staffCall.call")}
+            className="w-full h-14 min-h-[56px] font-extrabold text-base rounded-[16px] bg-[#3182F6] hover:bg-[#1B64DA] text-white shadow-none border-0 cursor-pointer"
+          >
+            {t("staffCall.call")}
+          </Button>
+        </DrawerFooter>
+      </DrawerContent>
+    </Drawer>
   );
 }

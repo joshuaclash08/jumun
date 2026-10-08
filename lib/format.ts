@@ -25,5 +25,5 @@ export function getCartTotals(items: CartItem[]): { totalQuantity: number; total
  * generic fallback (e.g. an a11y label) can pass one explicitly.
  */
 export function getCartItemDisplayName(item: CartItem, fallback: string = item.productId): string {
-  return item.nameKo || fallback;
+  return item.title || item.nameKo || fallback;
 }

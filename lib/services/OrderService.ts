@@ -1,4 +1,5 @@
 import type { CartItem, OrderReceipt, StoreInfo } from "@/lib/types";
+import { getCartTotals } from "@/lib/format";
 
 const MOCK_LATENCY_MS = 600;
 
@@ -39,7 +40,7 @@ export async function submitOrder(
     throw new Error("결제를 완료하지 못했어요.");
   }
 
-  const subtotal = items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
+  const { totalPrice: subtotal } = getCartTotals(items);
 
   return {
     orderNumber: generateOrderNumber(),

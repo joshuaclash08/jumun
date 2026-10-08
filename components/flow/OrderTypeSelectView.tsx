@@ -5,8 +5,7 @@ import { useRouter } from "next/navigation";
 import { Utensils, ShoppingBag } from "lucide-react";
 import { SelectionCard } from "./SelectionCard";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
-import { BackButton } from "@/components/ui/BackButton";
-import { SettingsIconButton } from "@/components/ui/SettingsIconButton";
+import { FlowHeader } from "@/components/layout/FlowHeader";
 import { tablePath, takeoutPath } from "@/lib/routes";
 import type { StoreListing } from "@/lib/types";
 import { useTranslation } from "@/lib/i18n";
@@ -26,10 +25,7 @@ export function OrderTypeSelectView({ store }: OrderTypeSelectViewProps) {
       id="main-content"
       className="flex min-h-[100dvh] w-full flex-col bg-background text-foreground"
     >
-      <header className="sticky top-0 z-30 flex h-14 items-center justify-between px-4 bg-background border-b border-border/40">
-        <BackButton href="/" label={tCommon("backHome")} className="-ml-1" />
-        <SettingsIconButton className="-mr-1" />
-      </header>
+      <FlowHeader backHref="/" backLabel={tCommon("backHome")} />
 
       <div className="flex flex-1 flex-col justify-center gap-6 px-5 pb-[calc(2rem+env(safe-area-inset-bottom,0px))]">
         <div className="flex flex-col gap-1.5">

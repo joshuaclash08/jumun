@@ -22,6 +22,7 @@ export function announce(messageKo: string, priority: "polite" | "assertive" = "
 export interface ToastInput {
   kind: "success" | "error";
   messageKo: string;
+  messageEn?: string;
   variant?: "cart" | "staff-call" | "delete" | "generic";
   hapticsEnabled?: boolean;
   onUndo?: () => void;
@@ -34,9 +35,12 @@ export interface ToastInput {
 // pushing a visual toast into useToastStore. Unlike the old notify(), this
 // never asks the caller to remember to push the toast themselves.
 export function toast(input: ToastInput): void {
-  const { kind, messageKo, variant = "generic", hapticsEnabled, onUndo } = input;
+  const { kind, messageKo, messageEn, variant = "generic", hapticsEnabled, onUndo } = input;
 
-  announce(messageKo, kind === "error" ? "assertive" : "polite");
+  const isEn = typeof document !== "undefined" && document.documentElement.lang === "en";
+  const textToAnnounce = isEn && messageEn ? messageEn : messageKo;
+
+  announce(textToAnnounce, kind === "error" ? "assertive" : "polite");
 
   if (hapticsEnabled) {
     vibrate(kind === "success" ? HAPTIC_PATTERNS.success : HAPTIC_PATTERNS.error);
@@ -45,6 +49,7 @@ export function toast(input: ToastInput): void {
   useToastStore.getState().pushToast({
     id: generateUUID(),
     messageKo,
+    messageEn,
     kind,
     variant,
     onUndo,

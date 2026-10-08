@@ -11,7 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
 import { useVoiceGuide } from "@/hooks/useVoiceGuide";
 import { StickyActionBar } from "@/components/shared/StickyActionBar";
-import { formatKRW } from "@/lib/format";
+import { formatKRW, getCartItemDisplayName } from "@/lib/format";
 import { tablePath, takeoutPath } from "@/lib/routes";
 import confetti from "canvas-confetti";
 import { useTranslation } from "@/lib/i18n";
@@ -28,7 +28,11 @@ const receiptContainer: Variants = {
 
 const receiptItem: Variants = {
   hidden: { opacity: 0, y: 16 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.22, 1, 0.36, 1] } },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.35, ease: [0.22, 1, 0.36, 1] },
+  },
 };
 
 function FluidSuccessCheck({ size = 76 }: { size?: number }) {
@@ -40,17 +44,11 @@ function FluidSuccessCheck({ size = 76 }: { size?: number }) {
       style={{ width: size, height: size }}
       aria-hidden="true"
     >
-      {/* Outer soft blue aura ring */}
-      <motion.div
-        initial={reduceMotion ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.7 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-        className="absolute inset-0 rounded-full bg-primary/10"
-      />
-
       {/* Main vibrant Toss Blue circle with spring pop */}
       <motion.div
-        initial={reduceMotion ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.6 }}
+        initial={
+          reduceMotion ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.6 }
+        }
         animate={{ opacity: 1, scale: 1 }}
         transition={{
           type: "spring",
@@ -127,13 +125,16 @@ export function ConfirmationStep({ onReset }: ConfirmationStepProps) {
     router.push(href);
   };
 
-  const orderTypeLabel = lastReceipt.orderType === "dine-in" ? t("checkout.dineIn") : t("checkout.takeout");
+  const orderTypeLabel =
+    lastReceipt.orderType === "dine-in"
+      ? t("checkout.dineIn")
+      : t("checkout.takeout");
   const formattedTime = new Date(lastReceipt.placedAt).toLocaleTimeString(
     language === "en" ? "en-US" : "ko-KR",
     {
       hour: "2-digit",
       minute: "2-digit",
-    }
+    },
   );
 
   return (
@@ -158,7 +159,7 @@ export function ConfirmationStep({ onReset }: ConfirmationStepProps) {
 
           {/* Large Hero Order Number Display */}
           <div className="flex flex-col items-center gap-0.5 mt-1">
-            <span className="text-xs sm:text-sm font-bold text-muted-foreground">
+            <span className="text-base font-bold text-muted-foreground">
               {t("receipt.orderNumber")}
             </span>
             <span className="text-4xl sm:text-5xl font-black text-primary tabular-nums tracking-tight">
@@ -172,8 +173,10 @@ export function ConfirmationStep({ onReset }: ConfirmationStepProps) {
           <Card className="w-full p-4 sm:p-5 rounded-[22px] shadow-resting border-border/80 text-left bg-card">
             <div className="flex items-center justify-between pb-1">
               <div>
-                <h2 className="text-base font-extrabold text-foreground">{t("receipt.receiptTitle")}</h2>
-                <p className="text-sm font-medium text-muted-foreground mt-0.5">
+                <h2 className="text-base font-extrabold text-foreground">
+                  {t("receipt.receiptTitle")}
+                </h2>
+                <p className="text-base font-medium text-muted-foreground mt-0.5">
                   {lastReceipt.store.storeName} ·{" "}
                   {lastReceipt.store.orderType === "dine-in"
                     ? t("receipt.tableInfo", { table: lastReceipt.store.table })
@@ -183,26 +186,29 @@ export function ConfirmationStep({ onReset }: ConfirmationStepProps) {
               </div>
               <Badge
                 variant="secondary"
-                className="font-extrabold text-sm px-2.5 py-0.5"
+                className="font-extrabold text-base px-2.5 py-0.5"
               >
                 {orderTypeLabel}
               </Badge>
             </div>
 
-            <Separator className="my-2 bg-border/60" />
+            <Separator variant="hairline" className="my-2" />
 
             <div className="flex flex-col gap-2 py-0.5">
               {lastReceipt.items.map((item, idx) => (
-                <div key={idx} className="flex justify-between items-start text-base">
+                <div
+                  key={idx}
+                  className="flex justify-between items-start text-base"
+                >
                   <div className="flex flex-col">
                     <span className="font-bold text-foreground">
-                      {item.nameKo || item.productId}{" "}
-                      <span className="text-muted-foreground font-medium text-sm">
+                      {getCartItemDisplayName(item)}{" "}
+                      <span className="text-muted-foreground font-medium text-base">
                         x{item.quantity}
                       </span>
                     </span>
                     {item.optionsSummary && (
-                      <span className="text-sm text-muted-foreground font-medium">
+                      <span className="text-base text-muted-foreground font-medium">
                         {item.optionsSummary}
                       </span>
                     )}
@@ -214,10 +220,12 @@ export function ConfirmationStep({ onReset }: ConfirmationStepProps) {
               ))}
             </div>
 
-            <Separator className="my-2 bg-border/60" />
+            <Separator variant="hairline" className="my-2" />
 
             <div className="pt-1 flex justify-between items-center text-base font-bold">
-              <span className="text-foreground">{t("receipt.totalAmount")}</span>
+              <span className="text-foreground">
+                {t("receipt.totalAmount")}
+              </span>
               <span className="text-primary text-xl sm:text-2xl font-black tabular-nums tracking-tight">
                 {formatKRW(lastReceipt.total)}
               </span>
@@ -229,7 +237,11 @@ export function ConfirmationStep({ onReset }: ConfirmationStepProps) {
       {/* Fixed/Sticky Bottom Action Bar — Always visible without scrolling */}
       <StickyActionBar>
         <motion.div variants={receiptItem}>
-          <Button size="cta-full" className="max-w-sm mx-auto" onClick={handleNewOrder}>
+          <Button
+            size="cta-full"
+            className="max-w-sm mx-auto"
+            onClick={handleNewOrder}
+          >
             {t("receipt.newOrder")}
           </Button>
         </motion.div>

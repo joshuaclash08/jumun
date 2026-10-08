@@ -106,8 +106,8 @@ export function QrScannerModal({ open, onOpenChange }: QrScannerModalProps) {
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent>
-        <DrawerHeader className="relative items-center pt-7 pb-2 text-center">
-          <div className="absolute top-3 left-3">
+        <DrawerHeader className="relative items-center pt-6 pb-2 text-center">
+          <div className="absolute top-3.5 left-3.5">
             <BackButton
               onClick={() => onOpenChange(false)}
               label={t("qrScanner.closeAria")}
@@ -120,7 +120,7 @@ export function QrScannerModal({ open, onOpenChange }: QrScannerModalProps) {
           <DrawerTitle className="text-lg font-extrabold text-foreground">
             {t("qrScanner.title")}
           </DrawerTitle>
-          <DrawerDescription className="text-base font-medium text-muted-foreground">
+          <DrawerDescription className="sr-only">
             {t("qrScanner.desc")}
           </DrawerDescription>
         </DrawerHeader>
@@ -161,7 +161,7 @@ export function QrScannerModal({ open, onOpenChange }: QrScannerModalProps) {
           )}
         </div>
 
-        <DrawerFooter className="flex flex-col gap-2 p-4 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] bg-background">
+        <DrawerFooter className="flex flex-col gap-2 p-4 pt-2">
           <Button
             variant="default"
             size="lg"

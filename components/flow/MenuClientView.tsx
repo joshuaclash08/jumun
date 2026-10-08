@@ -20,7 +20,9 @@ import { useCartStore } from "@/store/useCartStore";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
 import { formatKRW } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { Separator } from "@/components/ui/separator";
 import { useTranslation } from "@/lib/i18n";
+import { MenuService } from "@/lib/services";
 
 // docs/animation-guide.md §3A's wizard-transition recipe -- menu <-> receipt
 // is the one true "screen change" in this flow (everything else is a sheet
@@ -37,19 +39,31 @@ interface MenuClientViewProps {
   storeInfo?: StoreInfo;
 }
 
-export function MenuClientView({ categories, products, storeInfo }: MenuClientViewProps) {
-  const { t } = useTranslation("menu");
-  const { t: tCommon } = useTranslation("common");
+export function MenuClientView({
+  categories,
+  products,
+  storeInfo,
+}: MenuClientViewProps) {
+  const { t, language } = useTranslation("menu");
 
   const allCategories = React.useMemo<MenuCategory[]>(() => {
-    return [{ id: "popular", labelKo: t("popularCategory") }, ...categories];
+    return [
+      {
+        id: "popular",
+        title: t("popularCategory"),
+        labelKo: t("popularCategory"),
+      },
+      ...categories,
+    ];
   }, [categories, t]);
 
   const [activeCategoryId, setActiveCategoryId] = React.useState<string>(
-    allCategories[0]?.id || "popular"
+    allCategories[0]?.id || "popular",
   );
-  
-  const [selectedProduct, setSelectedProduct] = React.useState<Product | null>(null);
+
+  const [selectedProduct, setSelectedProduct] = React.useState<Product | null>(
+    null,
+  );
   const [isProductSheetOpen, setIsProductSheetOpen] = React.useState(false);
   const [isCartDrawerOpen, setIsCartDrawerOpen] = React.useState(false);
   const [isCheckoutSheetOpen, setIsCheckoutSheetOpen] = React.useState(false);
@@ -77,11 +91,64 @@ export function MenuClientView({ categories, products, storeInfo }: MenuClientVi
     }
   }, [storeInfo, setStoreInfo]);
 
-  const scrollEndTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const scrollEndTimeoutRef = React.useRef<ReturnType<
+    typeof setTimeout
+  > | null>(null);
+
+  // Cached category section vertical offsets to eliminate getBoundingClientRect layout thrashing
+  const sectionOffsetsRef = React.useRef<{ id: string; top: number }[]>([]);
+  const headerHeightRef = React.useRef<number>(60);
+
+  const updateSectionOffsets = React.useCallback(() => {
+    const headerEl = document.getElementById("menu-category-header");
+    if (headerEl) {
+      headerHeightRef.current = headerEl.offsetHeight;
+    }
+    const currentScroll = window.scrollY;
+    const offsets: { id: string; top: number }[] = [];
+    for (const cat of allCategories) {
+      const el = document.getElementById(`category-${cat.id}`);
+      if (el) {
+        const rect = el.getBoundingClientRect();
+        offsets.push({
+          id: cat.id,
+          top: rect.top + currentScroll,
+        });
+      }
+    }
+    if (offsets.length > 0) {
+      sectionOffsetsRef.current = offsets;
+    }
+  }, [allCategories]);
+
+  // Recalculate section offsets on mount, layout toggle, or resize
+  React.useEffect(() => {
+    updateSectionOffsets();
+    const handleResize = () => {
+      updateSectionOffsets();
+    };
+    window.addEventListener("resize", handleResize, { passive: true });
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [updateSectionOffsets, menuLayout]);
+
+  // Re-verify section offsets when scrolling rests (e.g. late image load or lazy render)
+  React.useEffect(() => {
+    const onScrollRest = () => {
+      if (!isProgrammaticScroll.current) {
+        updateSectionOffsets();
+      }
+    };
+    window.addEventListener("scrollend", onScrollRest, { passive: true });
+    return () => {
+      window.removeEventListener("scrollend", onScrollRest);
+    };
+  }, [updateSectionOffsets]);
 
   // Deterministic Reading-Line Scrollspy + Staff-call expand/collapse
-  // Runs in a single requestAnimationFrame loop without conflicting IntersectionObserver
-  // callbacks. Guarantees monotonic category transitions (zero pill bouncing/jittering).
+  // Runs with cached offsets: zero DOM queries and zero getBoundingClientRect calls during scroll.
+  // Guarantees monotonic category transitions (zero pill bouncing/jittering).
   React.useEffect(() => {
     let ticking = false;
 
@@ -109,28 +176,33 @@ export function MenuClientView({ categories, products, storeInfo }: MenuClientVi
             if (isNearBottom) {
               const lastCategory = allCategories[allCategories.length - 1];
               if (lastCategory) {
-                setActiveCategoryId((prev) => (prev === lastCategory.id ? prev : lastCategory.id));
+                setActiveCategoryId((prev) =>
+                  prev === lastCategory.id ? prev : lastCategory.id,
+                );
               }
             } else {
-              const headerEl = document.getElementById("menu-category-header");
-              const headerHeight = headerEl?.offsetHeight ?? 60;
+              const headerHeight = headerHeightRef.current || 60;
               const readingLine = headerHeight + 24;
+              const readingY = currentScrollY + readingLine;
 
+              const offsets = sectionOffsetsRef.current;
               let currentActiveId = allCategories[0]?.id || "popular";
 
-              for (let i = 0; i < allCategories.length; i++) {
-                const cat = allCategories[i];
-                const el = document.getElementById(`category-${cat.id}`);
-                if (!el) continue;
-                const rect = el.getBoundingClientRect();
-                if (rect.top <= readingLine) {
-                  currentActiveId = cat.id;
-                } else {
-                  break;
+              if (offsets.length > 0) {
+                for (let i = 0; i < offsets.length; i++) {
+                  if (offsets[i].top <= readingY) {
+                    currentActiveId = offsets[i].id;
+                  } else {
+                    break;
+                  }
                 }
+              } else {
+                updateSectionOffsets();
               }
 
-              setActiveCategoryId((prev) => (prev === currentActiveId ? prev : currentActiveId));
+              setActiveCategoryId((prev) =>
+                prev === currentActiveId ? prev : currentActiveId,
+              );
             }
           }
 
@@ -147,7 +219,7 @@ export function MenuClientView({ categories, products, storeInfo }: MenuClientVi
         clearTimeout(scrollEndTimeoutRef.current);
       }
     };
-  }, [allCategories]);
+  }, [allCategories, updateSectionOffsets]);
 
   const handleCategorySelect = (id: string) => {
     setActiveCategoryId(id);
@@ -157,7 +229,12 @@ export function MenuClientView({ categories, products, storeInfo }: MenuClientVi
         id === "popular"
           ? products.slice(0, 4).length
           : products.filter((p) => p.category === id).length;
-      speak(t("categoryVoice", { category: cat.labelKo, count }));
+      speak(
+        t("categoryVoice", {
+          category: MenuService.getLocalizedTitle(cat, language),
+          count,
+        }),
+      );
     }
 
     isProgrammaticScroll.current = true;
@@ -172,12 +249,23 @@ export function MenuClientView({ categories, products, storeInfo }: MenuClientVi
         clearTimeout(scrollEndTimeoutRef.current);
         scrollEndTimeoutRef.current = null;
       }
+      updateSectionOffsets();
     };
 
-    window.addEventListener("scrollend", clearProgrammaticScroll, { once: true });
-    document.addEventListener("scrollend", clearProgrammaticScroll, { once: true });
-    window.addEventListener("wheel", clearProgrammaticScroll, { once: true, passive: true });
-    window.addEventListener("touchmove", clearProgrammaticScroll, { once: true, passive: true });
+    window.addEventListener("scrollend", clearProgrammaticScroll, {
+      once: true,
+    });
+    document.addEventListener("scrollend", clearProgrammaticScroll, {
+      once: true,
+    });
+    window.addEventListener("wheel", clearProgrammaticScroll, {
+      once: true,
+      passive: true,
+    });
+    window.addEventListener("touchmove", clearProgrammaticScroll, {
+      once: true,
+      passive: true,
+    });
 
     if (scrollEndTimeoutRef.current) clearTimeout(scrollEndTimeoutRef.current);
     scrollEndTimeoutRef.current = setTimeout(clearProgrammaticScroll, 1500);
@@ -193,7 +281,8 @@ export function MenuClientView({ categories, products, storeInfo }: MenuClientVi
     }
     const element = document.getElementById(`category-${id}`);
     if (element) {
-      const y = element.getBoundingClientRect().top + window.scrollY - chromeHeight - 8;
+      const y =
+        element.getBoundingClientRect().top + window.scrollY - chromeHeight - 8;
       window.scrollTo({
         top: Math.max(0, y),
         behavior: reduceMotion ? "instant" : "smooth",
@@ -204,16 +293,21 @@ export function MenuClientView({ categories, products, storeInfo }: MenuClientVi
   const lastFocusedProductCardRef = React.useRef<HTMLElement | null>(null);
   const cartPillButtonRef = React.useRef<HTMLButtonElement | null>(null);
 
-  const handleProductClick = React.useCallback((product: Product) => {
-    lastFocusedProductCardRef.current = (document.activeElement as HTMLElement) || null;
-    setTimeout(() => {
-      speak(`${product.nameKo}, ${formatKRW(product.price)}`);
-    }, 0);
-    React.startTransition(() => {
-      setSelectedProduct(product);
-      setIsProductSheetOpen(true);
-    });
-  }, [speak]);
+  const handleProductClick = React.useCallback(
+    (product: Product) => {
+      lastFocusedProductCardRef.current =
+        (document.activeElement as HTMLElement) || null;
+      const title = MenuService.getLocalizedTitle(product, language);
+      setTimeout(() => {
+        speak(`${title}, ${formatKRW(product.price)}`);
+      }, 0);
+      React.startTransition(() => {
+        setSelectedProduct(product);
+        setIsProductSheetOpen(true);
+      });
+    },
+    [speak, language],
+  );
 
   const handleProductSheetOpenChange = (open: boolean) => {
     React.startTransition(() => {
@@ -250,78 +344,95 @@ export function MenuClientView({ categories, products, storeInfo }: MenuClientVi
     }
   };
 
-    // Support both 2-column Grid Cards and 1-column accessible Row List
-    const isListLayout = menuLayout === "list";
-    const categoryGridClass = isListLayout
-      ? "grid-cols-1 gap-y-3 sm:gap-y-3.5"
-      : "grid-cols-2 sm:grid-cols-3 gap-x-3.5 gap-y-6 sm:gap-x-4 sm:gap-y-8";
-    const cardLayout = isListLayout ? "row" : "grid";
-    const isMotionDisabled = reduceMotion || process.env.NODE_ENV === "test";
+  // Support both 2-column Grid Cards and 1-column accessible Row List
+  const isListLayout = menuLayout === "list";
+  const categoryGridClass = isListLayout
+    ? "grid-cols-1 gap-y-3 sm:gap-y-3.5"
+    : "grid-cols-2 sm:grid-cols-3 gap-x-3.5 gap-y-6 sm:gap-x-4 sm:gap-y-8";
+  const cardLayout = isListLayout ? "row" : "grid";
+  const isMotionDisabled = reduceMotion || process.env.NODE_ENV === "test";
 
-    return (
-      <OneHandedContainer>
-        <AnimatePresence mode="wait" initial={false}>
-          {orderStatus === "confirmed" ? (
-            <motion.div
-              key="confirmation"
-              initial={isMotionDisabled ? false : screenVariants.initial}
-              animate={screenVariants.animate}
-              exit={isMotionDisabled ? undefined : screenVariants.exit}
-              transition={{ duration: isMotionDisabled ? 0 : 0.2, ease: "easeOut" }}
-            >
-              <ConfirmationStep onReset={resetOrder} />
-            </motion.div>
-          ) : isWizardMode ? (
-            <motion.div
-              key="wizard"
-              initial={isMotionDisabled ? false : screenVariants.initial}
-              animate={screenVariants.animate}
-              exit={isMotionDisabled ? undefined : screenVariants.exit}
-              transition={{ duration: isMotionDisabled ? 0 : 0.2, ease: "easeOut" }}
-              className="flex w-full flex-col relative"
-            >
-              <WizardOrderView
-                categories={categories}
+  return (
+    <OneHandedContainer>
+      <AnimatePresence mode="wait" initial={false}>
+        {orderStatus === "confirmed" ? (
+          <motion.div
+            key="confirmation"
+            initial={isMotionDisabled ? false : screenVariants.initial}
+            animate={screenVariants.animate}
+            exit={isMotionDisabled ? undefined : screenVariants.exit}
+            transition={{
+              duration: isMotionDisabled ? 0 : 0.2,
+              ease: "easeOut",
+            }}
+          >
+            <ConfirmationStep onReset={resetOrder} />
+          </motion.div>
+        ) : isWizardMode ? (
+          <motion.div
+            key="wizard"
+            initial={isMotionDisabled ? false : screenVariants.initial}
+            animate={screenVariants.animate}
+            exit={isMotionDisabled ? undefined : screenVariants.exit}
+            transition={{
+              duration: isMotionDisabled ? 0 : 0.2,
+              ease: "easeOut",
+            }}
+            className="flex w-full flex-col relative"
+          >
+            <WizardOrderView
+              categories={categories}
+              products={products}
+              storeInfo={storeInfo}
+              onExitWizard={() => setOrderMode("standard")}
+            />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="menu"
+            initial={false}
+            animate={screenVariants.animate}
+            exit={isMotionDisabled ? undefined : screenVariants.exit}
+            transition={{
+              duration: isMotionDisabled ? 0 : 0.2,
+              ease: "easeOut",
+            }}
+            className="flex w-full flex-col relative"
+          >
+            {/* Sticky Category Tabs with Pinned Settings Button */}
+            <MenuCategoryHeader
+              categories={allCategories}
+              activeCategoryId={activeCategoryId}
+              onCategorySelect={handleCategorySelect}
+            />
+
+            {/* Menu Content Container */}
+            <div className="flex flex-col gap-8 pt-3.5 pb-36 sm:pb-40">
+              {/* Featured / Popular Carousel Section */}
+              <FeaturedMenuSection
                 products={products}
-                storeInfo={storeInfo}
-                onExitWizard={() => setOrderMode("standard")}
-              />
-            </motion.div>
-          ) : (
-            <motion.div
-              key="menu"
-              initial={false}
-              animate={screenVariants.animate}
-              exit={isMotionDisabled ? undefined : screenVariants.exit}
-              transition={{ duration: isMotionDisabled ? 0 : 0.2, ease: "easeOut" }}
-              className="flex w-full flex-col relative"
-            >
-              {/* Sticky Category Tabs with Pinned Settings Button */}
-              <MenuCategoryHeader
-                categories={allCategories}
-                activeCategoryId={activeCategoryId}
-                onCategorySelect={handleCategorySelect}
+                onProductClick={handleProductClick}
               />
 
-              {/* Menu Content Container */}
-              <div className="flex flex-col gap-8 pt-3.5 pb-36 sm:pb-40">
-                {/* Featured / Popular Carousel Section */}
-                <FeaturedMenuSection
-                  products={products}
-                  onProductClick={handleProductClick}
-                />
+              {/* Hairline Divider separating Featured from Category List */}
+              <Separator variant="hairline" />
 
-                {/* Categorized Product Sections with Search Section at bottom */}
-                <div className="flex flex-col gap-12 sm:gap-14 px-4">
-                  {categories
-                    .map((category) => ({
-                      category,
-                      categoryProducts: products.filter((p) => p.category === category.id),
-                    }))
-                    .filter(({ categoryProducts }) => categoryProducts.length > 0)
-                    .map(({ category, categoryProducts }, visibleIndex) => (
+              {/* Categorized Product Sections with Search Section at bottom */}
+              <div className="flex flex-col gap-10 sm:gap-12 px-4">
+                {categories
+                  .map((category) => ({
+                    category,
+                    categoryProducts: products.filter(
+                      (p) => p.category === category.id,
+                    ),
+                  }))
+                  .filter(({ categoryProducts }) => categoryProducts.length > 0)
+                  .map(({ category, categoryProducts }, visibleIndex) => (
+                    <React.Fragment key={category.id}>
+                      {visibleIndex > 0 && (
+                        <Separator variant="hairline" className="-mx-4 w-[calc(100%+2rem)]" />
+                      )}
                       <section
-                        key={category.id}
                         id={`category-${category.id}`}
                         role="tabpanel"
                         aria-labelledby={`tab-${category.id}`}
@@ -331,13 +442,16 @@ export function MenuClientView({ categories, products, storeInfo }: MenuClientVi
                           <h2
                             id={`heading-${category.id}`}
                             className="text-2xl sm:text-[26px] font-black text-foreground tracking-tight"
-                            aria-label={t("categoryHeadingAria", { name: category.labelKo, count: categoryProducts.length })}
+                            aria-label={t("categoryHeadingAria", {
+                              name: MenuService.getLocalizedTitle(
+                                category,
+                                language,
+                              ),
+                              count: categoryProducts.length,
+                            })}
                           >
-                            {category.labelKo}
+                            {MenuService.getLocalizedTitle(category, language)}
                           </h2>
-                          <span className="text-base font-bold text-muted-foreground tabular-nums" aria-hidden="true">
-                            {tCommon("itemCount", { count: categoryProducts.length })}
-                          </span>
                         </div>
 
                         <div className={`grid ${categoryGridClass}`}>
@@ -352,80 +466,86 @@ export function MenuClientView({ categories, products, storeInfo }: MenuClientVi
                           ))}
                         </div>
                       </section>
-                    ))}
+                    </React.Fragment>
+                  ))}
 
-                  {/* Bottom Search Section for quick menu lookup */}
-                  <MenuSearchSection
-                    products={products}
-                    categories={categories}
-                    onProductClick={handleProductClick}
-                  />
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Fixed Bottom Action Controls: Staff Call + Cart Summary Pill in unified dynamic bar */}
-        {orderStatus !== "confirmed" && !isWizardMode && (
-          <div
-            id="jumun-bottom-actions"
-            className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] inset-x-0 z-40 pointer-events-none px-4"
-          >
-            <div className="mx-auto max-w-[840px] flex items-center w-full">
-              <div
-                className={cn(
-                  "flex items-center gap-3 w-full transition-all duration-200 pointer-events-auto",
-                  oneHandedMode === "left" && "w-[82%] sm:w-[84%] mr-auto",
-                  oneHandedMode === "right" && "w-[82%] sm:w-[84%] ml-auto"
-                )}
-              >
-                {storeInfo && storeInfo.orderType === "dine-in" && (
-                  <StaffCallButton
-                    storeInfo={storeInfo}
-                    isExpanded={isStaffCallExpanded}
-                  />
-                )}
-                <CartSummaryPill
-                  buttonRef={cartPillButtonRef}
-                  onClick={() => {
-                    setTimeout(() => {
-                      const itemsCount = useCartStore.getState().items.length;
-                      speak(t("cart.voiceOpened", { count: itemsCount }));
-                    }, 0);
-                    React.startTransition(() => {
-                      setIsCartDrawerOpen(true);
-                    });
-                  }}
-                  showLabel={!storeInfo || storeInfo.orderType !== "dine-in" || !isStaffCallExpanded}
+                {/* Bottom Search Section for quick menu lookup */}
+                <MenuSearchSection
+                  products={products}
+                  categories={categories}
+                  onProductClick={handleProductClick}
                 />
               </div>
             </div>
-          </div>
+          </motion.div>
         )}
+      </AnimatePresence>
 
-        <ProductDetailSheet
-          product={selectedProduct}
-          open={isProductSheetOpen}
-          onOpenChange={handleProductSheetOpenChange}
-        />
+      {/* Fixed Bottom Action Controls: Staff Call + Cart Summary Pill in unified dynamic bar */}
+      {orderStatus !== "confirmed" && !isWizardMode && (
+        <div
+          id="jumun-bottom-actions"
+          className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] inset-x-0 z-40 pointer-events-none px-4"
+        >
+          <div className="mx-auto max-w-[840px] flex items-center w-full">
+            <div
+              className={cn(
+                "flex items-center gap-3 w-full transition-all duration-200 pointer-events-auto",
+                oneHandedMode === "left" && "w-[82%] sm:w-[84%] mr-auto",
+                oneHandedMode === "right" && "w-[82%] sm:w-[84%] ml-auto",
+              )}
+            >
+              {storeInfo && storeInfo.orderType === "dine-in" && (
+                <StaffCallButton
+                  storeInfo={storeInfo}
+                  isExpanded={isStaffCallExpanded}
+                />
+              )}
+              <CartSummaryPill
+                buttonRef={cartPillButtonRef}
+                onClick={() => {
+                  setTimeout(() => {
+                    const itemsCount = useCartStore.getState().items.length;
+                    speak(t("cart.voiceOpened", { count: itemsCount }));
+                  }, 0);
+                  React.startTransition(() => {
+                    setIsCartDrawerOpen(true);
+                  });
+                }}
+                showLabel={
+                  !storeInfo ||
+                  storeInfo.orderType !== "dine-in" ||
+                  !isStaffCallExpanded
+                }
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
-        <CartDrawer
-          open={isCartDrawerOpen}
-          onOpenChange={handleCartDrawerOpenChange}
-          onCheckout={() => {
-            setIsCartDrawerOpen(false);
-            setIsCheckoutSheetOpen(true);
-          }}
-        />
+      <ProductDetailSheet
+        product={selectedProduct}
+        open={isProductSheetOpen}
+        onOpenChange={handleProductSheetOpenChange}
+      />
 
-        <CheckoutSheet
-          open={isCheckoutSheetOpen}
-          onOpenChange={handleCheckoutSheetOpenChange}
-          onConfirm={() => {
-            window.scrollTo({ top: 0, behavior: "instant" });
-          }}
-        />
-      </OneHandedContainer>
-    );
+      <CartDrawer
+        open={isCartDrawerOpen}
+        onOpenChange={handleCartDrawerOpenChange}
+        onCheckout={() => {
+          (document.activeElement as HTMLElement)?.blur();
+          setIsCartDrawerOpen(false);
+          setIsCheckoutSheetOpen(true);
+        }}
+      />
+
+      <CheckoutSheet
+        open={isCheckoutSheetOpen}
+        onOpenChange={handleCheckoutSheetOpenChange}
+        onConfirm={() => {
+          window.scrollTo({ top: 0, behavior: "instant" });
+        }}
+      />
+    </OneHandedContainer>
+  );
 }

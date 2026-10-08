@@ -4,7 +4,9 @@
       "storeId": "jumun-cafe-01",
       "storeName": "주문 카페 1호점",
       "branchKo": "강남 본점",
+      "branchEn": "Gangnam Main",
       "addressKo": "서울시 강남구 테헤란로 123",
+      "addressEn": "123 Teheran-ro, Gangnam-gu, Seoul",
       "tableCount": 12,
       "distanceKo": "15m"
     },
@@ -12,7 +14,9 @@
       "storeId": "jumun-cafe-02",
       "storeName": "주문 카페 2호점",
       "branchKo": "신촌점",
+      "branchEn": "Sinchon Branch",
       "addressKo": "서울시 서대문구 연세로 45",
+      "addressEn": "45 Yonsei-ro, Seodaemun-gu, Seoul",
       "tableCount": 10,
       "distanceKo": "120m"
     },
@@ -20,7 +24,9 @@
       "storeId": "jumun-bakery-01",
       "storeName": "주문 베이커리",
       "branchKo": "성수 플래그십",
+      "branchEn": "Seongsu Flagship",
       "addressKo": "서울시 성동구 성수이로 88",
+      "addressEn": "88 Seongsui-ro, Seongdong-gu, Seoul",
       "tableCount": 8,
       "distanceKo": "450m"
     }

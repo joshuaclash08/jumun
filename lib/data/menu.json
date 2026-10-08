@@ -1,61 +1,171 @@
 {
   "categories": [
-    { "id": "coffee", "labelKo": "커피" },
-    { "id": "decaf", "labelKo": "디카페인" },
-    { "id": "tea", "labelKo": "TEA" },
-    { "id": "beverage", "labelKo": "에이드/음료" },
-    { "id": "dessert", "labelKo": "디저트" },
-    { "id": "bakery", "labelKo": "베이커리" },
-    { "id": "food", "labelKo": "푸드" },
-    { "id": "md", "labelKo": "원두/MD" }
+    {
+      "id": "coffee",
+      "title": "커피",
+      "labelKo": "커피",
+      "titleI18n": { "languages": { "en-US": "Coffee" } }
+    },
+    {
+      "id": "decaf",
+      "title": "디카페인",
+      "labelKo": "디카페인",
+      "titleI18n": { "languages": { "en-US": "Decaf" } }
+    },
+    {
+      "id": "tea",
+      "title": "TEA",
+      "labelKo": "TEA",
+      "titleI18n": { "languages": { "en-US": "Tea" } }
+    },
+    {
+      "id": "beverage",
+      "title": "에이드/음료",
+      "labelKo": "에이드/음료",
+      "titleI18n": { "languages": { "en-US": "Beverage" } }
+    },
+    {
+      "id": "dessert",
+      "title": "디저트",
+      "labelKo": "디저트",
+      "titleI18n": { "languages": { "en-US": "Dessert" } }
+    },
+    {
+      "id": "bakery",
+      "title": "베이커리",
+      "labelKo": "베이커리",
+      "titleI18n": { "languages": { "en-US": "Bakery" } }
+    },
+    {
+      "id": "food",
+      "title": "푸드",
+      "labelKo": "푸드",
+      "titleI18n": { "languages": { "en-US": "Food" } }
+    },
+    {
+      "id": "md",
+      "title": "원두/MD",
+      "labelKo": "원두/MD",
+      "titleI18n": { "languages": { "en-US": "Beans & MD" } }
+    }
   ],
   "optionGroups": {
     "temperature": {
       "id": "temperature",
+      "title": "온도 선택",
       "labelKo": "온도 선택",
+      "titleI18n": { "languages": { "en-US": "Temperature" } },
       "required": true,
       "selectionType": "single",
       "options": [
-        { "id": "hot", "labelKo": "따뜻하게", "priceDelta": 0 },
-        { "id": "ice", "labelKo": "차갑게", "priceDelta": 0 }
+        {
+          "id": "hot",
+          "title": "따뜻하게",
+          "labelKo": "따뜻하게",
+          "titleI18n": { "languages": { "en-US": "Hot" } },
+          "priceDelta": 0
+        },
+        {
+          "id": "ice",
+          "title": "차갑게",
+          "labelKo": "차갑게",
+          "titleI18n": { "languages": { "en-US": "Iced" } },
+          "priceDelta": 0
+        }
       ]
     },
     "size": {
       "id": "size",
+      "title": "사이즈 선택",
       "labelKo": "사이즈 선택",
+      "titleI18n": { "languages": { "en-US": "Size" } },
       "required": true,
       "selectionType": "single",
       "options": [
-        { "id": "regular", "labelKo": "보통 사이즈", "priceDelta": 0 },
-        { "id": "large", "labelKo": "큰 사이즈", "priceDelta": 500 }
+        {
+          "id": "regular",
+          "title": "보통 사이즈",
+          "labelKo": "보통 사이즈",
+          "titleI18n": { "languages": { "en-US": "Regular" } },
+          "priceDelta": 0
+        },
+        {
+          "id": "large",
+          "title": "큰 사이즈",
+          "labelKo": "큰 사이즈",
+          "titleI18n": { "languages": { "en-US": "Large" } },
+          "priceDelta": 500
+        }
       ]
     },
     "milk": {
       "id": "milk",
+      "title": "우유 변경",
       "labelKo": "우유 변경",
+      "titleI18n": { "languages": { "en-US": "Milk Options" } },
       "required": false,
       "selectionType": "single",
       "options": [
-        { "id": "regular-milk", "labelKo": "일반 우유", "priceDelta": 0 },
-        { "id": "oat-milk", "labelKo": "귀리 우유로 변경", "priceDelta": 700 },
-        { "id": "soy-milk", "labelKo": "두유로 변경", "priceDelta": 700 }
+        {
+          "id": "regular-milk",
+          "title": "일반 우유",
+          "labelKo": "일반 우유",
+          "titleI18n": { "languages": { "en-US": "Whole Milk" } },
+          "priceDelta": 0
+        },
+        {
+          "id": "oat-milk",
+          "title": "귀리 우유로 변경",
+          "labelKo": "귀리 우유로 변경",
+          "titleI18n": { "languages": { "en-US": "Oat Milk" } },
+          "priceDelta": 700
+        },
+        {
+          "id": "soy-milk",
+          "title": "두유로 변경",
+          "labelKo": "두유로 변경",
+          "titleI18n": { "languages": { "en-US": "Soy Milk" } },
+          "priceDelta": 700
+        }
       ]
     },
     "syrup": {
       "id": "syrup",
+      "title": "시럽/토핑 추가",
       "labelKo": "시럽/토핑 추가",
+      "titleI18n": { "languages": { "en-US": "Syrup & Toppings" } },
       "required": false,
       "selectionType": "multiple",
       "maxSelections": 2,
       "options": [
-        { "id": "vanilla-syrup", "labelKo": "바닐라 시럽", "priceDelta": 500 },
-        { "id": "caramel-syrup", "labelKo": "카라멜 시럽", "priceDelta": 500 },
         {
-          "id": "hazelnut-syrup",
-          "labelKo": "헤이즐넛 시럽",
+          "id": "vanilla-syrup",
+          "title": "바닐라 시럽",
+          "labelKo": "바닐라 시럽",
+          "titleI18n": { "languages": { "en-US": "Vanilla Syrup" } },
           "priceDelta": 500
         },
-        { "id": "shot-add", "labelKo": "샷 추가", "priceDelta": 500 }
+        {
+          "id": "caramel-syrup",
+          "title": "카라멜 시럽",
+          "labelKo": "카라멜 시럽",
+          "titleI18n": { "languages": { "en-US": "Caramel Syrup" } },
+          "priceDelta": 500
+        },
+        {
+          "id": "hazelnut-syrup",
+          "title": "헤이즐넛 시럽",
+          "labelKo": "헤이즐넛 시럽",
+          "titleI18n": { "languages": { "en-US": "Hazelnut Syrup" } },
+          "priceDelta": 500
+        },
+        {
+          "id": "shot-add",
+          "title": "샷 추가",
+          "labelKo": "샷 추가",
+          "titleI18n": { "languages": { "en-US": "Extra Espresso Shot" } },
+          "priceDelta": 500
+        }
       ]
     }
   },
@@ -63,10 +173,26 @@
     {
       "id": "americano",
       "category": "coffee",
+      "title": "아메리카노",
       "nameKo": "아메리카노",
+      "titleI18n": { "languages": { "en-US": "Americano" } },
+      "description": "깔끔하고 진한 에스프레소 두 샷에 물을 더했어요.",
       "descriptionKo": "깔끔하고 진한 에스프레소 두 샷에 물을 더했어요.",
+      "descriptionI18n": {
+        "languages": {
+          "en-US": "Clean, bold double-shot espresso diluted with hot or cold water."
+        }
+      },
+      "voiceDescription": "아메리카노, 4,500원. 깔끔하고 진한 에스프레소 두 샷에 물을 더했어요.",
       "voiceDescriptionKo": "아메리카노, 4,500원. 깔끔하고 진한 에스프레소 두 샷에 물을 더했어요.",
+      "voiceDescriptionI18n": {
+        "languages": {
+          "en-US": "Americano, 4,500 won. Clean and bold double-shot espresso."
+        }
+      },
       "price": 4500,
+      "originalPrice": 5000,
+      "isPopular": true,
       "imageUrl": "/images/menu/americano-v2.jpg",
       "themeBg": "#F0EFEA",
       "optionGroupIds": ["temperature", "size", "syrup"],
@@ -76,10 +202,25 @@
     {
       "id": "cafe-latte",
       "category": "coffee",
+      "title": "카페라떼",
       "nameKo": "카페라떼",
+      "titleI18n": { "languages": { "en-US": "Caffè Latte" } },
+      "description": "에스프레소에 부드러운 우유를 더한 기본 라떼예요.",
       "descriptionKo": "에스프레소에 부드러운 우유를 더한 기본 라떼예요.",
+      "descriptionI18n": {
+        "languages": {
+          "en-US": "Rich espresso combined with steamed velvety milk."
+        }
+      },
+      "voiceDescription": "카페라떼, 5,000원. 에스프레소에 부드러운 우유를 더한 기본 라떼예요.",
       "voiceDescriptionKo": "카페라떼, 5,000원. 에스프레소에 부드러운 우유를 더한 기본 라떼예요.",
+      "voiceDescriptionI18n": {
+        "languages": {
+          "en-US": "Caffè Latte, 5,000 won. Rich espresso with velvety steamed milk."
+        }
+      },
       "price": 5000,
+      "isNew": true,
       "imageUrl": "/images/menu/cafe-latte-v2.jpg",
       "themeBg": "#F5EBE1",
       "optionGroupIds": ["temperature", "size", "milk", "syrup"],
@@ -88,9 +229,23 @@
     {
       "id": "vanilla-latte",
       "category": "coffee",
+      "title": "바닐라 라떼",
       "nameKo": "바닐라 라떼",
+      "titleI18n": { "languages": { "en-US": "Vanilla Latte" } },
+      "description": "카페라떼에 바닐라 시럽을 더해 은은하게 달아요.",
       "descriptionKo": "카페라떼에 바닐라 시럽을 더해 은은하게 달아요.",
+      "descriptionI18n": {
+        "languages": {
+          "en-US": "Smooth caffè latte infused with fragrant sweet vanilla syrup."
+        }
+      },
+      "voiceDescription": "바닐라 라떼, 5,500원. 카페라떼에 바닐라 시럽을 더해 은은하게 달아요.",
       "voiceDescriptionKo": "바닐라 라떼, 5,500원. 카페라떼에 바닐라 시럽을 더해 은은하게 달아요.",
+      "voiceDescriptionI18n": {
+        "languages": {
+          "en-US": "Vanilla Latte, 5,500 won. Smooth latte with aromatic sweet vanilla."
+        }
+      },
       "price": 5500,
       "imageUrl": "/images/menu/vanilla-latte-v2.jpg",
       "themeBg": "#F8EFE0",
@@ -100,9 +255,23 @@
     {
       "id": "decaf-americano",
       "category": "decaf",
+      "title": "디카페인 아메리카노",
       "nameKo": "디카페인 아메리카노",
+      "titleI18n": { "languages": { "en-US": "Decaf Americano" } },
+      "description": "카페인 부담 없이 깔끔하게 즐기는 부드러운 아메리카노예요.",
       "descriptionKo": "카페인 부담 없이 깔끔하게 즐기는 부드러운 아메리카노예요.",
+      "descriptionI18n": {
+        "languages": {
+          "en-US": "Smooth decaffeinated espresso with full flavor and zero caffeine worry."
+        }
+      },
+      "voiceDescription": "디카페인 아메리카노, 4,800원. 카페인 부담 없이 즐기는 아메리카노예요.",
       "voiceDescriptionKo": "디카페인 아메리카노, 4,800원. 카페인 부담 없이 즐기는 아메리카노예요.",
+      "voiceDescriptionI18n": {
+        "languages": {
+          "en-US": "Decaf Americano, 4,800 won. Smooth decaf espresso with rich flavor."
+        }
+      },
       "price": 4800,
       "imageUrl": "/images/menu/decaf-americano-v2.jpg",
       "themeBg": "#EAEFEA",
@@ -112,9 +281,23 @@
     {
       "id": "decaf-latte",
       "category": "decaf",
+      "title": "디카페인 카페라떼",
       "nameKo": "디카페인 카페라떼",
+      "titleI18n": { "languages": { "en-US": "Decaf Caffè Latte" } },
+      "description": "속 편한 디카페인 에스프레소에 고소한 우유를 더했어요.",
       "descriptionKo": "속 편한 디카페인 에스프레소에 고소한 우유를 더했어요.",
+      "descriptionI18n": {
+        "languages": {
+          "en-US": "Gentle decaf espresso blended with rich and creamy milk."
+        }
+      },
+      "voiceDescription": "디카페인 카페라떼, 5,300원. 속 편한 디카페인 카페라떼예요.",
       "voiceDescriptionKo": "디카페인 카페라떼, 5,300원. 속 편한 디카페인 카페라떼예요.",
+      "voiceDescriptionI18n": {
+        "languages": {
+          "en-US": "Decaf Caffè Latte, 5,300 won. Gentle decaf espresso with creamy milk."
+        }
+      },
       "price": 5300,
       "imageUrl": "/images/menu/decaf-latte-v2.jpg",
       "themeBg": "#F2EBE1",
@@ -124,9 +307,23 @@
     {
       "id": "earl-grey-tea",
       "category": "tea",
+      "title": "프리미엄 얼그레이 티",
       "nameKo": "프리미엄 얼그레이 티",
+      "titleI18n": { "languages": { "en-US": "Premium Earl Grey Tea" } },
+      "description": "천연 베르가못 향이 은은하게 퍼지는 클래식 홍차예요.",
       "descriptionKo": "천연 베르가못 향이 은은하게 퍼지는 클래식 홍차예요.",
+      "descriptionI18n": {
+        "languages": {
+          "en-US": "Classic black tea delicately scented with natural bergamot citrus."
+        }
+      },
+      "voiceDescription": "얼그레이 티, 4,500원. 천연 베르가못 향 홍차예요.",
       "voiceDescriptionKo": "얼그레이 티, 4,500원. 천연 베르가못 향 홍차예요.",
+      "voiceDescriptionI18n": {
+        "languages": {
+          "en-US": "Premium Earl Grey Tea, 4,500 won. Classic black tea with bergamot."
+        }
+      },
       "price": 4500,
       "imageUrl": "/images/menu/earl-grey-tea-v2.jpg",
       "themeBg": "#F6ECE4",
@@ -136,9 +333,23 @@
     {
       "id": "chamomile-tea",
       "category": "tea",
+      "title": "카모마일 허브티",
       "nameKo": "카모마일 허브티",
+      "titleI18n": { "languages": { "en-US": "Chamomile Herbal Tea" } },
+      "description": "은은한 사과 향이 감도는 편안한 무카페인 허브티예요.",
       "descriptionKo": "은은한 사과 향이 감도는 편안한 무카페인 허브티예요.",
+      "descriptionI18n": {
+        "languages": {
+          "en-US": "Soothing caffeine-free herbal tea with delicate floral apple notes."
+        }
+      },
+      "voiceDescription": "카모마일 티, 4,500원. 편안한 무카페인 허브티예요.",
       "voiceDescriptionKo": "카모마일 티, 4,500원. 편안한 무카페인 허브티예요.",
+      "voiceDescriptionI18n": {
+        "languages": {
+          "en-US": "Chamomile Herbal Tea, 4,500 won. Soothing caffeine-free herbal tea."
+        }
+      },
       "price": 4500,
       "imageUrl": "/images/menu/chamomile-tea-v2.jpg",
       "themeBg": "#FAF4DE",
@@ -148,9 +359,23 @@
     {
       "id": "grapefruit-ade",
       "category": "beverage",
+      "title": "자몽 에이드",
       "nameKo": "자몽 에이드",
+      "titleI18n": { "languages": { "en-US": "Grapefruit Sparkling Ade" } },
+      "description": "상큼한 자몽 과육이 그대로 씹히는 탄산 에이드예요.",
       "descriptionKo": "상큼한 자몽 과육이 그대로 씹히는 탄산 에이드예요.",
+      "descriptionI18n": {
+        "languages": {
+          "en-US": "Sparkling ade packed with real ruby grapefruit pulp and refreshing fizz."
+        }
+      },
+      "voiceDescription": "자몽 에이드, 5,500원. 상큼한 자몽 과육이 그대로 씹히는 탄산 에이드예요.",
       "voiceDescriptionKo": "자몽 에이드, 5,500원. 상큼한 자몽 과육이 그대로 씹히는 탄산 에이드예요.",
+      "voiceDescriptionI18n": {
+        "languages": {
+          "en-US": "Grapefruit Sparkling Ade, 5,500 won. Refreshing ade with real grapefruit pulp."
+        }
+      },
       "price": 5500,
       "imageUrl": "/images/menu/grapefruit-ade-v2.jpg",
       "themeBg": "#FDE8E4",
@@ -161,9 +386,23 @@
     {
       "id": "peach-iced-tea",
       "category": "beverage",
+      "title": "복숭아 아이스티",
       "nameKo": "복숭아 아이스티",
+      "titleI18n": { "languages": { "en-US": "Peach Iced Tea" } },
+      "description": "달콤한 복숭아 향을 더한 차가운 홍차예요.",
       "descriptionKo": "달콤한 복숭아 향을 더한 차가운 홍차예요.",
+      "descriptionI18n": {
+        "languages": {
+          "en-US": "Chilled black tea sweetened with fragrant peach nectar."
+        }
+      },
+      "voiceDescription": "복숭아 아이스티, 5,000원. 달콤한 복숭아 향을 더한 차가운 홍차예요.",
       "voiceDescriptionKo": "복숭아 아이스티, 5,000원. 달콤한 복숭아 향을 더한 차가운 홍차예요.",
+      "voiceDescriptionI18n": {
+        "languages": {
+          "en-US": "Peach Iced Tea, 5,000 won. Chilled black tea infused with sweet peach."
+        }
+      },
       "price": 5000,
       "imageUrl": "/images/menu/peach-iced-tea-v2.jpg",
       "themeBg": "#FCECE4",
@@ -173,9 +412,23 @@
     {
       "id": "lemonade",
       "category": "beverage",
+      "title": "수제 레모네이드",
       "nameKo": "수제 레모네이드",
+      "titleI18n": { "languages": { "en-US": "Fresh Lemonade" } },
+      "description": "생레몬 즙을 듬뿍 짜 넣어 상큼하고 톡 쏘는 청량 음료예요.",
       "descriptionKo": "생레몬 즙을 듬뿍 짜 넣어 상큼하고 톡 쏘는 청량 음료예요.",
+      "descriptionI18n": {
+        "languages": {
+          "en-US": "Invigorating sparkling beverage made with freshly hand-squeezed lemons."
+        }
+      },
+      "voiceDescription": "수제 레모네이드, 5,500원. 생레몬 즙이 들어간 상큼한 에이드예요.",
       "voiceDescriptionKo": "수제 레모네이드, 5,500원. 생레몬 즙이 들어간 상큼한 에이드예요.",
+      "voiceDescriptionI18n": {
+        "languages": {
+          "en-US": "Fresh Lemonade, 5,500 won. Crisp sparkling ade with freshly squeezed lemon."
+        }
+      },
       "price": 5500,
       "imageUrl": "/images/menu/lemonade-v2.jpg",
       "themeBg": "#FCF6D6",
@@ -185,9 +438,23 @@
     {
       "id": "milk",
       "category": "beverage",
+      "title": "우유",
       "nameKo": "우유",
+      "titleI18n": { "languages": { "en-US": "Fresh Milk" } },
+      "description": "카페인 없이 편하게 즐길 수 있는 흰 우유예요.",
       "descriptionKo": "카페인 없이 편하게 즐길 수 있는 흰 우유예요.",
+      "descriptionI18n": {
+        "languages": {
+          "en-US": "Pure and wholesome whole milk without caffeine."
+        }
+      },
+      "voiceDescription": "우유, 3,000원. 카페인 없이 편하게 즐길 수 있는 흰 우유예요.",
       "voiceDescriptionKo": "우유, 3,000원. 카페인 없이 편하게 즐길 수 있는 흰 우유예요.",
+      "voiceDescriptionI18n": {
+        "languages": {
+          "en-US": "Fresh Milk, 3,000 won. Pure and comforting whole milk."
+        }
+      },
       "price": 3000,
       "imageUrl": "/images/menu/milk-v2.jpg",
       "themeBg": "#EEF4F8",
@@ -197,9 +464,23 @@
     {
       "id": "cheesecake",
       "category": "dessert",
+      "title": "뉴욕 치즈케이크",
       "nameKo": "뉴욕 치즈케이크",
+      "titleI18n": { "languages": { "en-US": "New York Cheesecake" } },
+      "description": "진한 크림치즈로 만든 부드러운 뉴욕 치즈케이크 한 조각이에요.",
       "descriptionKo": "진한 크림치즈로 만든 부드러운 뉴욕 치즈케이크 한 조각이에요.",
+      "descriptionI18n": {
+        "languages": {
+          "en-US": "Rich and velvety slice of classic baked New York style cheesecake."
+        }
+      },
+      "voiceDescription": "치즈케이크, 6,500원. 진한 크림치즈로 만든 부드러운 뉴욕 치즈케이크 한 조각이에요.",
       "voiceDescriptionKo": "치즈케이크, 6,500원. 진한 크림치즈로 만든 부드러운 뉴욕 치즈케이크 한 조각이에요.",
+      "voiceDescriptionI18n": {
+        "languages": {
+          "en-US": "New York Cheesecake, 6,500 won. Rich and velvety classic cheesecake slice."
+        }
+      },
       "price": 6500,
       "imageUrl": "/images/menu/cheesecake.jpg",
       "themeBg": "#FAF0D6",
@@ -210,9 +491,23 @@
     {
       "id": "chocolate-brownie",
       "category": "dessert",
+      "title": "초코 브라우니",
       "nameKo": "초코 브라우니",
+      "titleI18n": { "languages": { "en-US": "Fudge Chocolate Brownie" } },
+      "description": "진한 초콜릿이 촉촉하게 씹히는 브라우니 한 조각이에요.",
       "descriptionKo": "진한 초콜릿이 촉촉하게 씹히는 브라우니 한 조각이에요.",
+      "descriptionI18n": {
+        "languages": {
+          "en-US": "Decadent slice of moist and chewy dark chocolate fudge brownie."
+        }
+      },
+      "voiceDescription": "초코 브라우니, 5,000원. 진한 초콜릿이 촉촉하게 씹히는 브라우니 한 조각이에요.",
       "voiceDescriptionKo": "초코 브라우니, 5,000원. 진한 초콜릿이 촉촉하게 씹히는 브라우니 한 조각이에요.",
+      "voiceDescriptionI18n": {
+        "languages": {
+          "en-US": "Fudge Chocolate Brownie, 5,000 won. Moist and chewy dark chocolate brownie."
+        }
+      },
       "price": 5000,
       "imageUrl": "/images/menu/chocolate-brownie.jpg",
       "themeBg": "#EFE6DE",
@@ -222,9 +517,23 @@
     {
       "id": "butter-croissant",
       "category": "bakery",
+      "title": "프랑스 버터 크루아상",
       "nameKo": "프랑스 버터 크루아상",
+      "titleI18n": { "languages": { "en-US": "French Butter Croissant" } },
+      "description": "겉은 바삭하고 속은 겹겹이 고소한 프랑스식 버터 크루아상이에요.",
       "descriptionKo": "겉은 바삭하고 속은 겹겹이 고소한 프랑스식 버터 크루아상이에요.",
+      "descriptionI18n": {
+        "languages": {
+          "en-US": "Golden, flaky layers of classic French pastry made with pure butter."
+        }
+      },
+      "voiceDescription": "버터 크루아상, 4,200원. 고소하고 바삭한 크루아상이에요.",
       "voiceDescriptionKo": "버터 크루아상, 4,200원. 고소하고 바삭한 크루아상이에요.",
+      "voiceDescriptionI18n": {
+        "languages": {
+          "en-US": "French Butter Croissant, 4,200 won. Flaky and golden-crisp butter croissant."
+        }
+      },
       "price": 4200,
       "imageUrl": "/images/menu/butter-croissant.jpg",
       "themeBg": "#F5EAD8",
@@ -234,9 +543,23 @@
     {
       "id": "salt-bread",
       "category": "bakery",
+      "title": "시오 버터 소금빵",
       "nameKo": "시오 버터 소금빵",
+      "titleI18n": { "languages": { "en-US": "Shio Butter Salt Bread" } },
+      "description": "버터 풍미 가득한 촉촉한 반죽 위에 굵은 소금을 뿌렸어요.",
       "descriptionKo": "버터 풍미 가득한 촉촉한 반죽 위에 굵은 소금을 뿌렸어요.",
+      "descriptionI18n": {
+        "languages": {
+          "en-US": "Buttery, soft bread roll crowned with a sprinkle of crunchy sea salt."
+        }
+      },
+      "voiceDescription": "소금빵, 3,800원. 버터 풍미 가득한 소금빵이에요.",
       "voiceDescriptionKo": "소금빵, 3,800원. 버터 풍미 가득한 소금빵이에요.",
+      "voiceDescriptionI18n": {
+        "languages": {
+          "en-US": "Shio Butter Salt Bread, 3,800 won. Soft buttery roll with sea salt."
+        }
+      },
       "price": 3800,
       "imageUrl": "/images/menu/salt-bread.jpg",
       "themeBg": "#F3ECE3",
@@ -246,9 +569,23 @@
     {
       "id": "croque-monsieur",
       "category": "food",
+      "title": "크로크무슈",
       "nameKo": "크로크무슈",
+      "titleI18n": { "languages": { "en-US": "Croque Monsieur" } },
+      "description": "햄과 치즈를 넣고 노릇하게 구운 뒤 치즈를 한 번 더 올렸어요.",
       "descriptionKo": "햄과 치즈를 넣고 노릇하게 구운 뒤 치즈를 한 번 더 올렸어요.",
+      "descriptionI18n": {
+        "languages": {
+          "en-US": "Toasted sandwich layered with savory ham, béchamel, and melted cheese."
+        }
+      },
+      "voiceDescription": "크로크무슈, 7,500원. 햄과 치즈를 넣고 노릇하게 구운 뒤 치즈를 한 번 더 올렸어요.",
       "voiceDescriptionKo": "크로크무슈, 7,500원. 햄과 치즈를 넣고 노릇하게 구운 뒤 치즈를 한 번 더 올렸어요.",
+      "voiceDescriptionI18n": {
+        "languages": {
+          "en-US": "Croque Monsieur, 7,500 won. Savory toasted ham and melted cheese sandwich."
+        }
+      },
       "price": 7500,
       "imageUrl": "/images/menu/croque-monsieur.jpg",
       "themeBg": "#F7EBD8",
@@ -259,22 +596,51 @@
     {
       "id": "egg-sandwich",
       "category": "food",
+      "title": "에그 샌드위치",
       "nameKo": "에그 샌드위치",
+      "titleI18n": { "languages": { "en-US": "Egg Salad Sandwich" } },
+      "description": "부드러운 계란 샐러드를 듬뿍 채운 담백한 샌드위치예요.",
       "descriptionKo": "부드러운 계란 샐러드를 듬뿍 채운 담백한 샌드위치예요.",
+      "descriptionI18n": {
+        "languages": {
+          "en-US": "Fluffy, creamy egg salad generously stuffed between soft bread slices."
+        }
+      },
+      "voiceDescription": "에그 샌드위치, 6,000원. 부드러운 계란 샐러드를 듬뿍 채운 담백한 샌드위치예요.",
       "voiceDescriptionKo": "에그 샌드위치, 6,000원. 부드러운 계란 샐러드를 듬뿍 채운 담백한 샌드위치예요.",
+      "voiceDescriptionI18n": {
+        "languages": {
+          "en-US": "Egg Salad Sandwich, 6,000 won. Creamy and comforting egg salad sandwich."
+        }
+      },
       "price": 6000,
       "imageUrl": "/images/menu/egg-sandwich.jpg",
       "themeBg": "#FAF3D7",
       "optionGroupIds": [],
       "available": true
     },
-
     {
       "id": "house-blend-beans",
       "category": "md",
+      "title": "시그니처 하우스 블렌드 원두 (200g)",
       "nameKo": "시그니처 하우스 블렌드 원두 (200g)",
+      "titleI18n": {
+        "languages": { "en-US": "Signature House Blend Coffee Beans (200g)" }
+      },
+      "description": "다크 초콜릿의 묵직한 바디감과 고소한 견과류 풍미가 조화로운 원두예요.",
       "descriptionKo": "다크 초콜릿의 묵직한 바디감과 고소한 견과류 풍미가 조화로운 원두예요.",
+      "descriptionI18n": {
+        "languages": {
+          "en-US": "Artisan whole beans balancing dark chocolate body with roasted nut aromas."
+        }
+      },
+      "voiceDescription": "시그니처 하우스 블렌드 원두 200g, 15,000원.",
       "voiceDescriptionKo": "시그니처 하우스 블렌드 원두 200g, 15,000원.",
+      "voiceDescriptionI18n": {
+        "languages": {
+          "en-US": "Signature House Blend Coffee Beans 200g, 15,000 won."
+        }
+      },
       "price": 15000,
       "imageUrl": "/images/menu/house-blend-beans.jpg",
       "themeBg": "#ECEAE6",

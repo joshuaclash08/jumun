@@ -52,7 +52,12 @@ export const useCartStore = create<CartStore>()((set, get) => ({
     // Non-intrusive feedback: announce for screen readers and vibrate haptically
     // without popping up an intrusive visual toast over the category header.
     // Visual reward is delivered directly via CartSummaryPill's bouncy badge pop.
-    announce(`${item.nameKo || "상품"} ${item.quantity}잔이 장바구니에 담겼습니다.`);
+    const isEn = typeof document !== "undefined" && document.documentElement.lang === "en";
+    const displayName = isEn ? (item.title || item.nameKo || "Item") : (item.nameKo || "상품");
+    const announceMsg = isEn
+      ? `${displayName} (x${item.quantity}) added to cart.`
+      : `${displayName} ${item.quantity}잔이 장바구니에 담겼습니다.`;
+    announce(announceMsg);
     if (hapticsEnabled()) {
       vibrate(HAPTIC_PATTERNS.success);
     }
@@ -65,9 +70,12 @@ export const useCartStore = create<CartStore>()((set, get) => ({
     if (removedIndex === -1) return;
     const removed = items[removedIndex];
     const nextItems = items.filter((item) => item.id !== itemId);
+    const removedNameKo = removed.nameKo || "상품";
+    const removedNameEn = removed.title || removedNameKo;
     toast({
       kind: "success",
-      messageKo: `${removed.nameKo || "상품"}가 장바구니에서 삭제되었습니다.`,
+      messageKo: `${removedNameKo}가 장바구니에서 삭제되었습니다.`,
+      messageEn: `${removedNameEn} has been removed from the cart.`,
       variant: "delete",
       hapticsEnabled: hapticsEnabled(),
       onUndo: () => {

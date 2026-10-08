@@ -6,6 +6,7 @@ export interface CartItemSelection {
 export interface CartItem {
   id: string;
   productId: string;
+  title?: string;
   nameKo?: string;
   optionsSummary?: string;
   quantity: number;

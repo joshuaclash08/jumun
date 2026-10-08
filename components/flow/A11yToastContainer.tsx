@@ -48,6 +48,7 @@ export function A11yToastContainer() {
     (state) => state.timeoutExtension
   );
   const fontScale = useAccessibilityStore((state) => state.fontScale);
+  const language = useAccessibilityStore((state) => state.language);
 
   const mounted = React.useSyncExternalStore(
     emptySubscribe,
@@ -184,7 +185,9 @@ export function A11yToastContainer() {
 
             {/* Toast Message Text */}
             <span className="text-base font-semibold text-white/95 leading-none">
-              {currentToast.messageKo}
+              {language === "en" && currentToast.messageEn
+                ? currentToast.messageEn
+                : currentToast.messageKo}
             </span>
 
             {/* Optional Inline Undo Action */}

@@ -10,20 +10,20 @@ import {
   Check,
   CreditCard,
   Smartphone,
-  Plus,
-  Minus,
   Loader2,
 } from "lucide-react";
 import type { MenuCategory, Product, StoreInfo, CartItem } from "@/lib/types";
-import { formatKRW } from "@/lib/format";
+import { formatKRW, getCartItemDisplayName, getCartTotals } from "@/lib/format";
 import { useCartStore } from "@/store/useCartStore";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
 import { usePaymentStore } from "@/store/usePaymentStore";
 import { useVoiceGuide } from "@/hooks/useVoiceGuide";
-import { OrderService } from "@/lib/services";
+import { OrderService, MenuService } from "@/lib/services";
 import { toast } from "@/lib/services/A11yFeedbackService";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { QuantityStepper } from "@/components/flow/QuantityStepper";
+import { OptionGroupList } from "@/components/flow/OptionGroupList";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/lib/i18n";
 
@@ -40,7 +40,7 @@ export function WizardOrderView({
   storeInfo,
   onExitWizard,
 }: WizardOrderViewProps) {
-  const { t } = useTranslation("menu");
+  const { t, language } = useTranslation("menu");
   const { t: tCommon } = useTranslation("common");
 
   // Store hooks
@@ -58,8 +58,11 @@ export function WizardOrderView({
   const isMotionDisabled = reducedMotion || process.env.NODE_ENV === "test";
 
   const defaultPaymentMethod = usePaymentStore((state) => state.defaultMethod);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] =
-    React.useState<string>(defaultPaymentMethod);
+  const [userPaymentMethod, setUserPaymentMethod] = React.useState<string | null>(null);
+  const selectedPaymentMethod = userPaymentMethod ?? defaultPaymentMethod;
+  const setSelectedPaymentMethod = (method: string) => setUserPaymentMethod(method);
+
+  const lastDirectCheckoutItemIdRef = React.useRef<string | null>(null);
 
   // Voice guide hook
   const { speak, cancel } = useVoiceGuide();
@@ -129,7 +132,7 @@ export function WizardOrderView({
     setStep(2);
     speak(
       t("wizard.selectCategoryVoice", {
-        category: cat?.labelKo || "",
+        category: cat ? MenuService.getLocalizedTitle(cat, language) : "",
       }),
     );
   };
@@ -139,7 +142,7 @@ export function WizardOrderView({
     setSelectedProduct(product);
     // Initialize default options (pick first option for required groups)
     const initialOptions: Record<string, string[]> = {};
-    product.optionGroups.forEach((group) => {
+    (product.optionGroups || []).forEach((group) => {
       if (group.required && group.options.length > 0) {
         initialOptions[group.id] = [group.options[0].id];
       }
@@ -149,28 +152,10 @@ export function WizardOrderView({
     setStep(3);
     speak(
       t("wizard.selectProductVoice", {
-        product: product.nameKo,
+        product: MenuService.getLocalizedTitle(product, language),
         price: formatKRW(product.price),
       }),
     );
-  };
-
-  // Step 3: Toggle Option
-  const handleToggleOption = (
-    groupId: string,
-    optionId: string,
-    selectionType: "single" | "multiple",
-  ) => {
-    setOptionSelections((prev) => {
-      const current = prev[groupId] || [];
-      if (selectionType === "single") {
-        return { ...prev, [groupId]: [optionId] };
-      }
-      if (current.includes(optionId)) {
-        return { ...prev, [groupId]: current.filter((id) => id !== optionId) };
-      }
-      return { ...prev, [groupId]: [...current, optionId] };
-    });
   };
 
   // Build CartItem from current selections
@@ -185,11 +170,11 @@ export function WizardOrderView({
     );
 
     const optionsSummaryParts: string[] = [];
-    selectedProduct.optionGroups.forEach((group) => {
+    (selectedProduct.optionGroups || []).forEach((group) => {
       const selectedIds = optionSelections[group.id] || [];
       group.options.forEach((opt) => {
         if (selectedIds.includes(opt.id)) {
-          optionsSummaryParts.push(opt.labelKo);
+          optionsSummaryParts.push(MenuService.getLocalizedTitle(opt, language));
         }
       });
     });
@@ -198,6 +183,7 @@ export function WizardOrderView({
       id: `${selectedProduct.id}-${Date.now()}`,
       productId: selectedProduct.id,
       nameKo: selectedProduct.nameKo,
+      title: MenuService.getLocalizedTitle(selectedProduct, language),
       optionsSummary: optionsSummaryParts.join(", "),
       quantity,
       selections,
@@ -207,11 +193,28 @@ export function WizardOrderView({
 
   // Step 3 Actions: Add & Continue vs Direct Checkout
   const handleAddMoreItems = () => {
+    if (!selectedProduct) return;
+    const validation = MenuService.validateRequiredOptions(selectedProduct, optionSelections, language);
+    if (!validation.isValid) {
+      const missingStr = validation.missingGroups.join(", ");
+      const msgKo = `${missingStr} 옵션을 선택해주세요.`;
+      const msgEn = `Please select required option: ${missingStr}`;
+      toast({
+        kind: "error",
+        messageKo: msgKo,
+        messageEn: msgEn,
+        variant: "generic",
+        hapticsEnabled,
+      });
+      speak(language === "en" ? msgEn : msgKo);
+      return;
+    }
     const item = buildCurrentCartItem();
     if (!item) return;
 
     addItem(item);
-    speak(t("wizard.addMoreVoice", { product: item.nameKo || "" }));
+    lastDirectCheckoutItemIdRef.current = null;
+    speak(t("wizard.addMoreVoice", { product: item.title || item.nameKo || "" }));
     // Reset to step 1
     setSelectedProduct(null);
     setOptionSelections({});
@@ -220,9 +223,26 @@ export function WizardOrderView({
   };
 
   const handleProceedToCheckout = () => {
+    if (!selectedProduct) return;
+    const validation = MenuService.validateRequiredOptions(selectedProduct, optionSelections, language);
+    if (!validation.isValid) {
+      const missingStr = validation.missingGroups.join(", ");
+      const msgKo = `${missingStr} 옵션을 선택해주세요.`;
+      const msgEn = `Please select required option: ${missingStr}`;
+      toast({
+        kind: "error",
+        messageKo: msgKo,
+        messageEn: msgEn,
+        variant: "generic",
+        hapticsEnabled,
+      });
+      speak(language === "en" ? msgEn : msgKo);
+      return;
+    }
     const item = buildCurrentCartItem();
     if (item) {
       addItem(item);
+      lastDirectCheckoutItemIdRef.current = item.id;
     }
     setStep(4);
     speak(t("wizard.checkoutVoice"));
@@ -256,6 +276,7 @@ export function WizardOrderView({
 
     try {
       const receipt = await OrderService.submitOrder(storeInfo, items);
+      lastDirectCheckoutItemIdRef.current = null;
       setLastReceipt(receipt);
       setOrderStatus("confirmed");
       clearCart();
@@ -275,10 +296,7 @@ export function WizardOrderView({
   };
 
   // Total amount in cart for step 4
-  const cartTotal = items.reduce(
-    (sum, it) => sum + it.unitPrice * it.quantity,
-    0,
-  );
+  const { totalPrice: cartTotal } = getCartTotals(items);
 
   // One-Handed Layout Container Classes
   const oneHandedAlignClass = React.useMemo(() => {
@@ -300,7 +318,7 @@ export function WizardOrderView({
             <button
               type="button"
               onClick={onExitWizard}
-              className="inline-flex items-center gap-1.5 text-sm font-bold text-muted-foreground hover:text-foreground transition-colors p-1 -ml-1 rounded-lg"
+              className="inline-flex items-center gap-1.5 text-base font-bold text-muted-foreground hover:text-foreground transition-colors p-1 -ml-1 rounded-lg"
               aria-label={t("wizard.exitAria")}
             >
               <ArrowLeft className="w-4 h-4" />
@@ -320,7 +338,7 @@ export function WizardOrderView({
                 }
               }}
               className={cn(
-                "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all border",
+                "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-base font-bold transition-all border",
                 voiceGuideEnabled
                   ? "bg-primary/10 text-primary border-primary/30"
                   : "bg-muted/50 text-muted-foreground border-border/60 hover:text-foreground",
@@ -353,13 +371,13 @@ export function WizardOrderView({
         >
           {/* Progress Indicator */}
           <div className="flex items-center justify-between pb-3 border-b border-border/50">
-            <span className="text-xs font-bold tracking-wider text-primary uppercase">
+            <span className="text-base font-bold tracking-wider text-primary uppercase">
               {t("wizard.stepIndicator", { title: stepTitles[step], step })}
             </span>
             {oneHandedMode !== "none" && (
               <Badge
                 variant="outline"
-                className="text-[11px] font-semibold text-muted-foreground"
+                className="text-base font-semibold text-muted-foreground"
               >
                 {oneHandedMode === "left"
                   ? t("wizard.leftHand")
@@ -383,9 +401,6 @@ export function WizardOrderView({
                   <h1 className="text-2xl font-black text-foreground tracking-tight">
                     {t("wizard.step1Title")}
                   </h1>
-                  <p className="text-sm font-medium text-muted-foreground mt-1">
-                    {t("wizard.step1Desc")}
-                  </p>
                 </div>
 
                 <div className="grid grid-cols-1 gap-3 pt-2">
@@ -398,9 +413,9 @@ export function WizardOrderView({
                     >
                       <div className="flex flex-col">
                         <span className="text-lg font-bold text-foreground group-hover:text-primary transition-colors">
-                          {cat.labelKo}
+                          {MenuService.getLocalizedTitle(cat, language)}
                         </span>
-                        <span className="text-xs font-medium text-muted-foreground">
+                        <span className="text-base font-medium text-muted-foreground">
                           {t("wizard.itemsPrepared", { count: products.filter((p) => p.category === cat.id).length })}
                         </span>
                       </div>
@@ -437,11 +452,8 @@ export function WizardOrderView({
                   </button>
                   <div>
                     <h1 className="text-2xl font-black text-foreground tracking-tight">
-                      {t("wizard.step2Title", { category: selectedCategory?.labelKo || "" })}
+                      {t("wizard.step2Title", { category: selectedCategory ? MenuService.getLocalizedTitle(selectedCategory, language) : "" })}
                     </h1>
-                    <p className="text-sm font-medium text-muted-foreground mt-0.5">
-                      {t("wizard.step2Desc")}
-                    </p>
                   </div>
                 </div>
 
@@ -464,13 +476,13 @@ export function WizardOrderView({
                       </div>
                       <div className="flex-1 min-w-0 flex flex-col justify-center">
                         <span className="text-base font-bold text-foreground group-hover:text-primary transition-colors truncate">
-                          {prod.nameKo}
+                          {MenuService.getLocalizedTitle(prod, language)}
                         </span>
-                        <span className="text-sm font-extrabold text-foreground mt-0.5">
+                        <span className="text-base font-extrabold text-foreground mt-0.5">
                           {formatKRW(prod.price)}
                         </span>
-                        <span className="text-xs font-medium text-muted-foreground mt-1 line-clamp-1">
-                          {prod.descriptionKo}
+                        <span className="text-base font-medium text-muted-foreground mt-1 line-clamp-1">
+                          {MenuService.getLocalizedDescription(prod, language)}
                         </span>
                       </div>
                     </button>
@@ -503,11 +515,8 @@ export function WizardOrderView({
                   </button>
                   <div>
                     <h1 className="text-2xl font-black text-foreground tracking-tight">
-                      {selectedProduct.nameKo}
+                      {MenuService.getLocalizedTitle(selectedProduct, language)}
                     </h1>
-                    <p className="text-sm font-medium text-muted-foreground mt-0.5">
-                      {t("wizard.step3Desc")}
-                    </p>
                   </div>
                 </div>
 
@@ -524,7 +533,7 @@ export function WizardOrderView({
                   </div>
                   <div className="flex-1 min-w-0">
                     <h2 className="text-base font-bold text-foreground">
-                      {selectedProduct.nameKo}
+                      {MenuService.getLocalizedTitle(selectedProduct, language)}
                     </h2>
                     <span className="text-base font-extrabold text-primary">
                       {formatKRW(currentUnitPrice * quantity)}
@@ -532,97 +541,80 @@ export function WizardOrderView({
                   </div>
                 </div>
 
-                {/* Option Groups */}
-                {selectedProduct.optionGroups.map((group) => {
-                  const selectedIds = optionSelections[group.id] || [];
-                  return (
-                    <div key={group.id} className="flex flex-col gap-2.5">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-bold text-foreground">
-                          {group.labelKo}
-                        </span>
-                        {group.required && (
-                          <Badge
-                            variant="secondary"
-                            className="text-[11px] font-semibold"
-                          >
-                            {t("productDetail.requiredBadge")}
-                          </Badge>
-                        )}
-                      </div>
+                {/* Unified Option Groups via OptionGroupList */}
+                {selectedProduct.optionGroups && selectedProduct.optionGroups.length > 0 && (
+                  <OptionGroupList
+                    groups={selectedProduct.optionGroups}
+                    selections={optionSelections}
+                    onOptionToggle={(group, optionId) => {
+                      const isSingle = group.selectionType === "single";
+                      const current = optionSelections[group.id] || [];
+                      const opt = group.options.find((o) => o.id === optionId);
+                      const optTitle = opt ? MenuService.getLocalizedTitle(opt, language) : "";
 
-                      <div className="grid grid-cols-2 gap-2">
-                        {group.options.map((opt) => {
-                          const isSelected = selectedIds.includes(opt.id);
-                          return (
-                            <button
-                              key={opt.id}
-                              type="button"
-                              onClick={() => {
-                                handleToggleOption(
-                                  group.id,
-                                  opt.id,
-                                  group.selectionType,
-                                );
-                                speak(t("wizard.optionSelectedVoice", { option: opt.labelKo }));
-                              }}
-                              className={cn(
-                                "flex flex-col items-center justify-center p-3.5 rounded-xl border-2 transition-all font-bold text-sm",
-                                isSelected
-                                  ? "border-primary bg-primary/10 text-primary shadow-xs"
-                                  : "border-border/70 bg-card text-foreground hover:bg-muted/40",
-                              )}
-                            >
-                              <span>{opt.labelKo}</span>
-                              {opt.priceDelta > 0 && (
-                                <span className="text-xs font-semibold opacity-80 mt-0.5">
-                                  +{formatKRW(opt.priceDelta)}
-                                </span>
-                              )}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  );
-                })}
+                      if (isSingle) {
+                        setOptionSelections((prev) => ({ ...prev, [group.id]: [optionId] }));
+                        if (opt) {
+                          speak(t("wizard.optionSelectedVoice", { option: optTitle }));
+                        }
+                        return;
+                      }
 
-                {/* Quantity Stepper */}
+                      if (current.includes(optionId)) {
+                        setOptionSelections((prev) => ({
+                          ...prev,
+                          [group.id]: current.filter((id) => id !== optionId),
+                        }));
+                        if (opt) {
+                          speak(t("productDetail.optionDeselectedVoice", { option: optTitle }));
+                        }
+                        return;
+                      }
+
+                      if (group.maxSelections && current.length >= group.maxSelections) {
+                        const msg = t("productDetail.maxSelectionsToast", { count: group.maxSelections });
+                        toast({
+                          kind: "error",
+                          messageKo: msg,
+                          variant: "generic",
+                          hapticsEnabled,
+                        });
+                        speak(msg);
+                        return;
+                      }
+
+                      setOptionSelections((prev) => ({
+                        ...prev,
+                        [group.id]: [...current, optionId],
+                      }));
+                      if (opt) {
+                        speak(t("wizard.optionSelectedVoice", { option: optTitle }));
+                      }
+                    }}
+                  />
+                )}
+
+                {/* Tactile Quantity Stepper */}
                 <div className="flex items-center justify-between p-4 rounded-2xl bg-card border border-border/70">
                   <span className="text-base font-bold text-foreground">
                     {t("wizard.orderQuantity")}
                   </span>
-                  <div className="flex items-center gap-3">
-                    <button
-                      type="button"
-                      disabled={quantity <= 1}
-                      onClick={() => {
-                        const next = Math.max(1, quantity - 1);
-                        setQuantity(next);
-                        speak(t("wizard.quantityVoice", { count: next }));
-                      }}
-                      className="w-11 h-11 rounded-full border border-border flex items-center justify-center text-foreground disabled:opacity-30 active:scale-95 transition-all"
-                      aria-label={t("wizard.decreaseQuantityAria")}
-                    >
-                      <Minus className="w-5 h-5" />
-                    </button>
-                    <span className="text-lg font-black tabular-nums w-8 text-center">
-                      {quantity}
-                    </span>
-                    <button
-                      type="button"
-                      disabled={quantity >= 10}
-                      onClick={() => {
-                        const next = Math.min(10, quantity + 1);
-                        setQuantity(next);
-                        speak(t("wizard.quantityVoice", { count: next }));
-                      }}
-                      className="w-11 h-11 rounded-full border border-border flex items-center justify-center text-foreground disabled:opacity-30 active:scale-95 transition-all"
-                      aria-label={t("wizard.increaseQuantityAria")}
-                    >
-                      <Plus className="w-5 h-5" />
-                    </button>
-                  </div>
+                  <QuantityStepper
+                    value={quantity}
+                    onIncrement={() => {
+                      const next = Math.min(10, quantity + 1);
+                      setQuantity(next);
+                      speak(t("wizard.quantityVoice", { count: next }));
+                    }}
+                    onDecrement={() => {
+                      const next = Math.max(1, quantity - 1);
+                      setQuantity(next);
+                      speak(t("wizard.quantityVoice", { count: next }));
+                    }}
+                    min={1}
+                    max={10}
+                    itemLabel={t("wizard.orderQuantity")}
+                  />
                 </div>
 
                 {/* Bottom Step 3 Action Buttons */}
@@ -659,10 +651,14 @@ export function WizardOrderView({
                   <button
                     type="button"
                     onClick={() => {
+                      if (lastDirectCheckoutItemIdRef.current) {
+                        useCartStore.getState().removeItem(lastDirectCheckoutItemIdRef.current);
+                        lastDirectCheckoutItemIdRef.current = null;
+                      }
                       setStep(3);
                       speak(t("wizard.backToOptionVoice"));
                     }}
-                    className="p-1 -ml-1 text-muted-foreground hover:text-foreground transition-colors"
+                    className="p-1 -ml-1 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                     aria-label={tCommon("back")}
                   >
                     <ArrowLeft className="w-5 h-5" />
@@ -671,18 +667,15 @@ export function WizardOrderView({
                     <h1 className="text-2xl font-black text-foreground tracking-tight">
                       {t("wizard.step4Title")}
                     </h1>
-                    <p className="text-sm font-medium text-muted-foreground mt-0.5">
-                      {t("wizard.step4Desc")}
-                    </p>
                   </div>
                 </div>
 
                 {/* Store and Table Details */}
-                <div className="p-4 rounded-2xl bg-muted/40 border border-border/60 flex items-center justify-between text-sm">
+                <div className="p-4 rounded-2xl bg-muted/40 border border-border/60 flex items-center justify-between text-base">
                   <span className="font-bold text-foreground">
                     {storeInfo?.storeName || t("wizard.defaultStore")}
                   </span>
-                  <Badge variant="outline" className="font-bold">
+                  <Badge variant="outline" className="font-bold text-base">
                     {storeInfo?.orderType === "dine-in"
                       ? tCommon("tableNumber", { table: storeInfo.table })
                       : t("wizard.takeoutOrder")}
@@ -691,7 +684,7 @@ export function WizardOrderView({
 
                 {/* Item List Summary */}
                 <div className="flex flex-col gap-2.5">
-                  <span className="text-sm font-bold text-foreground">
+                  <span className="text-base font-bold text-foreground">
                     {t("wizard.orderedMenuList")}
                   </span>
                   <div className="flex flex-col gap-2 rounded-2xl bg-card border border-border/70 p-4 divide-y divide-border/40">
@@ -702,14 +695,14 @@ export function WizardOrderView({
                       >
                         <div className="flex flex-col">
                           <span className="text-base font-bold text-foreground">
-                            {it.nameKo}
+                            {getCartItemDisplayName(it)}
                           </span>
                           {it.optionsSummary && (
-                            <span className="text-xs text-muted-foreground">
+                            <span className="text-base text-muted-foreground">
                               {it.optionsSummary}
                             </span>
                           )}
-                          <span className="text-xs font-semibold text-muted-foreground mt-0.5">
+                          <span className="text-base font-semibold text-muted-foreground mt-0.5">
                             {t("wizard.itemQuantity", { quantity: it.quantity })}
                           </span>
                         </div>
@@ -732,17 +725,21 @@ export function WizardOrderView({
 
                 {/* Payment Method Selector */}
                 <div className="flex flex-col gap-2.5">
-                  <span className="text-sm font-bold text-foreground">
+                  <span className="text-base font-bold text-foreground">
                     {t("checkout.paymentMethod")}
                   </span>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div
+                    role="radiogroup"
+                    aria-label={t("checkout.paymentMethod")}
+                    className="grid grid-cols-2 gap-2"
+                  >
                     {[
                       {
-                        id: "credit_card",
+                        id: "card",
                         label: t("wizard.creditCard"),
                         icon: CreditCard,
                       },
-                      { id: "toss_pay", label: t("wizard.tossPay"), icon: Smartphone },
+                      { id: "easy-pay", label: t("wizard.tossPay"), icon: Smartphone },
                     ].map((method) => {
                       const isSelected = selectedPaymentMethod === method.id;
                       const Icon = method.icon;
@@ -750,12 +747,14 @@ export function WizardOrderView({
                         <button
                           key={method.id}
                           type="button"
+                          role="radio"
+                          aria-checked={isSelected}
                           onClick={() => {
                             setSelectedPaymentMethod(method.id);
                             speak(t("wizard.payMethodSelectedVoice", { method: method.label }));
                           }}
                           className={cn(
-                            "flex items-center gap-2.5 p-3.5 rounded-xl border-2 transition-all font-bold text-sm",
+                            "flex items-center gap-2.5 p-3.5 rounded-xl border-2 transition-all font-bold text-base cursor-pointer",
                             isSelected
                               ? "border-primary bg-primary/10 text-primary shadow-xs"
                               : "border-border/70 bg-card text-foreground hover:bg-muted/40",

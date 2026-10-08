@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
 import { ShoppingBag } from "lucide-react";
 import { RollingPrice } from "@/components/ui/RollingPrice";
-import { formatKRW } from "@/lib/format";
+import { formatKRW, getCartTotals } from "@/lib/format";
 import { useTranslation } from "@/lib/i18n";
 
 interface CartSummaryPillProps {
@@ -29,11 +29,7 @@ export function CartSummaryPill({
   const items = useCartStore((state) => state.items);
   const reduceMotion = useAccessibilityStore((state) => state.reducedMotion);
 
-  const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
-  const totalPrice = items.reduce(
-    (sum, item) => sum + item.unitPrice * item.quantity,
-    0
-  );
+  const { totalQuantity, totalPrice } = getCartTotals(items);
 
   const ariaLabel = t("cart.summaryAria", { count: totalQuantity, total: formatKRW(totalPrice) });
 

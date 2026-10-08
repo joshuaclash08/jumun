@@ -3,10 +3,51 @@
 import * as React from "react";
 import { Search, X } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import { getChoseong } from "es-hangul";
 import type { MenuCategory, Product } from "@/lib/types";
 import { ProductCard } from "@/components/flow/ProductCard";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
 import { useTranslation } from "@/lib/i18n";
+
+function choseongIncludes(target: string, query: string): boolean {
+  try {
+    const trimmed = query.replace(/\s+/g, "");
+    if (!/^[ㄱ-ㅎ]+$/.test(trimmed)) return false;
+    const targetChoseong = getChoseong(target).replace(/\s+/g, "");
+    return targetChoseong.includes(trimmed);
+  } catch {
+    return false;
+  }
+}
+
+function matchesSearchToken(
+  token: string,
+  fields: {
+    koTitle: string;
+    enTitle: string;
+    koDesc: string;
+    enDesc: string;
+    catKo: string;
+    catEn: string;
+  }
+): boolean {
+  if (!token) return true;
+  if (/^[ㄱ-ㅎ]+$/.test(token)) {
+    return (
+      choseongIncludes(fields.koTitle, token) ||
+      choseongIncludes(fields.koDesc, token) ||
+      choseongIncludes(fields.catKo, token)
+    );
+  }
+  return (
+    fields.koTitle.includes(token) ||
+    fields.enTitle.includes(token) ||
+    fields.koDesc.includes(token) ||
+    fields.enDesc.includes(token) ||
+    fields.catKo.includes(token) ||
+    fields.catEn.includes(token)
+  );
+}
 
 interface MenuSearchSectionProps {
   products: Product[];
@@ -27,25 +68,25 @@ export function MenuSearchSection({
 
   const trimmedQuery = query.trim();
 
-  // p.category is the English id ("coffee"), never what a user types --
-  // match against the Korean category label instead.
-  const categoryLabelById = React.useMemo(
-    () => new Map(categories.map((c) => [c.id, c.labelKo])),
-    [categories]
-  );
-
   const filteredProducts = React.useMemo(() => {
     if (!trimmedQuery) return [];
-    const lower = trimmedQuery.toLowerCase();
+    const tokens = trimmedQuery.toLowerCase().split(/\s+/).filter(Boolean);
+    if (tokens.length === 0) return [];
+
     return products.filter((p) => {
-      const nameMatch = p.nameKo.toLowerCase().includes(lower);
-      const descMatch = p.descriptionKo.toLowerCase().includes(lower);
-      const categoryMatch = (categoryLabelById.get(p.category) ?? "")
-        .toLowerCase()
-        .includes(lower);
-      return nameMatch || descMatch || categoryMatch;
+      const cat = categories.find((c) => c.id === p.category);
+      const fields = {
+        koTitle: (p.title || p.nameKo || "").toLowerCase(),
+        enTitle: (p.titleI18n?.languages?.["en-US"] || "").toLowerCase(),
+        koDesc: (p.description || p.descriptionKo || "").toLowerCase(),
+        enDesc: (p.descriptionI18n?.languages?.["en-US"] || "").toLowerCase(),
+        catKo: (cat?.title || cat?.labelKo || "").toLowerCase(),
+        catEn: (cat?.titleI18n?.languages?.["en-US"] || "").toLowerCase(),
+      };
+
+      return tokens.every((token) => matchesSearchToken(token, fields));
     });
-  }, [products, trimmedQuery, categoryLabelById]);
+  }, [products, trimmedQuery, categories]);
 
   const handleClear = () => {
     setQuery("");

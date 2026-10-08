@@ -1,38 +1,70 @@
 import menuData from "@/lib/data/menu.json";
-import type { MenuCategory, Product, ProductCategory, ProductOptionGroup } from "@/lib/types";
+import type {
+  AppLanguage,
+  MenuCategory,
+  PluginLanguagePack,
+  Product,
+  ProductCategory,
+  ProductOption,
+  ProductOptionGroup,
+} from "@/lib/types";
 
-// Fictional cafe menu, no real brand -- see docs/decisions/0002-menu-domain.md.
-// Source of truth is lib/data/menu.json, not hardcoded TS, so the catalog can
-// change without touching this service's logic.
+// Fictional cafe menu, aligned with Toss POS Plugin SDK PluginCatalogItem schema.
+// See docs/decisions/0002-menu-domain.md and https://docs.tossplace.com/reference/plugin-sdk/pos/catalog.html.
 
-// Runtime shape checks for menu.json, which is hand-edited during content
-// updates (see architecture.md). Without these, a typo'd field or an
-// optionGroup id that doesn't exist in `optionGroups` type-checks fine via
-// the `as` cast and only surfaces as `undefined` reaching a component deep
-// in the render tree (e.g. ProductDetailSheet's `.optionGroups.map(...)`).
-// Failing loudly here, at module load, catches it at the source instead.
 function validateCategories(raw: unknown): MenuCategory[] {
   if (!Array.isArray(raw)) {
     throw new Error("menu.json: `categories` must be an array");
   }
-  raw.forEach((entry: Partial<MenuCategory>, index) => {
-    if (typeof entry?.id !== "string" || typeof entry?.labelKo !== "string") {
-      throw new Error(`menu.json: categories[${index}] must have a string id and labelKo`);
+  return raw.map((entry: Partial<MenuCategory>, index) => {
+    const title = entry?.title || entry?.labelKo;
+    if (typeof entry?.id !== "string" || typeof title !== "string") {
+      throw new Error(`menu.json: categories[${index}] must have a string id and title/labelKo`);
     }
+    return {
+      ...entry,
+      id: entry.id as ProductCategory,
+      title,
+      labelKo: entry.labelKo || title,
+    } as MenuCategory;
   });
-  return raw as MenuCategory[];
 }
 
 function validateOptionGroups(raw: unknown): Record<string, ProductOptionGroup> {
   if (typeof raw !== "object" || raw === null) {
     throw new Error("menu.json: `optionGroups` must be an object");
   }
+  const result: Record<string, ProductOptionGroup> = {};
   for (const [id, group] of Object.entries(raw as Record<string, Partial<ProductOptionGroup>>)) {
     if (!group || !Array.isArray(group.options)) {
       throw new Error(`menu.json: optionGroups.${id} is missing a valid \`options\` array`);
     }
+    const title = group.title || group.labelKo || "";
+    const options: ProductOption[] = group.options.map((opt, optIndex) => {
+      const optTitle = opt.title || opt.labelKo;
+      if (!opt.id || typeof optTitle !== "string") {
+        throw new Error(`menu.json: optionGroups.${id}.options[${optIndex}] is missing id or title`);
+      }
+      return {
+        ...opt,
+        title: optTitle,
+        labelKo: opt.labelKo || optTitle,
+        priceDelta: opt.priceDelta ?? 0,
+      };
+    });
+
+    result[id] = {
+      id,
+      title,
+      titleI18n: group.titleI18n,
+      labelKo: group.labelKo || title,
+      required: !!group.required,
+      selectionType: group.selectionType || "single",
+      maxSelections: group.maxSelections,
+      options,
+    };
   }
-  return raw as Record<string, ProductOptionGroup>;
+  return result;
 }
 
 const CATEGORIES = validateCategories(menuData.categories);
@@ -42,8 +74,6 @@ interface RawProduct extends Omit<Product, "optionGroups"> {
   optionGroupIds: string[];
 }
 
-// Resolves each product's optionGroupIds against OPTION_GROUPS with a loud
-// failure on a dangling id, instead of the previous silent `undefined` entry.
 function validateProducts(raw: unknown): Product[] {
   if (!Array.isArray(raw)) {
     throw new Error("menu.json: `products` must be an array");
@@ -52,6 +82,10 @@ function validateProducts(raw: unknown): Product[] {
     if (typeof product.id !== "string") {
       throw new Error(`menu.json: products[${index}] is missing a string id`);
     }
+    const title = product.title || product.nameKo || product.id;
+    const description = product.description || product.descriptionKo || "";
+    const voiceDescription = product.voiceDescription || product.voiceDescriptionKo || "";
+
     const optionGroups = (optionGroupIds ?? []).map((id) => {
       const group = OPTION_GROUPS[id];
       if (!group) {
@@ -61,7 +95,17 @@ function validateProducts(raw: unknown): Product[] {
       }
       return group;
     });
-    return { ...product, optionGroups };
+
+    return {
+      ...product,
+      title,
+      nameKo: product.nameKo || title,
+      description,
+      descriptionKo: product.descriptionKo || description,
+      voiceDescription,
+      voiceDescriptionKo: product.voiceDescriptionKo || voiceDescription,
+      optionGroups,
+    };
   });
 }
 
@@ -94,11 +138,6 @@ export async function getProduct(productId: string): Promise<Product | null> {
   return PRODUCTS.find((product) => product.id === productId) ?? null;
 }
 
-/**
- * Pure popularity-ranking rule shared by getPopularProducts (server/service
- * call sites) and FeaturedMenuSection's client-side useMemo, so the "popular
- * items" business rule lives in exactly one place.
- */
 export function selectPopularProducts(products: Product[], limit = 4): Product[] {
   return products
     .filter((product) => product.popularityRank !== undefined)
@@ -110,3 +149,101 @@ export async function getPopularProducts(limit = 4): Promise<Product[]> {
   await delay(MOCK_LATENCY_MS);
   return selectPopularProducts(PRODUCTS, limit);
 }
+
+/**
+ * Resolves localized title for a product, category, or option choice.
+ * Matches Toss POS Plugin SDK language pack ('en-US' for English).
+ */
+export function getLocalizedTitle(
+  item:
+    | {
+        title?: string;
+        titleI18n?: PluginLanguagePack;
+        labelKo?: string;
+        nameKo?: string;
+      }
+    | null
+    | undefined,
+  language: AppLanguage | string,
+  fallback = "",
+): string {
+  if (!item) return fallback;
+  if (language === "en") {
+    const en = item.titleI18n?.languages?.["en-US"];
+    if (en) return en;
+  }
+  return item.title || item.nameKo || item.labelKo || fallback;
+}
+
+/**
+ * Resolves localized description for a product.
+ */
+export function getLocalizedDescription(
+  item:
+    | {
+        description?: string;
+        descriptionI18n?: PluginLanguagePack;
+        descriptionKo?: string;
+      }
+    | null
+    | undefined,
+  language: AppLanguage | string,
+  fallback = "",
+): string {
+  if (!item) return fallback;
+  if (language === "en") {
+    const en = item.descriptionI18n?.languages?.["en-US"];
+    if (en) return en;
+  }
+  return item.description || item.descriptionKo || fallback;
+}
+
+/**
+ * Resolves localized voice TTS prompt for accessibility announcements.
+ */
+export function getLocalizedVoiceDescription(
+  item:
+    | {
+        voiceDescription?: string;
+        voiceDescriptionI18n?: PluginLanguagePack;
+        voiceDescriptionKo?: string;
+      }
+    | null
+    | undefined,
+  language: AppLanguage | string,
+  fallback = "",
+): string {
+  if (!item) return fallback;
+  if (language === "en") {
+    const en = item.voiceDescriptionI18n?.languages?.["en-US"];
+    if (en) return en;
+  }
+  return item.voiceDescription || item.voiceDescriptionKo || fallback;
+}
+
+/**
+ * Validates whether all required option groups for a product have at least one selected option.
+ * If language is provided (e.g. "en"), missing group titles are resolved in that language.
+ */
+export function validateRequiredOptions(
+  product: Product,
+  selectedOptions: Record<string, string[]>,
+  language?: AppLanguage | string,
+): { isValid: boolean; missingGroups: string[] } {
+  const missingGroups: string[] = [];
+  for (const group of product.optionGroups || []) {
+    if (group.required) {
+      const selected = (selectedOptions[group.id] || []).filter(
+        (id) => typeof id === "string" && id.trim().length > 0,
+      );
+      if (selected.length === 0) {
+        const resolvedTitle = language
+          ? getLocalizedTitle(group, language)
+          : group.title || group.labelKo || group.id;
+        missingGroups.push(resolvedTitle || group.id);
+      }
+    }
+  }
+  return { isValid: missingGroups.length === 0, missingGroups };
+}
+

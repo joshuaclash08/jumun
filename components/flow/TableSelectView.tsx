@@ -4,8 +4,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
-import { BackButton } from "@/components/ui/BackButton";
-import { SettingsIconButton } from "@/components/ui/SettingsIconButton";
+import { FlowHeader } from "@/components/layout/FlowHeader";
 import { cn } from "@/lib/utils";
 import { orderPath, tablePath } from "@/lib/routes";
 import type { StoreListing } from "@/lib/types";
@@ -31,14 +30,10 @@ export function TableSelectView({ store }: TableSelectViewProps) {
       id="main-content"
       className="flex min-h-[100dvh] w-full flex-col bg-background text-foreground"
     >
-      <header className="sticky top-0 z-30 flex h-14 items-center justify-between px-4 bg-background border-b border-border/40">
-        <BackButton
-          href={orderPath(store.storeId)}
-          label={tCommon("back")}
-          className="-ml-1"
-        />
-        <SettingsIconButton className="-mr-1" />
-      </header>
+      <FlowHeader
+        backHref={orderPath(store.storeId)}
+        backLabel={tCommon("back")}
+      />
 
       <div className="flex flex-1 flex-col gap-6 px-5 pt-2 pb-[calc(2rem+env(safe-area-inset-bottom,0px))]">
         <div className="flex flex-col gap-1.5">

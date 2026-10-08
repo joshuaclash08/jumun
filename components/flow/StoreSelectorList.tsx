@@ -7,6 +7,7 @@ import { ChevronDown, ChevronRight, Store } from "lucide-react";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
 import type { StoreListing } from "@/lib/types";
 import { useTranslation } from "@/lib/i18n";
+import { cn } from "@/lib/utils";
 
 export interface StoreSelectorListProps {
   stores: StoreListing[];
@@ -19,6 +20,7 @@ export interface StoreSelectorListProps {
 export function StoreSelectorList({ stores }: StoreSelectorListProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const reduceMotion = useAccessibilityStore((state) => state.reducedMotion);
+  const language = useAccessibilityStore((state) => state.language);
   const { t } = useTranslation("landing");
 
   return (
@@ -29,28 +31,26 @@ export function StoreSelectorList({ stores }: StoreSelectorListProps) {
         onClick={() => setIsOpen((prev) => !prev)}
         aria-expanded={isOpen}
         aria-controls="available-stores-list"
-        className="w-full flex items-center justify-between py-3 px-3.5 text-left rounded-[16px] bg-muted/40 hover:bg-muted/70 border border-border/40 transition-all cursor-pointer"
+        className="w-full flex items-center justify-between py-3 px-3.5 text-left rounded-[16px] bg-muted/40 hover:bg-muted/70 active:bg-muted/80 active:scale-[0.99] border border-border/40 transition-all cursor-pointer touch-manipulation select-none"
       >
         <div className="flex items-center gap-2.5">
           <div className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-background text-foreground shadow-xs border border-border/40">
             <Store className="h-4 w-4" aria-hidden="true" />
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="text-[15px] font-bold text-foreground">
+            <span className="text-base font-bold text-foreground">
               {t("selectStoreDirectly")}
-            </span>
-            <span className="text-xs font-semibold text-muted-foreground">
-              ({stores.length})
             </span>
           </div>
         </div>
-        <motion.div
-          animate={{ rotate: isOpen ? 180 : 0 }}
-          transition={{ duration: reduceMotion ? 0 : 0.2 }}
-          className="text-muted-foreground pr-0.5"
+        <div
+          className={cn(
+            "text-muted-foreground pr-0.5 transition-transform duration-200 ease-out",
+            isOpen && "rotate-180",
+          )}
         >
           <ChevronDown className="h-4 w-4" aria-hidden="true" />
-        </motion.div>
+        </div>
       </button>
 
       {/* Expandable Store List */}
@@ -85,32 +85,27 @@ export function StoreSelectorList({ stores }: StoreSelectorListProps) {
                     <div className="flex items-center justify-between gap-3 rounded-[16px] p-3.5 bg-card border border-border/60 hover:border-border hover:bg-muted/30 transition-all">
                       {/* Left: icon + name/branch + address */}
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-primary/10 text-primary">
-                          <Store
-                            className="h-5 w-5 stroke-[2]"
-                            aria-hidden="true"
-                          />
-                        </div>
                         <div className="flex flex-col min-w-0">
                           <div className="flex items-center gap-1.5 min-w-0">
-                            <span className="font-bold text-[15px] text-foreground truncate leading-tight">
+                            <span className="font-bold text-base text-foreground truncate leading-tight">
                               {store.storeName}
                             </span>
-                            <span className="shrink-0 text-xs font-semibold text-muted-foreground bg-muted px-1.5 py-0.5 rounded-[6px]">
-                              {store.branchKo}
+                            <span className="shrink-0 text-base font-semibold text-muted-foreground bg-muted px-2 py-0.5 rounded-[6px]">
+                              {language === "en" && store.branchEn
+                                ? store.branchEn
+                                : store.branchKo}
                             </span>
                           </div>
-                          <span className="text-xs font-medium text-muted-foreground truncate mt-1">
-                            {store.addressKo}
+                          <span className="text-base font-medium text-muted-foreground truncate mt-1">
+                            {language === "en" && store.addressEn
+                              ? store.addressEn
+                              : store.addressKo}
                           </span>
                         </div>
                       </div>
 
                       {/* Right: distance badge + chevron */}
                       <div className="flex items-center gap-1.5 shrink-0 pl-1">
-                        <span className="text-xs font-bold text-secondary-foreground bg-secondary px-2 py-0.5 rounded-full">
-                          {store.distanceKo}
-                        </span>
                         <ChevronRight
                           className="h-4 w-4 text-muted-foreground/70"
                           aria-hidden="true"

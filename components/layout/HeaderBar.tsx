@@ -1,9 +1,9 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { Utensils, ShoppingBag } from "lucide-react";
 import type { StoreInfo } from "@/lib/types";
-import { BackButton } from "@/components/ui/BackButton";
 import { SettingsIconButton } from "@/components/ui/SettingsIconButton";
 import { orderPath, tablePath } from "@/lib/routes";
 import { useTranslation } from "@/lib/i18n";
@@ -15,22 +15,25 @@ interface HeaderBarProps {
 export function HeaderBar({ storeInfo }: HeaderBarProps) {
   const { t: tCommon } = useTranslation("common");
 
-  const backHref =
-    storeInfo.orderType === "dine-in"
-      ? tablePath(storeInfo.storeId)
-      : orderPath(storeInfo.storeId);
-
   const diningLabel =
     storeInfo.orderType === "dine-in"
       ? tCommon("tableNumber", { table: storeInfo.table })
       : tCommon("takeout");
 
-  return (
-    <header className="flex items-center justify-between gap-3 px-4 h-14 bg-background shrink-0">
-      {/* Left: Back Navigation Button + Store Name */}
-      <div className="flex items-center gap-2.5 min-w-0">
-        <BackButton href={backHref} label={tCommon("back")} className="-ml-1" />
+  const changeHref =
+    storeInfo.orderType === "dine-in"
+      ? tablePath(storeInfo.storeId)
+      : orderPath(storeInfo.storeId);
 
+  const changeAriaLabel =
+    storeInfo.orderType === "dine-in"
+      ? `${diningLabel}, 테이블 변경하기`
+      : `${diningLabel}, 주문 방식 변경하기`;
+
+  return (
+    <header className="flex items-center justify-between gap-2.5 px-4 h-14 bg-background border-b border-border/40 shrink-0">
+      {/* Left: Store Name (Back button removed for QR menu root page) */}
+      <div className="flex items-center min-w-0">
         <h1
           className="text-lg sm:text-xl font-black text-foreground tracking-tight truncate"
           aria-label={`${storeInfo.storeName}, ${diningLabel}`}
@@ -39,12 +42,14 @@ export function HeaderBar({ storeInfo }: HeaderBarProps) {
         </h1>
       </div>
 
-      {/* Right: Table Number or Takeout Badge + Settings */}
-      <div className="flex items-center gap-2 shrink-0">
+      {/* Right: Clickable Table Number / Takeout Badge + Language Dropdown + Settings */}
+      <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
         {storeInfo.orderType === "dine-in" ? (
-          <div
-            aria-hidden="true"
-            className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1 text-sm font-extrabold text-secondary-foreground border border-secondary"
+          <Link
+            href={changeHref}
+            className="inline-flex items-center gap-1 sm:gap-1.5 rounded-full bg-secondary hover:bg-secondary/80 active:scale-95 transition-all px-2.5 sm:px-3 py-1 text-base font-extrabold text-secondary-foreground border border-secondary shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            aria-label={changeAriaLabel}
+            title={changeAriaLabel}
           >
             <Utensils
               className="size-3.5 stroke-[2.5] shrink-0"
@@ -53,18 +58,20 @@ export function HeaderBar({ storeInfo }: HeaderBarProps) {
             <span className="tabular-nums">
               {tCommon("tableNumber", { table: storeInfo.table })}
             </span>
-          </div>
+          </Link>
         ) : (
-          <div
-            aria-hidden="true"
-            className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-sm font-extrabold text-muted-foreground border border-border/60"
+          <Link
+            href={changeHref}
+            className="inline-flex items-center gap-1 sm:gap-1.5 rounded-full bg-muted hover:bg-muted/80 active:scale-95 transition-all px-2.5 sm:px-3 py-1 text-base font-extrabold text-muted-foreground hover:text-foreground border border-border/60 shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            aria-label={changeAriaLabel}
+            title={changeAriaLabel}
           >
             <ShoppingBag
               className="size-3.5 stroke-[2.5] text-foreground shrink-0"
               aria-hidden="true"
             />
             <span className="text-foreground">{tCommon("takeout")}</span>
-          </div>
+          </Link>
         )}
 
         <SettingsIconButton className="-mr-1" />

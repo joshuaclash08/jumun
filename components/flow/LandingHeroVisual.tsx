@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { motion, AnimatePresence } from "motion/react";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
 import { cn } from "@/lib/utils";
 
@@ -9,20 +8,29 @@ interface LandingHeroVisualProps {
   className?: string;
 }
 
+/**
+ * Animated NFC / QR Code visual in Toss style.
+ * Uses 100% pure CSS GPU-accelerated keyframe animations.
+ *
+ * Benefits:
+ * - Immediate SSR paint (visible at 0ms, zero opacity: 0 flash or layout blank)
+ * - Zero Web Animations API / Framer Motion SVG bugs on Safari 15 / WebKit
+ * - Native 60/120fps hardware compositor performance
+ * - Native prefers-reduced-motion integration
+ */
 export function LandingHeroVisual({ className }: LandingHeroVisualProps) {
   const reduceMotion = useAccessibilityStore((state) => state.reducedMotion);
   const [scanAnimMode, setScanAnimMode] = React.useState<"nfc" | "qr">("nfc");
 
   React.useEffect(() => {
-    // Swapping shapes every 3s is itself a motion event, independent of the
-    // cross-fade transition duration below -- gate the rotation entirely,
-    // not just how it transitions, or reduceMotion users still see strobing.
     if (reduceMotion) return;
     const interval = setInterval(() => {
       setScanAnimMode((prev) => (prev === "nfc" ? "qr" : "nfc"));
     }, 3000);
     return () => clearInterval(interval);
   }, [reduceMotion]);
+
+  const isNfc = scanAnimMode === "nfc";
 
   return (
     <div
@@ -32,143 +40,122 @@ export function LandingHeroVisual({ className }: LandingHeroVisualProps) {
       )}
       aria-hidden="true"
     >
-      <AnimatePresence mode="wait">
-        {scanAnimMode === "nfc" ? (
-          <motion.div
-            key="nfc-anim"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: reduceMotion ? 0 : 0.3 }}
-            className="flex items-center justify-center"
-          >
-            <svg
-              className="h-24 w-24 sm:h-28 sm:w-28 text-foreground"
-              viewBox="0 0 48 48"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              {/* NFC receiver waves */}
-              <g>
-                <path d="M20.5 2.5a5 5 0 0 0 7 0" strokeWidth="2.2" />
-                <path d="M17 6.5a9 9 0 0 0 14 0" strokeWidth="2.2" />
-              </g>
-
-              {/* Moving phone */}
-              <motion.g
-                animate={reduceMotion ? undefined : { y: [1, -3, 1] }}
-                transition={{
-                  repeat: Infinity,
-                  duration: 2.2,
-                  ease: "easeInOut",
-                }}
-              >
-                <rect
-                  x="15.5"
-                  y="17.5"
-                  width="17"
-                  height="28"
-                  rx="3.8"
-                  className="fill-background"
-                  strokeWidth="2.2"
-                />
-                <rect
-                  x="21.5"
-                  y="20"
-                  width="5"
-                  height="1.8"
-                  rx="0.9"
-                  fill="currentColor"
-                  stroke="none"
-                />
-              </motion.g>
-            </svg>
-          </motion.div>
-        ) : (
-          <motion.div
-            key="qr-anim"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: reduceMotion ? 0 : 0.3 }}
-            className="flex items-center justify-center"
-          >
-            <svg
-              className="h-24 w-24 sm:h-28 sm:w-28 text-foreground"
-              viewBox="0 0 48 48"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <motion.g
-                style={{ transformOrigin: "24px 24px" }}
-                animate={
-                  reduceMotion
-                    ? undefined
-                    : { scale: [1, 0.94, 1.03, 1] }
-                }
-                transition={{
-                  duration: 1.8,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-              >
-                {/* Top-Left Finder */}
-                <rect x="10" y="10" width="11" height="11" rx="1.5" />
-                <rect
-                  x="12.5"
-                  y="12.5"
-                  width="6"
-                  height="6"
-                  rx="0.75"
-                  fill="currentColor"
-                  stroke="none"
-                />
-
-                {/* Top-Right Finder */}
-                <rect x="27" y="10" width="11" height="11" rx="1.5" />
-                <rect
-                  x="29.5"
-                  y="12.5"
-                  width="6"
-                  height="6"
-                  rx="0.75"
-                  fill="currentColor"
-                  stroke="none"
-                />
-
-                {/* Bottom-Left Finder */}
-                <rect x="10" y="27" width="11" height="11" rx="1.5" />
-                <rect
-                  x="12.5"
-                  y="29.5"
-                  width="6"
-                  height="6"
-                  rx="0.75"
-                  fill="currentColor"
-                  stroke="none"
-                />
-
-                {/* Bottom-Right Data Dot */}
-                <rect
-                  x="29.5"
-                  y="29.5"
-                  width="6"
-                  height="6"
-                  rx="1.2"
-                  fill="currentColor"
-                  stroke="none"
-                />
-              </motion.g>
-            </svg>
-          </motion.div>
+      {/* ── NFC Visual Stage ────────────────────────────────────── */}
+      <div
+        className={cn(
+          "absolute inset-0 flex items-center justify-center transition-all duration-300 ease-out",
+          isNfc
+            ? "opacity-100 scale-100 pointer-events-auto"
+            : "opacity-0 scale-95 pointer-events-none"
         )}
-      </AnimatePresence>
+      >
+        <svg
+          className="h-24 w-24 sm:h-28 sm:w-28 text-foreground"
+          viewBox="0 0 48 48"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          {/* NFC receiver waves */}
+          <g>
+            <path d="M20.5 2.5a5 5 0 0 0 7 0" strokeWidth="2.2" />
+            <path d="M17 6.5a9 9 0 0 0 14 0" strokeWidth="2.2" />
+          </g>
+
+          {/* Moving phone */}
+          <g className={reduceMotion ? undefined : "animate-nfc-phone"}>
+            <rect
+              x="15.5"
+              y="17.5"
+              width="17"
+              height="28"
+              rx="3.8"
+              className="fill-background"
+              strokeWidth="2.2"
+            />
+            <rect
+              x="21.5"
+              y="20"
+              width="5"
+              height="1.8"
+              rx="0.9"
+              fill="currentColor"
+              stroke="none"
+            />
+          </g>
+        </svg>
+      </div>
+
+      {/* ── QR Visual Stage ─────────────────────────────────────── */}
+      <div
+        className={cn(
+          "absolute inset-0 flex items-center justify-center transition-all duration-300 ease-out",
+          !isNfc
+            ? "opacity-100 scale-100 pointer-events-auto"
+            : "opacity-0 scale-95 pointer-events-none"
+        )}
+      >
+        <svg
+          className="h-24 w-24 sm:h-28 sm:w-28 text-foreground"
+          viewBox="0 0 48 48"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <g className={reduceMotion ? undefined : "animate-qr-pulse"}>
+            {/* Top-Left Finder */}
+            <rect x="10" y="10" width="11" height="11" rx="1.5" />
+            <rect
+              x="12.5"
+              y="12.5"
+              width="6"
+              height="6"
+              rx="0.75"
+              fill="currentColor"
+              stroke="none"
+            />
+
+            {/* Top-Right Finder */}
+            <rect x="27" y="10" width="11" height="11" rx="1.5" />
+            <rect
+              x="29.5"
+              y="12.5"
+              width="6"
+              height="6"
+              rx="0.75"
+              fill="currentColor"
+              stroke="none"
+            />
+
+            {/* Bottom-Left Finder */}
+            <rect x="10" y="27" width="11" height="11" rx="1.5" />
+            <rect
+              x="12.5"
+              y="29.5"
+              width="6"
+              height="6"
+              rx="0.75"
+              fill="currentColor"
+              stroke="none"
+            />
+
+            {/* Bottom-Right Data Dot */}
+            <rect
+              x="29.5"
+              y="29.5"
+              width="6"
+              height="6"
+              rx="1.2"
+              fill="currentColor"
+              stroke="none"
+            />
+          </g>
+        </svg>
+      </div>
     </div>
   );
 }

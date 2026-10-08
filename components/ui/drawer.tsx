@@ -6,9 +6,10 @@ import { Drawer as DrawerPrimitive } from "vaul"
 import { cn } from "@/lib/utils"
 
 function Drawer({
+  autoFocus = true,
   ...props
 }: React.ComponentProps<typeof DrawerPrimitive.Root>) {
-  return <DrawerPrimitive.Root data-slot="drawer" {...props} />
+  return <DrawerPrimitive.Root data-slot="drawer" autoFocus={autoFocus} {...props} />
 }
 
 function DrawerTrigger({
@@ -38,7 +39,7 @@ function DrawerOverlay({
       data-slot="drawer-overlay"
       data-lenis-prevent=""
       className={cn(
-        "fixed inset-0 z-50 bg-black/40 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
+        "fixed inset-0 z-50 bg-black/40 backdrop-blur-xs data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
         className
       )}
       {...props}
@@ -59,6 +60,8 @@ function DrawerContent({
   handleVariant = "auto",
   handleClassName,
   hideHandle = false,
+  style,
+  onCloseAutoFocus,
   ...props
 }: DrawerContentProps) {
   return (
@@ -68,31 +71,39 @@ function DrawerContent({
         data-slot="drawer-content"
         data-lenis-prevent=""
         data-handle-variant={handleVariant}
+        onCloseAutoFocus={(event) => {
+          onCloseAutoFocus?.(event)
+          if (!event.defaultPrevented) {
+            ;(document.activeElement as HTMLElement)?.blur()
+          }
+        }}
+        style={{
+          "--initial-transform": "calc(100% + 5rem)",
+          ...style,
+        } as React.CSSProperties}
         className={cn(
-          "group/drawer-content fixed z-50 flex h-auto max-h-[92vh] min-h-0 flex-col bg-background text-base text-foreground shadow-floating overscroll-contain",
+          "group/drawer-content fixed z-50 flex h-auto max-h-[min(90vh,calc(100dvh-2.5rem-env(safe-area-inset-bottom,0px)))] min-h-0 flex-col bg-background text-base text-foreground shadow-floating overscroll-contain focus:outline-none [&::after]:hidden",
           "data-[vaul-drawer-direction=bottom]:left-1/2 data-[vaul-drawer-direction=bottom]:-translate-x-1/2",
-          "data-[vaul-drawer-direction=bottom]:w-full data-[vaul-drawer-direction=bottom]:max-w-[840px]",
-          "data-[vaul-drawer-direction=bottom]:bottom-0 data-[vaul-drawer-direction=bottom]:mt-24",
-          "data-[vaul-drawer-direction=bottom]:rounded-t-[28px] data-[vaul-drawer-direction=bottom]:border-t data-[vaul-drawer-direction=bottom]:border-border/60",
+          "data-[vaul-drawer-direction=bottom]:bottom-[calc(0.75rem+env(safe-area-inset-bottom,0px))] sm:data-[vaul-drawer-direction=bottom]:bottom-5",
+          "data-[vaul-drawer-direction=bottom]:w-[calc(100%-1.5rem)] data-[vaul-drawer-direction=bottom]:max-w-[540px]",
+          "data-[vaul-drawer-direction=bottom]:rounded-[28px] sm:data-[vaul-drawer-direction=bottom]:rounded-[32px]",
+          "data-[vaul-drawer-direction=bottom]:border data-[vaul-drawer-direction=bottom]:border-border/80 dark:data-[vaul-drawer-direction=bottom]:border-border/50",
+          "data-[vaul-drawer-direction=bottom]:shadow-floating",
           "data-[vaul-drawer-direction=left]:inset-y-0 data-[vaul-drawer-direction=left]:left-0 data-[vaul-drawer-direction=left]:w-3/4 data-[vaul-drawer-direction=left]:rounded-r-2xl data-[vaul-drawer-direction=left]:border-r",
           "data-[vaul-drawer-direction=right]:inset-y-0 data-[vaul-drawer-direction=right]:right-0 data-[vaul-drawer-direction=right]:w-3/4 data-[vaul-drawer-direction=right]:rounded-l-2xl data-[vaul-drawer-direction=right]:border-l",
           "data-[vaul-drawer-direction=top]:inset-x-0 data-[vaul-drawer-direction=top]:top-0 data-[vaul-drawer-direction=top]:mb-24 data-[vaul-drawer-direction=top]:max-h-[92vh] data-[vaul-drawer-direction=top]:rounded-b-2xl data-[vaul-drawer-direction=top]:border-b",
+          "overflow-hidden",
           className
         )}
         {...props}
       >
-        {/* Unified longer drag handle (64px wide pill) — floating at top-3 across all drawers */}
+        {/* Unified floating drag handle pill (Toss Place style) */}
         {!hideHandle && (
           <DrawerPrimitive.Handle
             data-slot="drawer-handle"
             className={cn(
-              "!absolute top-3 left-1/2 -translate-x-1/2 z-40 !m-0 !w-16 sm:!w-20 !h-1.5 shrink-0 rounded-full cursor-grab active:cursor-grabbing backdrop-blur-md pointer-events-auto transition-colors duration-200",
-              // "auto": iOS-style adaptive grabber against white/gray sheet headers (dark charcoal with white specular highlight in light mode, frosted light in dark mode)
-              "group-data-[handle-variant=auto]/drawer-content:bg-neutral-800/60 dark:group-data-[handle-variant=auto]/drawer-content:bg-white/65 group-data-[handle-variant=auto]/drawer-content:shadow-[0_1px_1px_rgba(255,255,255,0.85),0_0_0_0.5px_rgba(0,0,0,0.12)] dark:group-data-[handle-variant=auto]/drawer-content:shadow-[0_1px_3px_rgba(0,0,0,0.6),0_0_0_0.5px_rgba(255,255,255,0.2)]",
-              // "light": light frosted glass pill with ambient drop shadow for dark photos/backgrounds
-              "group-data-[handle-variant=light]/drawer-content:bg-white/85 dark:group-data-[handle-variant=light]/drawer-content:bg-white/75 group-data-[handle-variant=light]/drawer-content:shadow-[0_1px_4px_rgba(0,0,0,0.6),0_0_0_0.5px_rgba(255,255,255,0.4)]",
-              // "dark": high-contrast dark graphite pill with specular rim highlight for white, light-gray, cream, or beige backgrounds
-              "group-data-[handle-variant=dark]/drawer-content:bg-neutral-900/70 dark:group-data-[handle-variant=dark]/drawer-content:bg-neutral-900/80 group-data-[handle-variant=dark]/drawer-content:shadow-[0_1px_1px_rgba(255,255,255,0.9),0_0_0_0.5px_rgba(0,0,0,0.18)]",
+              "!absolute top-2.5 left-1/2 -translate-x-1/2 z-40 !m-0 !w-12 sm:!w-14 !h-1 shrink-0 rounded-full cursor-grab active:cursor-grabbing backdrop-blur-md pointer-events-auto transition-colors duration-200",
+              "bg-neutral-300/80 dark:bg-neutral-600/80 hover:bg-neutral-400 dark:hover:bg-neutral-500",
               handleClassName
             )}
           />
@@ -107,7 +118,22 @@ function DrawerHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="drawer-header"
-      className={cn("flex flex-col gap-1 px-5 pt-7 pb-3 text-left", className)}
+      className={cn("flex flex-col gap-1 px-5 pt-6 pb-2 text-left", className)}
+      {...props}
+    />
+  )
+}
+
+function DrawerBody({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="drawer-body"
+      data-lenis-prevent=""
+      tabIndex={-1}
+      className={cn(
+        "flex-1 min-h-0 overflow-y-auto overscroll-contain px-5 py-3 scrollbar-none outline-none",
+        className
+      )}
       {...props}
     />
   )
@@ -117,7 +143,11 @@ function DrawerFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="drawer-footer"
-      className={cn("mt-auto flex flex-col gap-2 p-4", className)}
+      data-sticky-action-bar="true"
+      className={cn(
+        "mt-auto flex flex-col gap-2 p-5 pt-2 bg-gradient-to-t from-background via-background/95 to-transparent",
+        className
+      )}
       {...props}
     />
   )
@@ -160,6 +190,7 @@ export {
   DrawerClose,
   DrawerContent,
   DrawerHeader,
+  DrawerBody,
   DrawerFooter,
   DrawerTitle,
   DrawerDescription,
