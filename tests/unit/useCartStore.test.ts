@@ -58,6 +58,8 @@ describe("useCartStore", () => {
     // from the latest toast on useToastStore (toasts live there now, not on
     // useCartStore).
     const latestToast = useToastStore.getState().toasts.at(-1);
+    expect(latestToast?.messageKo).toContain("삭제되었습니다");
+    expect(latestToast?.messageEn).toContain("has been removed from the cart");
     expect(latestToast?.onUndo).toBeDefined();
     latestToast?.onUndo?.();
 

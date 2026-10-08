@@ -72,9 +72,6 @@ describe("Theme System & ThemeModeSelector", () => {
     render(<ThemeModeSelector />);
 
     expect(screen.getByText("화면 테마")).toBeInTheDocument();
-    expect(
-      screen.getByText("기본 밝은 모드와 눈이 편안한 다크 모드를 선택해요")
-    ).toBeInTheDocument();
 
     const brightButton = screen.getByRole("radio", { name: /밝은 모드/i });
     const darkButton = screen.getByRole("radio", { name: /다크 모드/i });

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { OrderService } from "@/lib/services";
-import type { CartItem, StoreInfo } from "@/lib/types";
+import { OrderService, MenuService } from "@/lib/services";
+import type { CartItem, StoreInfo, Product } from "@/lib/types";
 
 describe("OrderService", () => {
   const mockStore: StoreInfo = {
@@ -49,5 +49,95 @@ describe("OrderService", () => {
         forceFailure: true,
       })
     ).rejects.toThrow("결제를 완료하지 못했어요.");
+  });
+});
+
+describe("MenuService.validateRequiredOptions", () => {
+  const productWithOptions: Product = {
+    id: "p1",
+    category: "coffee",
+    nameKo: "아메리카노",
+    descriptionKo: "진한 에스프레소",
+    voiceDescriptionKo: "아메리카노",
+    price: 4500,
+    imageUrl: "/img.jpg",
+    available: true,
+    optionGroups: [
+      {
+        id: "temp",
+        labelKo: "온도",
+        required: true,
+        selectionType: "single",
+        options: [
+          { id: "hot", labelKo: "HOT", priceDelta: 0 },
+          { id: "ice", labelKo: "ICE", priceDelta: 500 },
+        ],
+      },
+      {
+        id: "shot",
+        labelKo: "샷 추가",
+        required: false,
+        selectionType: "multiple",
+        options: [
+          { id: "extra", labelKo: "1샷 추가", priceDelta: 500 },
+        ],
+      },
+    ],
+  };
+
+  it("returns isValid: true when all required groups are selected", () => {
+    const res = MenuService.validateRequiredOptions(productWithOptions, {
+      temp: ["ice"],
+    });
+    expect(res.isValid).toBe(true);
+    expect(res.missingGroups).toHaveLength(0);
+  });
+
+  it("returns isValid: false with missingGroup name when required option is missing", () => {
+    const res = MenuService.validateRequiredOptions(productWithOptions, {
+      shot: ["extra"],
+    });
+    expect(res.isValid).toBe(false);
+    expect(res.missingGroups).toContain("온도");
+  });
+
+  it("returns isValid: true when product has no option groups", () => {
+    const plainProduct: Product = {
+      id: "p2",
+      category: "coffee",
+      nameKo: "에스프레소",
+      descriptionKo: "진한 에스프레소 원액",
+      voiceDescriptionKo: "에스프레소",
+      price: 4000,
+      imageUrl: "/img.jpg",
+      available: true,
+      optionGroups: [],
+    };
+    const res = MenuService.validateRequiredOptions(plainProduct, {});
+    expect(res.isValid).toBe(true);
+    expect(res.missingGroups).toHaveLength(0);
+  });
+
+  it("resolves localized missing group names in English when language is 'en'", () => {
+    const productWithI18nGroup: Product = {
+      ...productWithOptions,
+      optionGroups: [
+        {
+          id: "temp",
+          title: "온도",
+          labelKo: "온도",
+          titleI18n: { languages: { "en-US": "Temperature" } },
+          required: true,
+          selectionType: "single",
+          options: [
+            { id: "hot", labelKo: "HOT", priceDelta: 0 },
+            { id: "ice", labelKo: "ICE", priceDelta: 500 },
+          ],
+        },
+      ],
+    };
+    const res = MenuService.validateRequiredOptions(productWithI18nGroup, {}, "en");
+    expect(res.isValid).toBe(false);
+    expect(res.missingGroups).toContain("Temperature");
   });
 });

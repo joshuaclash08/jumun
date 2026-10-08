@@ -2,9 +2,11 @@ import { describe, expect, it, beforeEach } from "vitest";
 import { render, screen, act } from "@testing-library/react";
 import { A11yToastContainer } from "@/components/flow/A11yToastContainer";
 import { useToastStore } from "@/store/useToastStore";
+import { useAccessibilityStore } from "@/store/useAccessibilityStore";
 
 describe("A11yToastContainer Portal & Layering", () => {
   beforeEach(() => {
+    useAccessibilityStore.getState().resetAll();
     useToastStore.getState().clearAll();
     // Clean up any remaining elements in document.body
     const existing = document.querySelectorAll("[role='region']");
@@ -79,5 +81,21 @@ describe("A11yToastContainer Portal & Layering", () => {
     expect(toastRegion.style.bottom).toBe("214px");
 
     drawerContent.remove();
+  });
+
+  it("renders toast in English when language is set to 'en' and messageEn is provided", async () => {
+    useAccessibilityStore.getState().setLanguage("en");
+    render(<A11yToastContainer />);
+
+    act(() => {
+      useToastStore.getState().pushToast({
+        id: "test-toast-en",
+        kind: "success",
+        messageKo: "장바구니에 담겼습니다.",
+        messageEn: "Added to cart.",
+      });
+    });
+
+    expect(screen.getByText("Added to cart.")).toBeInTheDocument();
   });
 });

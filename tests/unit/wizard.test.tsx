@@ -68,6 +68,29 @@ describe("WizardOrderView & One-Handed Layout", () => {
       available: true,
       optionGroups: [],
     },
+    {
+      id: "prod-tea",
+      category: "beverage",
+      nameKo: "제주 녹차",
+      descriptionKo: "유기농 녹차",
+      voiceDescriptionKo: "제주 녹차, 5,500원",
+      price: 5500,
+      imageUrl: "/images/menu/tea.jpg",
+      available: true,
+      optionGroups: [
+        {
+          id: "topping",
+          labelKo: "토핑",
+          required: false,
+          selectionType: "multiple",
+          maxSelections: 1,
+          options: [
+            { id: "honey", labelKo: "꿀 추가", priceDelta: 300 },
+            { id: "lemon", labelKo: "레몬 추가", priceDelta: 300 },
+          ],
+        },
+      ],
+    },
   ];
 
   const mockStoreInfo: StoreInfo = {
@@ -169,21 +192,29 @@ describe("WizardOrderView & One-Handed Layout", () => {
     const americanoBtn = screen.getByRole("button", { name: /아메리카노/i });
     fireEvent.click(americanoBtn);
 
-    // Step 3: Option selection
-    expect(screen.getByRole("button", { name: /따뜻하게 \(HOT\)/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /시원하게 \(ICE\)/i })).toBeInTheDocument();
+    // Step 3: Option selection (accessible radio buttons)
+    expect(screen.getByRole("radio", { name: /따뜻하게 \(HOT\)/i })).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: /시원하게 \(ICE\)/i })).toBeInTheDocument();
 
     // Select ICE option
-    const iceOptionBtn = screen.getByRole("button", { name: /시원하게 \(ICE\)/i });
+    const iceOptionBtn = screen.getByRole("radio", { name: /시원하게 \(ICE\)/i });
     fireEvent.click(iceOptionBtn);
+
+    // Quantity Stepper: increase quantity by 1
+    const incBtn = screen.getByRole("button", { name: /수량 1개 늘리기/i });
+    fireEvent.click(incBtn);
+    const decBtn = screen.getByRole("button", { name: /수량 1개 줄이기/i });
+    fireEvent.click(decBtn);
 
     // Click direct checkout
     const checkoutBtn = screen.getByRole("button", { name: /이 메뉴 바로 결제하기/i });
     fireEvent.click(checkoutBtn);
 
-    // Step 4: Checkout summary
+    // Step 4: Checkout summary & synchronized payment method
     expect(screen.getByText("주문 및 결제 확인")).toBeInTheDocument();
     expect(screen.getByText("총 5,000원 결제하기")).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: /신용\/체크카드/i })).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: /토스페이/i })).toBeInTheDocument();
   });
 
   it("supports adding item to cart and returning to step 1 for multi-item ordering", () => {
@@ -211,6 +242,63 @@ describe("WizardOrderView & One-Handed Layout", () => {
     // Cart should contain 1 item
     expect(useCartStore.getState().items.length).toBe(1);
     expect(useCartStore.getState().items[0].nameKo).toBe("카페라떼");
+  });
+
+  it("does not duplicate items in cart when navigating back from step 4 to step 3", () => {
+    render(
+      <WizardOrderView
+        categories={mockCategories}
+        products={mockProducts}
+        storeInfo={mockStoreInfo}
+        onExitWizard={vi.fn()}
+      />,
+    );
+
+    // Select coffee -> Americano
+    fireEvent.click(screen.getByRole("button", { name: /^커피/ }));
+    fireEvent.click(screen.getByRole("button", { name: /아메리카노/i }));
+
+    // Step 3: Click direct checkout
+    fireEvent.click(screen.getByRole("button", { name: /이 메뉴 바로 결제하기/i }));
+    expect(screen.getByText("주문 및 결제 확인")).toBeInTheDocument();
+    expect(useCartStore.getState().items).toHaveLength(1);
+
+    // Navigate back to Step 3
+    const backBtn = screen.getByRole("button", { name: /이전 화면으로 돌아가기/ });
+    fireEvent.click(backBtn);
+    expect(screen.getByRole("radio", { name: /따뜻하게/i })).toBeInTheDocument();
+    expect(useCartStore.getState().items).toHaveLength(0);
+
+    // Click direct checkout again
+    fireEvent.click(screen.getByRole("button", { name: /이 메뉴 바로 결제하기/i }));
+    expect(screen.getByText("주문 및 결제 확인")).toBeInTheDocument();
+    expect(useCartStore.getState().items).toHaveLength(1);
+    expect(screen.getByText("총 4,500원 결제하기")).toBeInTheDocument();
+  });
+
+  it("enforces maxSelections limit on multiple options in wizard mode", () => {
+    render(
+      <WizardOrderView
+        categories={mockCategories}
+        products={mockProducts}
+        storeInfo={mockStoreInfo}
+        onExitWizard={vi.fn()}
+      />,
+    );
+
+    // Select beverage -> Jeju Tea
+    fireEvent.click(screen.getByRole("button", { name: /^논커피/ }));
+    fireEvent.click(screen.getByRole("button", { name: /제주 녹차/i }));
+
+    // Step 3: Select Honey (maxSelections = 1)
+    const honeyCheckbox = screen.getByRole("checkbox", { name: /꿀 추가/i });
+    fireEvent.click(honeyCheckbox);
+    expect(honeyCheckbox).toHaveAttribute("aria-checked", "true");
+
+    // Try selecting Lemon -> should be blocked by maxSelections limit
+    const lemonCheckbox = screen.getByRole("checkbox", { name: /레몬 추가/i });
+    fireEvent.click(lemonCheckbox);
+    expect(lemonCheckbox).toHaveAttribute("aria-checked", "false");
   });
 
   it("passes axe accessibility checks on WizardOrderView", async () => {
@@ -241,7 +329,7 @@ describe("WizardOrderView & One-Handed Layout", () => {
     expect(
       screen.queryByRole("button", { name: /단계별 간편 주문/i }),
     ).not.toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /커피/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /^커피/ })).toBeInTheDocument();
 
     // 2. When orderMode is wizard (set via Settings)
     useAccessibilityStore.getState().setOrderMode("wizard");

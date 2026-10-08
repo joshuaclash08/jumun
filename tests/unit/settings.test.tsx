@@ -2,11 +2,11 @@ import { describe, expect, it, beforeEach, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { axe } from "vitest-axe";
 import SettingsPage from "@/app/settings/page";
-import AccessibilityDetailPage from "@/app/settings/accessibility/page";
 import PaymentSettingsPage from "@/app/settings/payment/page";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
 import { usePaymentStore } from "@/store/usePaymentStore";
+import { useCartStore } from "@/store/useCartStore";
 import { useToastStore } from "@/store/useToastStore";
 
 // Mock next/navigation
@@ -57,9 +57,10 @@ describe("Checkbox Component", () => {
   });
 });
 
-describe("SettingsPage - Icon Removal & Checkbox Migration", () => {
+describe("SettingsPage - Switch Migration & Layout", () => {
   beforeEach(() => {
     useAccessibilityStore.getState().resetAll();
+    useCartStore.getState().resetOrder();
   });
 
   it("renders all settings text items without decorative icons", () => {
@@ -71,6 +72,7 @@ describe("SettingsPage - Icon Removal & Checkbox Migration", () => {
     expect(screen.getByText("주문 화면 방식")).toBeInTheDocument();
     expect(screen.getByText("메뉴 보기 방식")).toBeInTheDocument();
     expect(screen.getByText("글자 크기")).toBeInTheDocument();
+    expect(screen.getByText("한손 조작 모드")).toBeInTheDocument();
     expect(screen.getByText("고대비 모드")).toBeInTheDocument();
     expect(screen.getByText("난독증 친화 간격")).toBeInTheDocument();
     expect(screen.getByText("애니메이션 줄이기")).toBeInTheDocument();
@@ -79,12 +81,62 @@ describe("SettingsPage - Icon Removal & Checkbox Migration", () => {
     expect(screen.getByText("알림 표시 시간 2배 연장")).toBeInTheDocument();
     expect(screen.getByText("음성 안내 (보이스오버 체험)")).toBeInTheDocument();
     expect(screen.getByText("기본 결제 수단 관리")).toBeInTheDocument();
-    expect(screen.getByText("언어 및 초기화")).toBeInTheDocument();
+    expect(screen.getByText("언어 (Language)")).toBeInTheDocument();
     expect(screen.getByText("설정 초기화")).toBeInTheDocument();
 
-    // Checkboxes should exist for toggleable items (excluding haptics on web)
-    const checkboxes = screen.getAllByRole("checkbox");
-    expect(checkboxes.length).toBe(5); // highContrast, dyslexiaSpacing, reducedMotion, timeoutExtension, voiceGuideEnabled
+    // Switches should exist for toggleable items (excluding haptics on web)
+    const switches = screen.getAllByRole("switch");
+    expect(switches.length).toBe(5); // highContrast, dyslexiaSpacing, reducedMotion, timeoutExtension, voiceGuideEnabled
+  });
+
+  it("renders recent order card when lastReceipt is present and resets on clear", () => {
+    useCartStore.setState({
+      lastReceipt: {
+        orderNumber: "101",
+        items: [
+          {
+            id: "c1",
+            productId: "p1",
+            nameKo: "아메리카노",
+            quantity: 2,
+            selections: [],
+            unitPrice: 4500,
+          },
+        ],
+        subtotal: 9000,
+        total: 9000,
+        orderType: "dine-in",
+        store: { storeId: "gangnam", storeName: "강남점", orderType: "dine-in", table: "1" },
+        placedAt: new Date().toISOString(),
+      },
+    });
+
+    render(<SettingsPage />);
+    expect(screen.getByText("최근 주문 내역")).toBeInTheDocument();
+    expect(screen.getByText(/주문번호.*101/)).toBeInTheDocument();
+    expect(screen.getByText("아메리카노")).toBeInTheDocument();
+
+    const clearBtn = screen.getByText("내역 삭제");
+    fireEvent.click(clearBtn);
+    expect(useCartStore.getState().lastReceipt).toBeNull();
+  });
+
+  it("toggles one-handed mode with reordered options left, none, right in settings", () => {
+    render(<SettingsPage />);
+
+    expect(useAccessibilityStore.getState().oneHandedMode).toBe("none");
+
+    const leftRadio = screen.getByRole("radio", { name: "왼손" });
+    fireEvent.click(leftRadio);
+    expect(useAccessibilityStore.getState().oneHandedMode).toBe("left");
+
+    const rightRadio = screen.getByRole("radio", { name: "오른손" });
+    fireEvent.click(rightRadio);
+    expect(useAccessibilityStore.getState().oneHandedMode).toBe("right");
+
+    const centerRadio = screen.getByRole("radio", { name: "중앙" });
+    fireEvent.click(centerRadio);
+    expect(useAccessibilityStore.getState().oneHandedMode).toBe("none");
   });
 
   it("toggles menu layout mode between grid and list in settings", () => {
@@ -96,21 +148,21 @@ describe("SettingsPage - Icon Removal & Checkbox Migration", () => {
     fireEvent.click(listRadio);
     expect(useAccessibilityStore.getState().menuLayout).toBe("list");
 
-    const gridRadio = screen.getByRole("radio", { name: "카드형 (기본)" });
+    const gridRadio = screen.getByRole("radio", { name: "카드형" });
     fireEvent.click(gridRadio);
     expect(useAccessibilityStore.getState().menuLayout).toBe("grid");
   });
 
-  it("toggles high contrast mode when clicking the checkbox or label row", () => {
+  it("toggles high contrast mode when clicking the switch or label row", () => {
     render(<SettingsPage />);
 
-    const highContrastCheckbox = screen.getByRole("checkbox", { name: "고대비 모드" });
+    const highContrastSwitch = screen.getByRole("switch", { name: "고대비 모드" });
     expect(useAccessibilityStore.getState().highContrast).toBe(false);
 
-    fireEvent.click(highContrastCheckbox);
+    fireEvent.click(highContrastSwitch);
     expect(useAccessibilityStore.getState().highContrast).toBe(true);
 
-    fireEvent.click(highContrastCheckbox);
+    fireEvent.click(highContrastSwitch);
     expect(useAccessibilityStore.getState().highContrast).toBe(false);
   });
 
@@ -119,12 +171,12 @@ describe("SettingsPage - Icon Removal & Checkbox Migration", () => {
     render(<SettingsPage />);
 
     // Toggle high contrast
-    const highContrastCheckbox = screen.getByRole("checkbox", { name: "고대비 모드" });
-    fireEvent.click(highContrastCheckbox);
+    const highContrastSwitch = screen.getByRole("switch", { name: "고대비 모드" });
+    fireEvent.click(highContrastSwitch);
 
-    // Click English language
-    const englishBtn = screen.getByRole("button", { name: "English" });
-    fireEvent.click(englishBtn);
+    // Change language via dropdown
+    const select = screen.getByRole("combobox", { name: "언어 (Language)" });
+    fireEvent.change(select, { target: { value: "en" } });
 
     // Verify no toasts were pushed
     expect(useToastStore.getState().toasts).toHaveLength(0);
@@ -137,17 +189,7 @@ describe("SettingsPage - Icon Removal & Checkbox Migration", () => {
   });
 });
 
-describe("AccessibilityDetailPage & PaymentSettingsPage", () => {
-  it("renders AccessibilityDetailPage with checkboxes and clean text", async () => {
-    const { container } = render(<AccessibilityDetailPage />);
-    expect(screen.getByRole("heading", { name: "접근성" })).toBeInTheDocument();
-    expect(screen.queryByText("진동 피드백")).not.toBeInTheDocument();
-    expect(screen.getAllByRole("checkbox").length).toBe(3); // voiceGuide, dyslexiaSpacing, timeoutExtension
-
-    const results = await axe(container);
-    expect(results).toHaveNoViolations();
-  });
-
+describe("PaymentSettingsPage", () => {
   it("renders PaymentSettingsPage with text-only payment cards", async () => {
     usePaymentStore.getState().setDefaultMethod("card");
     const { container } = render(<PaymentSettingsPage />);
@@ -173,6 +215,10 @@ describe("Settings i18n English Mode", () => {
     expect(screen.getByText("Theme")).toBeInTheDocument();
     expect(screen.getByText("Order Screen Layout")).toBeInTheDocument();
     expect(screen.getByText("Font Size")).toBeInTheDocument();
+    expect(screen.getByText("One-Handed Mode")).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "Left" })).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "Center" })).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "Right" })).toBeInTheDocument();
     expect(screen.getByText("High Contrast Mode")).toBeInTheDocument();
     expect(screen.getByText("Dyslexia-friendly Spacing")).toBeInTheDocument();
     expect(screen.getByText("Reduce Motion")).toBeInTheDocument();
@@ -180,44 +226,38 @@ describe("Settings i18n English Mode", () => {
     expect(screen.getByText("Double Notification Duration")).toBeInTheDocument();
     expect(screen.getByText("Voice Guide (VoiceOver Preview)")).toBeInTheDocument();
     expect(screen.getByText("Manage Default Payment Method")).toBeInTheDocument();
-    expect(screen.getByText("Language & Reset")).toBeInTheDocument();
+    expect(screen.getByText("Language")).toBeInTheDocument();
     expect(screen.getByText("Reset Settings")).toBeInTheDocument();
     expect(screen.getByText("Save Settings")).toBeInTheDocument();
 
-    // High contrast checkbox aria-label in English
-    const highContrastCheckbox = screen.getByRole("checkbox", { name: "High Contrast Mode" });
-    expect(highContrastCheckbox).toBeInTheDocument();
+    // High contrast switch aria-label in English
+    const highContrastSwitch = screen.getByRole("switch", { name: "High Contrast Mode" });
+    expect(highContrastSwitch).toBeInTheDocument();
 
     const results = await axe(container);
     expect(results).toHaveNoViolations();
   });
 
-  it("dynamically switches language between Korean and English upon button click", () => {
+  it("dynamically switches language between Korean and English upon dropdown selection", () => {
     useAccessibilityStore.getState().setLanguage("ko");
     render(<SettingsPage />);
 
     expect(screen.getByText("화면 및 텍스트 상세 설정")).toBeInTheDocument();
 
-    const englishBtn = screen.getByRole("button", { name: "English" });
-    fireEvent.click(englishBtn);
+    const select = screen.getByRole("combobox", { name: "언어 (Language)" });
+    fireEvent.change(select, { target: { value: "en" } });
 
     expect(useAccessibilityStore.getState().language).toBe("en");
     expect(screen.getByText("Screen & Display Settings")).toBeInTheDocument();
 
-    const koreanBtn = screen.getByRole("button", { name: "한국어" });
-    fireEvent.click(koreanBtn);
+    const selectEn = screen.getByRole("combobox", { name: "Language" });
+    fireEvent.change(selectEn, { target: { value: "ko" } });
 
     expect(useAccessibilityStore.getState().language).toBe("ko");
     expect(screen.getByText("화면 및 텍스트 상세 설정")).toBeInTheDocument();
   });
 
-  it("renders AccessibilityDetailPage and PaymentSettingsPage in English", async () => {
-    const { unmount } = render(<AccessibilityDetailPage />);
-    expect(screen.getByRole("heading", { name: "Accessibility" })).toBeInTheDocument();
-    expect(screen.getByText("Voice Guide (VoiceOver Preview)")).toBeInTheDocument();
-    expect(screen.getByText("Save Settings")).toBeInTheDocument();
-    unmount();
-
+  it("renders PaymentSettingsPage in English", async () => {
     usePaymentStore.getState().setDefaultMethod("card");
     render(<PaymentSettingsPage />);
     expect(screen.getByRole("heading", { name: "Manage Payment Methods" })).toBeInTheDocument();
