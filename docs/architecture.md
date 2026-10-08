@@ -1,235 +1,137 @@
 # Architecture
 
-This document describes the folder structure, core patterns, and platform policies for Jumun's Phase 1 app. Foundation scaffolding (dependencies, shadcn init, this folder skeleton, app shell) is in progress per `plan.md`'s current status; screens and business logic are not built yet.
+This document describes the directory structure, architectural patterns, and platform policies of the JUMUN platform.
 
 ## Folder structure
 
 ```
 /app
-  layout.tsx              # <html lang="ko">, next/font (Pretendard + Noto Sans KR), theme/a11y sync provider
-  page.tsx                 # root fallback — no encoded storeId/table (direct visit, home-screen relaunch, or QR/NFC
-                           # read failure); renders the hero + QR-scan CTA + "직접 매장 선택하기" store list
-  /order/[storeId]/         # the real entry point. Every QR/NFC tag encodes /order/{storeId}?table={n} directly.
-                           # Manually-selected stores land here with no query params, which renders the dine-in/
-                           # takeout choice (OrderTypeSelectView) instead -- see docs/decisions/0014.
-    /table/                  # dine-in only: table-number grid (TableSelectView), then on to ?table={n} above
-  /settings/                 # dedicated settings route, not a sheet — see docs/decisions/0007-settings-as-dedicated-route.md
-    page.tsx                  # 테마/화면, 접근성 + 결제 (linking out), 언어
-    /accessibility/page.tsx    # dyslexia spacing, haptics, alert display-time
-    /payment/page.tsx           # mocked default payment method (no real card/account data)
-  globals.css                # @import "tailwindcss" + @theme tokens sourced from docs/design-system.md
+  layout.tsx              # Root HTML shell (<title> "JUMUN"), Pretendard font loader, theme sync script
+  page.tsx                # Landing fallback: QR scan CTA, manual store selector, setup redirection
+  providers.tsx           # Global client providers: A11y initialization, live region, toast container
+  template.tsx            # Next.js route transition template
+  globals.css             # Tailwind v4 @theme design tokens (colors, radii, spacing, focus rings)
+  /order/[storeId]/
+    page.tsx              # Primary ordering view: resolves ?table=N (QR) or ?type=takeout
+    /table/page.tsx       # Dine-in only: table selection grid (TableSelectView)
+  /settings/
+    page.tsx              # Consolidated settings: screen, display, accessibility, language, recent receipt
+    /payment/page.tsx     # Mocked payment method management
+  /setup/
+    page.tsx              # First-time user accessibility onboarding wizard (SetupGuard)
+
 /components
-  /ui                        # shadcn-generated primitives ONLY — never hand-edited beyond shadcn's own codegen
-  /a11y                       # skip-link, visually-hidden text helper, live-region announcer
-  /layout                      # HeaderBar (store name/table, staff-call + settings-link icons)
-  /flow                         # one component per wizard screen (menu, cart, checkout, confirmation, staff call, QR scan)
-  /settings                      # SettingsHeader (back+title), SettingsRow/SettingsGroup (list-row primitives)
-/hooks                          # hardware-interface wrappers — see pattern below
-  useHaptics.ts
-  useReducedMotion.ts
-  useLenisMotionSync.ts
+  /a11y                   # LiveRegionAnnouncer, SkipLink, VisuallyHidden
+  /flow                   # Screen-level flow components:
+                          # - MenuClientView (main menu orchestrator)
+                          # - WizardOrderView (4-step sequential order flow)
+                          # - ProductCard (2-col grid / 1-col list)
+                          # - ProductDetailSheet (bottom sheet option selector)
+                          # - OptionGroupList (unified option group renderer)
+                          # - CartDrawer (cart review sheet)
+                          # - CartSummaryPill (floating cart summary)
+                          # - CheckoutSheet (payment & confirmation sheet)
+                          # - ConfirmationStep (order receipt & confetti screen)
+                          # - StaffCallButton (floating 6-option call drawer)
+                          # - FeaturedMenuSection (top recommended menu carousel)
+                          # - MenuSearchSection (es-hangul choseong search)
+                          # - OrderTypeSelectView (dine-in vs takeout selection)
+                          # - TableSelectView (table selection grid)
+                          # - SelectionCard (tactile selection button)
+                          # - SetupGuard (onboarding route guard)
+                          # - A11yToastContainer (floating portal toast with drawer clearance)
+  /layout                 # FlowHeader, HeaderBar, OneHandedContainer
+  /settings               # FontScaleSelector, LanguageSelector, OneHandedModeSelector,
+                          # OrderModeSelector, MenuLayoutSelector, ThemeModeSelector,
+                          # SettingsHeader, SettingsGroup, SettingsRow
+  /shared                 # StickyActionBar (fixed bottom action bar with progressive blur)
+  /ui                     # Accessible primitives: button, drawer, card, switch, checkbox,
+                          # badge, separator, tabs, RollingPrice, TossIllustrations
+
+/hooks
+  useHaptics.ts           # Vibration API wrapper with reduced-motion / toggle gating
+  useLenisMotionSync.ts   # Synchronizes Lenis smooth scroll with user motion preferences
+  useOSDarkModePreference.ts # Detects system dark mode media query
+  useReducedMotion.ts     # Detects system prefers-reduced-motion media query
+  useVoiceGuide.ts        # Web Speech API wrapper for screen-reader guidance
+
 /store
-  useCartStore.ts                # cart state, toast+undo history
-  useAccessibilityStore.ts        # settings only, never a raw disability profile
-  usePaymentStore.ts               # which mocked payment method (card/easy-pay) checkout preselects
+  useCartStore.ts         # Cart items, store info, order status, last receipt, undo stack
+  useAccessibilityStore.ts # Font scale, high contrast, theme, reduced motion, haptics,
+                          # one-handed mode, order mode, menu layout (persisted)
+  usePaymentStore.ts      # Default payment method preference (card vs easy pay)
+  useToastStore.ts        # Global accessible toast notification queue
+
 /lib
-  /services                       # MenuService, OrderService, StoreService, AccessibilityService, A11yFeedbackService
-  /data                            # menu.json + stores.json — fictional cafe seed data (docs/decisions/0002-menu-domain.md),
-                                   # not hardcoded TS; services read these, never edit them by hand mid-request
-  /types                            # Product, CartItem, StoreInfo, StoreListing, OrderStatus, OrderReceipt, etc.
-  utils.ts                          # shadcn's cn() helper
-/public
-  manifest.json                     # installable PWA metadata — never a required install gate
-components.json                     # shadcn CLI config
+  /constants
+    setup.ts              # Setup onboarding cookies and localStorage keys
+  /data
+    menu.json             # Fictional cafe menu: 8 categories, 18 products with photos
+    stores.json           # Sample stores and table counts
+  /i18n
+    /locales/ko           # 6 Korean namespaces: common, landing, menu, orderFlow, settings, setup
+    /locales/en           # 6 English namespaces: 100% synchronized
+    index.ts              # useTranslation hook and translate() engine
+    types.ts              # Type-safe i18n keys and schema
+    validator.ts          # Parity validation logic
+  /polyfills.ts           # iOS 15 / Safari 15 polyfills (requestIdleCallback, Object.hasOwn)
+  /routes.ts              # Type-safe path helpers (orderPath, tablePath, takeoutPath)
+  /services
+    A11yFeedbackService.ts # Fan-out feedback service (toast + haptics)
+    AccessibilityService.ts # Accessibility preset management
+    MenuService.ts        # Category and product lookup, localized title getters
+    OrderService.ts       # Mocked order submission with simulated latency
+    StoreService.ts       # Store metadata lookup
+  format.ts               # formatKRW, getCartTotals, getCartItemDisplayName
+  utils.ts                # cn() class merge helper, generateUUID()
 ```
 
-Compared to legacy's `components/{a11y,kiosk,layout,steps,ui}` split, this collapses `kiosk/` and `steps/` into a single `flow/` — legacy split them because it had two parallel systems (a disability-gated onboarding wizard in `steps/`, and the main ordering UI in `kiosk/`). With the onboarding gate removed (`docs/decisions/0001-onboarding-model.md`), there's no reason to keep two parallel directories; it's one flow.
+---
 
-### PWA manifest
+## State Architecture
 
-`public/manifest.json` makes the app installable for anyone who chooses to (never a requirement — see `PRODUCT.md`'s positioning), and supplies the browser-chrome theming for anyone who doesn't install. Required fields: `name` ("Jumun — 바리어프리 셀프오더"), `short_name` ("Jumun"), `start_url: "/"` (deliberately the root fallback route above, not a specific `/order/[storeId]`, since a stale store/table context baked into a home-screen icon would be wrong the next time it's tapped at a different venue), `display: "standalone"`, `background_color`/`theme_color` set to `--color-bg` (`#FFFFFF`, `docs/design-system.md`) so the OS splash/chrome matches the app instead of defaulting to white, and an icon set (192px/512px minimum, plus a maskable variant for Android's adaptive-icon treatment). No app-install banner or prompt is ever shown proactively — this stays purely opt-in, consistent with `docs/decisions/0001-onboarding-model.md`'s no-gate principle extending to installation, not just onboarding.
+State is cleanly partitioned across 4 focused Zustand stores:
 
-## Patterns worth keeping from legacy
+1. **`useCartStore`**:
+   - Manages the active shopping cart (`items: CartItem[]`).
+   - Tracks `storeInfo` (discriminated union: `dine-in` with `table` number vs `takeout`).
+   - Manages `orderStatus` (`"browsing"` $\to$ `"checkout"` $\to$ `"confirmed"`).
+   - Stores `lastReceipt` for display on the confirmation screen and settings page.
+   - Maintains an undo history stack capped at 5 items for accidental item removal.
+   - All cart total calculations are centralized via `getCartTotals(items)`.
 
-Legacy got a few structural things right even where its product decisions were inconsistent. These patterns are worth reusing conceptually — not copy-pasting the code, since legacy never had shadcn/Radix wired in and its actual component implementations predate this project's design system.
+2. **`useAccessibilityStore`**:
+   - Persists user preferences to `localStorage` under `jumun:accessibility-settings`.
+   - Never stores raw medical or disability profiles — only functional UI preferences (font scale, contrast mode, theme, animations, haptics, one-handed mode, order mode, menu layout).
+   - Restores settings immediately during SSR/hydration via an inline `<script>` in `app/layout.tsx` to prevent theme flash.
 
-### Service layer (`lib/services/`)
+3. **`usePaymentStore`**:
+   - Manages preferred payment method (credit card vs easy pay), seeded during checkout.
 
-A barrel-exported set of services (`MenuService`, `OrderService`, `StoreService`, `AccessibilityService`, `A11yFeedbackService`) sits between components/stores and data. `OrderService.submitOrder` returns a mocked `Promise` with artificial latency in Phase 1 — no real backend yet (see `plan.md`'s Phase 1 scope) — which keeps the calling code shaped the way it'll need to be once a real API exists.
+4. **`useToastStore`**:
+   - Manages accessible, non-intrusive toast messages.
+   - Portaled to `document.body` via `A11yToastContainer` with dynamic bottom clearance above open Vaul bottom drawers.
 
-`A11yFeedbackService` is a specific pattern worth keeping verbatim: every cart mutation (add/remove/quantity change) fires a fan-out to toast + haptic + visual-caption feedback, and it's dynamically `import()`-ed from inside the store action rather than imported at the top of the file. That's not incidental — it's how legacy avoided a circular import between the cart store and the accessibility feedback system. Keep the technique, not just the idea.
+---
 
-### Hooks as hardware-interface wrappers
+## Service Layer (`lib/services/`)
 
-Every hook that touches something platform-specific — `useHaptics`, `useReducedMotion` — wraps the actual browser API behind a small, stable interface:
+A barrel-exported service layer abstracts data access and side-effects:
+- **`MenuService`**: Provides category filtering, product retrieval, search filtering, and localized name extraction (`getLocalizedTitle`).
+- **`OrderService`**: Simulates order placement with `MOCK_LATENCY_MS` (600ms). Supports deterministic failure testing via `forceFailure: true`.
+- **`StoreService`**: Resolves valid store identifiers and table configurations.
+- **`A11yFeedbackService`**: Orchestrates accessible fan-out notifications (audio/visual toast + haptic feedback) on user actions.
 
-```ts
-// Phase 1 (web): navigator.vibrate() + a visual pulse fallback
-// Phase 2 (native, later): swap the implementation for expo-haptics
-// Call sites never change — only what's inside the hook does
-```
+---
 
-This is deliberate, not incidental — `plan.md`'s Phase 2 (Expo/React Native port) only works cleanly if hardware access is centralized behind interfaces now. The alternative — calling `navigator.vibrate()` directly wherever haptic feedback is needed — would mean every call site needs rewriting at the Phase 2 boundary instead of just the hook internals.
+## Hardware & Compatibility Engineering
 
-`useLenisMotionSync.ts` is new (not in legacy) — see `docs/tech-stack.md`'s Lenis caveat: it gates `<ReactLenis>` behind the app's own `reduceMotion` store value rather than relying on Lenis's built-in OS-level check alone.
-
-### State shape
-
-Two Zustand stores, following legacy's shape:
-
-- **`useCartStore`** — `storeInfo` (a `StoreInfo` discriminated union on `orderType`: dine-in carries `table`, takeout doesn't — resolved server-side from `/order/[storeId]`'s `?table=` or `?type=takeout` query, see `docs/decisions/0014-entry-order-type-and-table-selection.md`), `items[]`, order status, last receipt, a toast queue with undo callbacks, and a capped undo history stack (legacy capped at 5 — a reasonable starting point). Every mutation pushes to the undo stack first, then triggers `A11yFeedbackService` as described above.
-- **`useAccessibilityStore`** — language, high-contrast/AAA flag, font scale, reduced-motion override, haptics on/off, dyslexia-mode spacing, timeout-extension (kept as a settings concept even though Phase 1 has no timeouts to extend — see below). Persists via cookie/localStorage only, and only the merged boolean/numeric settings — **never** a raw disability category or profile. This is a privacy-conscious pattern worth keeping exactly: legacy already made the right call here.
-
-**Difference from legacy worth calling out explicitly**: legacy branched storage between cookies (personal phone) and `sessionStorage` (detected shared/kiosk device via `?table=`/`?store=` URL params), anticipating that a physical kiosk might also exist alongside BYOD phones. This project confirmed there is no shared-kiosk hardware case at all — every session is BYOD. So Jumun's settings storage is simply cookie/localStorage, unconditionally. No device-type branch needed.
-
-## Data model
-
-Core types (`lib/types/`), adapted conceptually from legacy's shapes but re-scoped to the fictional cafe menu (`docs/decisions/0002-menu-domain.md`):
-
-```ts
-// lib/types/menu.ts
-interface ProductOption {
-  id: string;
-  labelKo: string;
-  priceDelta: number; // 0 for no-cost options (e.g. temperature); positive for upsizes
-}
-
-interface ProductOptionGroup {
-  id: string;
-  labelKo: string;
-  required: boolean;
-  selectionType: 'single' | 'multiple';
-  maxSelections?: number; // optional limit for multiple selection groups
-  options: ProductOption[];
-}
-
-interface Product {
-  id: string;
-  category: string; // 'coffee' | 'decaf' | 'tea' | 'beverage' | 'dessert' | 'bakery' | 'food' | 'brunch' | 'md'
-  nameKo: string;
-  descriptionKo: string;
-  voiceDescriptionKo: string; // fuller sentence for screen-reader labels, see docs/design-system.md
-  price: number; // KRW, base price before options
-  icon: string; // lucide-react export name, one per product
-  imageUrl?: string; // full-bleed photography asset path (/images/menu/*.jpg)
-  themeBg?: string; // backdrop tint color hex matching the product photo
-  optionGroups: ProductOptionGroup[];
-  available: boolean;
-}
-
-// lib/types/cart.ts
-interface CartItemSelection {
-  groupId: string;
-  optionIds: string[];
-}
-
-interface CartItem {
-  id: string; // unique per line item, not per product -- same product with different options is a separate line
-  productId: string;
-  nameKo: string;
-  optionsSummary?: string;
-  quantity: number;
-  selections: CartItemSelection[];
-  unitPrice: number; // base price + selected option deltas, snapshotted at add-time
-}
-
-// lib/types/store.ts
-interface StoreListing {
-  storeId: string;
-  storeName: string;
-  branchKo: string;
-  addressKo: string;
-  tableCount: number; // for TableSelectView's table-number grid, not a real per-table roster
-  distanceKo: string;
-}
-
-// lib/types/order.ts
-// Discriminated on orderType, not an optional `table` -- a takeout order
-// can't type-check with a leftover/fabricated table value.
-type StoreInfo =
-  | { storeId: string; storeName: string; orderType: "dine-in"; table: string }
-  | { storeId: string; storeName: string; orderType: "takeout" };
-
-type OrderType = 'dine-in' | 'takeout';
-type OrderStatus = 'idle' | 'submitting' | 'failed' | 'confirmed';
-
-interface OrderReceipt {
-  orderNumber: string;
-  items: CartItem[];
-  subtotal: number;
-  total: number;
-  orderType: OrderType;
-  store: StoreInfo;
-  placedAt: string; // ISO timestamp
-}
-
-// lib/types/accessibility.ts
-interface AccessibilitySettings {
-  language: 'ko' | 'en';
-  highContrast: boolean; // false = default theme, true = AAA mode (docs/design-system.md)
-  fontScale: number; // multiplier on the 18px base, not a replacement unit
-  reducedMotion: boolean; // seeded from prefers-reduced-motion, independently overridable
-  dyslexiaSpacing: boolean;
-  hapticsEnabled: boolean;
-}
-```
-
-## Service layer contracts
-
-`lib/services/` function signatures (all return `Promise`s, even where Phase 1's implementation is synchronous/mocked — keeps call sites correct once a real backend lands):
-
-```ts
-// MenuService
-getCategories(): Promise<{ id: string; labelKo: string }[]>
-getProductsByCategory(categoryId: string): Promise<Product[]>
-getProduct(productId: string): Promise<Product | null>
-
-// OrderService
-submitOrder(storeInfo: StoreInfo, items: CartItem[], options?: { forceFailure?: boolean }): Promise<OrderReceipt>
-// orderType on the receipt is derived from storeInfo.orderType, not passed separately --
-// checkout no longer re-asks dine-in/takeout, it's decided at entry (docs/decisions/0014)
-// Phase 1: mocked latency + a deliberately reachable simulated-failure path
-// (docs/features.md's "Order submission fails" state) -- not just an always-succeeds stub
-
-// StoreService
-resolveStore(storeId: string, orderType: OrderType, table?: string): Promise<StoreInfo | null>
-// table is required (and only meaningful) for orderType "dine-in"; null triggers the
-// invalid/expired-link state in docs/features.md, not a thrown error
-getStoreListing(storeId: string): StoreListing | null
-// existence check used by OrderTypeSelectView/TableSelectView before a table is known
-
-// AccessibilityService
-getSettings(): AccessibilitySettings // reads the persisted, cross-venue store
-mergeSettings(partial: Partial<AccessibilitySettings>): AccessibilitySettings
-
-// A11yFeedbackService
-announce(messageKo: string, priority: 'polite' | 'assertive'): void // drives the live-region text
-notify(kind: 'success' | 'error', messageKo: string): void // toast + haptic + visual-caption fan-out
-```
-
-`StoreService.resolveStore` returning `null` rather than throwing is deliberate: an invalid/expired link is an expected, designed-for outcome (`docs/features.md`), not an exceptional one — reserve thrown errors for genuinely unexpected failures.
-
-## Mobile-only viewport policy
-
-"Mobile-only" means fluid layout within the real phone-width band — roughly 360–430px — not one fixed pixel size. Legacy built a `MobileDeviceContainer` component that letterboxes the app to a fixed 430px-wide centered column with white space on either side when viewed on a wide/desktop screen. That's explicitly not needed here: this project spends zero effort on tablet/desktop presentation, including the cosmetic effort of a desktop preview frame. Build fluid mobile-width layouts with a normal responsive viewport meta tag; nothing scales up to larger breakpoints. Trivial to reintroduce a preview container later if a desktop demo affordance is ever wanted — not worth building now.
-
-**Safe-area insets are not optional.** The viewport meta tag needs `viewport-fit=cover` (Next.js: set `viewportFit: 'cover'` in the `viewport` export alongside `width`/`initialScale`, omitting `maximumScale`/`userScalable` per the fix below) — without it, every `env(safe-area-inset-*)` value silently resolves to `0` and the fixed bottom bar (`docs/design-system.md`) sits flush against the home indicator on notched devices, invisible in a desktop browser's device toolbar and wrong only on a real phone. The bottom bar's padding is the baseline gap *plus* `env(safe-area-inset-bottom)`, not one or the other.
-
-## Cross-venue accessibility persistence
-
-`useAccessibilityStore` persists under a single global key (not scoped per store/table) — confirmed intentional in `PRODUCT.md`: a user's settings follow them to every venue they scan a Jumun tag at, not just the one they set them at. Only `useCartStore`'s `storeInfo` (and the cart contents themselves) are scoped to the current session/URL — those two stores have deliberately different persistence scopes for this reason, not by oversight.
-
-## Two fixes versus legacy — deliberately not inherited
-
-1. **Pinch-zoom must stay enabled.** Legacy's `app/layout.tsx` set:
-   ```ts
-   export const viewport: Viewport = {
-     width: 'device-width',
-     initialScale: 1,
-     maximumScale: 1,
-     userScalable: false,
-   };
-   ```
-   `maximumScale: 1` and `userScalable: false` disable pinch-to-zoom — a direct accessibility regression (WCAG 1.4.4, Resize Text) for exactly the low-vision users this product targets. Jumun's viewport config omits both.
-
-2. **TypeScript build errors must not be silenced.** Legacy's `next.config.ts` set `typescript: { ignoreBuildErrors: true }`, which undermines the strict-mode guarantee claimed elsewhere in its own docs. Jumun keeps the default (errors fail the build).
+### iOS 15 / Safari 15 / Low-End Hardware
+To ensure accessibility extends to users using older devices (e.g. iPhone 6s):
+1. **Polyfill Layer (`lib/polyfills.ts`)**:
+   - Loaded unconditionally before any application code in `app/layout.tsx` and `app/providers.tsx`.
+   - Polyfills `window.requestIdleCallback`, `window.cancelIdleCallback`, and `Object.hasOwn`.
+2. **GPU-Accelerated Menu Tabs (`MenuCategoryHeader.tsx`)**:
+   - Uses a single persistent indicator pill moved via CSS `transform: translate3d(x, 0, 0)` and `width` transitions.
+   - Caches tab offset coordinates in `tabRectsRef` and section vertical offsets in `sectionOffsetsRef` to eliminate layout thrashing during scroll events.
+   - Wraps the category tablist with `[contain:layout]` to isolate reflow boundaries.
