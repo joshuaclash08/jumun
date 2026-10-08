@@ -1,6 +1,5 @@
 {
   "title": "Need help with your order?",
-  "desc": "Adjust font size, high-contrast, animations, and more to fit your needs.",
-  "needHelp": "Yes, set up for me",
-  "noHelp": "No thanks, start right away"
+  "needHelp": "Yes, customize display",
+  "noHelp": "I'm good, start now"
 }

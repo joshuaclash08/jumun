@@ -46,7 +46,7 @@ export function SettingsRow({
             <Icon className="h-5 w-5" />
           </div>
         )}
-        <div className="flex flex-1 min-w-0 flex-col gap-0.5">
+        <div className="flex flex-1 min-w-0 flex-col justify-center gap-0.5">
           <span className="text-base font-bold text-foreground">{label}</span>
           {description && (
             <span className="text-base font-medium text-muted-foreground leading-relaxed">{description}</span>
@@ -54,7 +54,7 @@ export function SettingsRow({
         </div>
       </div>
       {trailing ? (
-        <div className="shrink-0 flex items-center">{trailing}</div>
+        <div className="shrink-0 flex items-center justify-center self-center">{trailing}</div>
       ) : (
         href && <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground/70" aria-hidden="true" />
       )}

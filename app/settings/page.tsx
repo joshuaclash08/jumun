@@ -13,20 +13,23 @@ import {
   OrderModeSelector,
   ThemeModeSelector,
   MenuLayoutSelector,
+  LanguageSelector,
 } from "@/components/settings";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
+import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
+import { useCartStore } from "@/store/useCartStore";
+import { formatKRW, getCartItemDisplayName, getCartTotals } from "@/lib/format";
 import { StickyActionBar } from "@/components/shared/StickyActionBar";
-import { cn } from "@/lib/utils";
 import { SETUP_COMPLETED_KEY, SETUP_COMPLETED_COOKIE, sanitizeReturnTo } from "@/lib/constants/setup";
-import { useTranslation, SUPPORTED_LOCALES, translate, DEFAULT_LOCALE } from "@/lib/i18n";
+import { useTranslation, translate, DEFAULT_LOCALE } from "@/lib/i18n";
 
 function SettingsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const returnTo = searchParams?.get?.("returnTo") ?? null;
-  const { t, language, setLanguage } = useTranslation("settings");
+  const { t } = useTranslation("settings");
   const {
     highContrast,
     setHighContrast,
@@ -40,6 +43,8 @@ function SettingsContent() {
     setVoiceGuideEnabled,
     resetAll,
   } = useAccessibilityStore();
+  const lastReceipt = useCartStore((s) => s.lastReceipt);
+  const resetOrder = useCartStore((s) => s.resetOrder);
 
   const markSetupDone = () => {
     if (typeof window !== "undefined") {
@@ -99,12 +104,64 @@ function SettingsContent() {
       <SettingsHeader title={t("title")} onBack={handleBack} />
 
       <div className="flex flex-col gap-6 px-4 pt-4">
-        {/* ── 1. Screen & Typography Section ────────────────────────── */}
+        {/* ── 0. Recent Order Summary (if lastReceipt exists) ──────── */}
+        {lastReceipt && (
+          <>
+            <section
+              className="flex flex-col gap-2.5"
+              aria-label={t("recentOrder.title")}
+            >
+              <div className="flex items-center justify-between px-1">
+                <h2 className="text-base font-extrabold text-foreground">
+                  {t("recentOrder.title")}
+                </h2>
+                <button
+                  type="button"
+                  onClick={() => resetOrder()}
+                  className="text-base font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                >
+                  {t("recentOrder.clear")}
+                </button>
+              </div>
+              <div className="rounded-2xl border border-border/40 bg-card p-4 shadow-sm">
+                <div className="flex items-center justify-between text-base">
+                  <span className="font-semibold text-muted-foreground">
+                    {t("recentOrder.orderNumber", { number: lastReceipt.orderNumber })}
+                  </span>
+                  <span className="text-base font-medium text-muted-foreground">
+                    {lastReceipt.store?.storeName}
+                  </span>
+                </div>
+                <div className="mt-2 text-base font-bold text-foreground">
+                  {lastReceipt.items
+                    .map((it) => getCartItemDisplayName(it))
+                    .join(", ")}
+                </div>
+                <div className="mt-1 flex items-center justify-between text-base">
+                  <span className="text-muted-foreground">
+                    {t("recentOrder.itemsCount", {
+                      count: getCartTotals(lastReceipt.items).totalQuantity,
+                    })}
+                  </span>
+                  <span className="font-extrabold text-primary">
+                    {formatKRW(lastReceipt.total)}
+                  </span>
+                </div>
+              </div>
+            </section>
+            <Separator variant="hairline" className="-mx-4 w-[calc(100%+2rem)]" />
+          </>
+        )}
+
+        {/* ── 1. Screen & Display Settings (Language at top row) ───── */}
         <section className="flex flex-col gap-2.5">
           <h2 className="px-1 text-base font-extrabold text-foreground">
             {t("screen.sectionTitle")}
           </h2>
           <SettingsGroup>
+            {/* Language Dropdown Selector (Top Row) */}
+            <LanguageSelector />
+
             {/* Theme Mode Control (Light vs Dark) */}
             <ThemeModeSelector />
 
@@ -123,9 +180,8 @@ function SettingsContent() {
             <SettingsRow
               htmlFor="setting-high-contrast"
               label={t("screen.highContrast.label")}
-              description={t("screen.highContrast.desc")}
               trailing={
-                <Checkbox
+                <Switch
                   id="setting-high-contrast"
                   checked={highContrast}
                   onCheckedChange={(checked) =>
@@ -141,7 +197,7 @@ function SettingsContent() {
               label={t("screen.dyslexiaSpacing.label")}
               description={t("screen.dyslexiaSpacing.desc")}
               trailing={
-                <Checkbox
+                <Switch
                   id="setting-dyslexia-spacing"
                   checked={dyslexiaSpacing}
                   onCheckedChange={(checked) =>
@@ -155,9 +211,8 @@ function SettingsContent() {
             <SettingsRow
               htmlFor="setting-reduced-motion"
               label={t("screen.reducedMotion.label")}
-              description={t("screen.reducedMotion.desc")}
               trailing={
-                <Checkbox
+                <Switch
                   id="setting-reduced-motion"
                   checked={reducedMotion}
                   onCheckedChange={(checked) =>
@@ -170,7 +225,9 @@ function SettingsContent() {
           </SettingsGroup>
         </section>
 
-        {/* ── 2. Feedback & Accessibility Details ───────────────────── */}
+        <Separator variant="hairline" className="-mx-4 w-[calc(100%+2rem)]" />
+
+        {/* ── 3. Feedback & Accessibility Details ───────────────────── */}
         <section className="flex flex-col gap-2.5">
           <h2 className="px-1 text-base font-extrabold text-foreground">
             {t("feedback.sectionTitle")}
@@ -181,7 +238,7 @@ function SettingsContent() {
               label={t("feedback.timeoutExtension.label")}
               description={t("feedback.timeoutExtension.desc")}
               trailing={
-                <Checkbox
+                <Switch
                   id="setting-timeout-extension"
                   checked={timeoutExtension}
                   onCheckedChange={(checked) =>
@@ -197,7 +254,7 @@ function SettingsContent() {
               label={t("feedback.voiceGuide.label")}
               description={t("feedback.voiceGuide.desc")}
               trailing={
-                <Checkbox
+                <Switch
                   id="setting-voice-guide"
                   checked={voiceGuideEnabled}
                   onCheckedChange={(checked) =>
@@ -219,59 +276,19 @@ function SettingsContent() {
           </SettingsGroup>
         </section>
 
-        {/* ── 3. Language & Reset ───────────────────────────────────── */}
-        <section className="flex flex-col gap-2.5">
-          <h2 className="px-1 text-base font-extrabold text-foreground">
-            {t("languageAndReset.sectionTitle")}
-          </h2>
-          <SettingsGroup>
-            <div className="flex flex-col gap-3 px-5 py-4">
-              <span className="text-base font-bold text-foreground">
-                {t("languageAndReset.language")}
-              </span>
-              <div className="grid grid-cols-2 gap-2 pt-1 bg-muted/40 p-1.5 rounded-[16px]">
-                {SUPPORTED_LOCALES.map((item) => {
-                  const isSelected = language === item.code;
-                  return (
-                    <motion.button
-                      key={item.code}
-                      type="button"
-                      whileTap={reducedMotion ? undefined : { scale: 0.96 }}
-                      transition={{
-                        type: "spring",
-                        stiffness: 400,
-                        damping: 25,
-                      }}
-                      onClick={() => {
-                        setLanguage(item.code);
-                      }}
-                      className={cn(
-                        "flex h-11 items-center justify-center rounded-[12px] font-bold text-base transition-all outline-none",
-                        isSelected
-                          ? "bg-primary text-white shadow-sm"
-                          : "text-muted-foreground hover:text-foreground hover:bg-background/60",
-                      )}
-                    >
-                      {item.nativeName}
-                    </motion.button>
-                  );
-                })}
-              </div>
-            </div>
-          </SettingsGroup>
+        <Separator variant="hairline" className="-mx-4 w-[calc(100%+2rem)]" />
 
-          {/* Reset Button */}
-          <div className="flex justify-center pt-3">
-            <motion.button
-              type="button"
-              whileTap={reducedMotion ? undefined : { scale: 0.96 }}
-              transition={{ type: "spring", stiffness: 400, damping: 25 }}
-              onClick={handleReset}
-              className="flex items-center justify-center rounded-full bg-destructive/10 border border-destructive/20 px-6 py-2.5 text-base font-bold text-destructive hover:bg-destructive/20 transition-colors"
-            >
-              {t("languageAndReset.reset")}
-            </motion.button>
-          </div>
+        {/* ── 4. Reset Settings ─────────────────────────────────────── */}
+        <section className="flex flex-col items-center justify-center pt-2 pb-1">
+          <motion.button
+            type="button"
+            whileTap={reducedMotion ? undefined : { scale: 0.96 }}
+            transition={{ type: "spring", stiffness: 400, damping: 25 }}
+            onClick={handleReset}
+            className="flex items-center justify-center rounded-full bg-destructive/10 border border-destructive/20 px-6 py-2.5 text-base font-bold text-destructive hover:bg-destructive/20 transition-colors"
+          >
+            {t("languageAndReset.reset")}
+          </motion.button>
         </section>
       </div>
 

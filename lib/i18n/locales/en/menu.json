@@ -21,15 +21,26 @@
     "clearButton": "Clear search"
   },
   "staffCall": {
+    "title": "Call Staff",
+    "heading": "How can we help you?",
     "button": "Call Staff",
     "callAria": "Call staff",
     "closeAria": "Close staff call",
-    "confirmTitle": "Would you like to call the staff?",
     "called": "Call Sent",
-    "successTitle": "Staff has been called!",
-    "successDesc": "A staff member will visit your table shortly.",
-    "confirmButton": "Call Staff",
-    "toastSuccess": "Called staff for Table {table}."
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "close": "Close",
+    "call": "Call Staff",
+    "toastSuccess": "Called staff for Table {table}.",
+    "toastItemsSuccess": "Requested {items} for Table {table}.",
+    "options": {
+      "wipes": "Wet wipes",
+      "apron": "Apron",
+      "plates": "Extra plates",
+      "receipt": "Receipt",
+      "cutlery": "Utensils",
+      "staff": "Call staff"
+    }
   },
   "productDetail": {
     "closeAria": "Close menu details",
@@ -72,7 +83,7 @@
   "checkout": {
     "title": "Order & Pay",
     "closeAria": "Close checkout",
-    "errorNotice": "Your cart items are saved safely. Please try paying again.",
+    "errorNotice": "Please try paying again.",
     "diningPlace": "Dining Option",
     "dineIn": "Dine-in",
     "takeout": "Takeout",
@@ -166,6 +177,8 @@
     "stepperDecrease": "Decrease {item} quantity by 1",
     "stepperIncrease": "Increase {item} quantity by 1",
     "stepperCurrent": "Current quantity: {value}",
-    "stepperAdjust": "Adjust {item} quantity"
+    "stepperAdjust": "Adjust {item} quantity",
+    "switchToList": "Switch to list view",
+    "switchToGrid": "Switch to grid view"
   }
 }

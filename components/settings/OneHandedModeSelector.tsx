@@ -6,9 +6,9 @@ import { SegmentedControl } from "@/components/settings/SegmentedControl";
 import { useTranslation } from "@/lib/i18n";
 import type { OneHandedMode } from "@/lib/types";
 
-const ONE_HANDED_CONFIG: { value: OneHandedMode; key: "screen.oneHanded.none" | "screen.oneHanded.left" | "screen.oneHanded.right" }[] = [
-  { value: "none", key: "screen.oneHanded.none" },
+const ONE_HANDED_CONFIG: { value: OneHandedMode; key: "screen.oneHanded.left" | "screen.oneHanded.none" | "screen.oneHanded.right" }[] = [
   { value: "left", key: "screen.oneHanded.left" },
+  { value: "none", key: "screen.oneHanded.none" },
   { value: "right", key: "screen.oneHanded.right" },
 ];
 
@@ -32,14 +32,9 @@ export function OneHandedModeSelector() {
 
   return (
     <div className="flex flex-col gap-3 px-5 py-4">
-      <div className="flex flex-col gap-1">
-        <span className="text-base font-bold text-foreground">
-          {t("screen.oneHanded.title")}
-        </span>
-        <span className="text-base font-medium text-muted-foreground">
-          {t("screen.oneHanded.desc")}
-        </span>
-      </div>
+      <span className="text-base font-bold text-foreground">
+        {t("screen.oneHanded.title")}
+      </span>
       <SegmentedControl<OneHandedMode>
         groupLabel={t("screen.oneHanded.groupLabel")}
         options={options}

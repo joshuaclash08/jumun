@@ -54,12 +54,10 @@ export function SettingsCard({
           </span>
         )}
       </div>
-      {/* NOTE: `trailing ?? <ChevronRight />` -- `??` treats `null` as nullish
-          too, so passing `trailing={null}` still renders the chevron. A
-          future caller that wants to truly hide it must pass an explicit
-          empty element instead. Known footgun, left as-is. */}
-      {trailing ?? (
+      {trailing === undefined ? (
         <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground/70" aria-hidden="true" />
+      ) : (
+        trailing
       )}
     </div>
   );

@@ -142,9 +142,9 @@
 
 .dyslexia-spacing,
 .dyslexia-spacing * {
-  letter-spacing: 0.1em !important;
-  line-height: 1.6 !important;
-  word-spacing: 0.14em !important;
+  letter-spacing: 0 !important;
+  line-height: 1.65 !important;
+  word-spacing: 0.2em !important;
 }
 
 @layer base {
@@ -182,5 +182,45 @@
   }
   .scrollbar-none::-webkit-scrollbar {
     display: none;
+  }
+}
+
+@keyframes nfc-phone-bob {
+  0%, 100% {
+    transform: translate3d(0, 1px, 0);
+  }
+  50% {
+    transform: translate3d(0, -3.5px, 0);
+  }
+}
+
+@keyframes qr-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(0.94);
+  }
+  70% {
+    transform: scale(1.03);
+  }
+}
+
+.animate-nfc-phone {
+  animation: nfc-phone-bob 2.2s ease-in-out infinite;
+  will-change: transform;
+}
+
+.animate-qr-pulse {
+  animation: qr-pulse 1.8s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-nfc-phone,
+  .animate-qr-pulse {
+    animation: none !important;
   }
 }

@@ -21,15 +21,26 @@
     "clearButton": "검색어 지우기"
   },
   "staffCall": {
+    "title": "직원 호출",
+    "heading": "무엇을 도와드릴까요?",
     "button": "직원 호출",
     "callAria": "직원 호출하기",
     "closeAria": "직원 호출 닫기",
-    "confirmTitle": "직원을 호출할까요?",
     "called": "호출 완료",
-    "successTitle": "호출이 완료되었어요!",
-    "successDesc": "직원이 곧 테이블로 방문할게요.",
-    "confirmButton": "호출하기",
-    "toastSuccess": "{table}번 테이블로 직원을 호출했어요."
+    "confirm": "확인",
+    "cancel": "취소",
+    "close": "닫기",
+    "call": "호출하기",
+    "toastSuccess": "{table}번 테이블로 직원을 호출했어요.",
+    "toastItemsSuccess": "{table}번 테이블로 {items}을(를) 요청했어요.",
+    "options": {
+      "wipes": "물티슈",
+      "apron": "앞치마",
+      "plates": "앞접시",
+      "receipt": "영수증",
+      "cutlery": "수저",
+      "staff": "직원호출"
+    }
   },
   "productDetail": {
     "closeAria": "메뉴 상세 닫기",
@@ -72,7 +83,7 @@
   "checkout": {
     "title": "주문 및 결제",
     "closeAria": "주문 및 결제 닫기",
-    "errorNotice": "선택하신 장바구니 항목은 안전하게 유지됩니다. 다시 결제를 진행해 주세요.",
+    "errorNotice": "다시 결제를 진행해 주세요.",
     "diningPlace": "식사 장소",
     "dineIn": "매장 식사",
     "takeout": "포장하기",
@@ -166,6 +177,8 @@
     "stepperDecrease": "{item} 수량 1개 줄이기",
     "stepperIncrease": "{item} 수량 1개 늘리기",
     "stepperCurrent": "현재 수량 {value}개",
-    "stepperAdjust": "{item} 수량 조절"
+    "stepperAdjust": "{item} 수량 조절",
+    "switchToList": "리스트형으로 보기",
+    "switchToGrid": "카드형으로 보기"
   }
 }

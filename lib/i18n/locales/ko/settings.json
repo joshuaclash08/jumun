@@ -4,64 +4,74 @@
     "sectionTitle": "화면 및 텍스트 상세 설정",
     "theme": {
       "title": "화면 테마",
-      "desc": "기본 밝은 모드와 눈이 편안한 다크 모드를 선택해요",
+      "desc": "밝은 모드와 다크 모드를 선택해요",
       "groupLabel": "화면 테마 선택",
       "light": "밝은 모드",
       "dark": "다크 모드"
     },
     "fontScale": {
       "title": "글자 크기",
-      "desc": "화면 전체 기본 글꼴 크기를 조절해요",
+      "desc": "화면 글꼴 크기를 조절해요",
+      "smaller": "작게",
+      "larger": "크게",
       "groupLabel": "글자 크기 선택",
+      "small": "작게",
       "normal": "보통",
       "large": "크게",
-      "xlarge": "아주 크게"
+      "xlarge": "아주 크게",
+      "huge": "가장 크게",
+      "decreaseAria": "글자 크기 축소",
+      "increaseAria": "글자 크기 확대",
+      "previewTitle": "미리보기",
+      "sampleProductName": "아메리카노",
+      "sampleProductPrice": "4,500원",
+      "sampleProductDesc": "깊고 진한 풍미의 에스프레소"
     },
     "oneHanded": {
       "title": "한손 조작 모드",
-      "desc": "버튼과 카드를 엄지가 닿기 쉬운 한쪽 방향으로 밀착 배치해요",
+      "desc": "버튼과 카드를 한쪽으로 모아요",
       "groupLabel": "한손 조작 방향 선택",
-      "none": "기본",
-      "left": "왼손 모드",
-      "right": "오른손 모드"
+      "left": "왼손",
+      "none": "중앙",
+      "right": "오른손"
     },
     "orderMode": {
       "title": "주문 화면 방식",
-      "desc": "한 화면에 전체 메뉴를 둘러볼지, 단계별로 하나씩 집중 선택할지 정해요",
+      "desc": "한 번에 하나씩 집중해서 골라요",
       "groupLabel": "주문 화면 방식 선택",
       "standard": "일반 메뉴판",
       "wizard": "단계별 주문"
     },
     "menuLayout": {
       "title": "메뉴 보기 방식",
-      "desc": "한눈에 보기 좋은 카드형과 글자가 크고 읽기 편한 리스트형을 선택해요",
+      "desc": "카드형과 리스트형을 선택해요",
       "groupLabel": "메뉴 보기 방식 선택",
-      "grid": "카드형 (기본)",
+      "grid": "카드형",
       "list": "리스트형"
     },
     "highContrast": {
       "label": "고대비 모드",
-      "desc": "텍스트와 배경의 대비를 17:1 이상으로 높여요"
+      "desc": "텍스트 대비를 높여 선명하게 보여줘요"
     },
     "dyslexiaSpacing": {
       "label": "난독증 친화 간격",
-      "desc": "글자, 단어, 줄 사이 간격을 넓혀 가독성을 높여요"
+      "desc": "줄과 단어 간격을 넓혀요"
     },
     "reducedMotion": {
       "label": "애니메이션 줄이기",
-      "desc": "화면 전환 및 장식 애니메이션을 즉시 완료해요"
+      "desc": "화면 전환 애니메이션을 줄여요"
     }
   },
   "feedback": {
     "sectionTitle": "피드백 및 편의",
     "timeoutExtension": {
       "label": "알림 표시 시간 2배 연장",
-      "desc": "알림 토스트가 화면에 머무는 시간을 3초에서 7초로 늘려요"
+      "desc": "알림이 화면에 더 오래 머물러요"
     },
     "voiceGuide": {
       "label": "음성 안내 (보이스오버 체험)",
-      "desc": "주문 단계와 메뉴 정보를 브라우저 음성으로 들려줘요 (프로토타입)",
-      "descDetail": "단계별 주문 화면과 메뉴 정보를 브라우저 음성으로 들려줘요"
+      "desc": "화면 내용을 소리로 읽어줘요",
+      "descDetail": "화면 내용을 소리로 읽어줘요"
     },
     "paymentMethod": {
       "label": "기본 결제 수단 관리"
@@ -81,6 +91,12 @@
       "card": "신용 / 체크카드",
       "easyPay": "간편 결제"
     }
+  },
+  "recentOrder": {
+    "title": "최근 주문 내역",
+    "clear": "내역 삭제",
+    "orderNumber": "주문번호 {number}",
+    "itemsCount": "{count}개"
   },
   "actions": {
     "complete": "설정 완료"

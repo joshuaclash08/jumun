@@ -7,3 +7,4 @@ export * from "./OneHandedModeSelector";
 export * from "./OrderModeSelector";
 export * from "./ThemeModeSelector";
 export * from "./MenuLayoutSelector";
+export * from "./LanguageSelector";

@@ -31,14 +31,9 @@ export function MenuLayoutSelector() {
 
   return (
     <div className="flex flex-col gap-3 px-5 py-4">
-      <div className="flex flex-col gap-1">
-        <span className="text-base font-bold text-foreground">
-          {t("screen.menuLayout.title")}
-        </span>
-        <span className="text-base font-medium text-muted-foreground">
-          {t("screen.menuLayout.desc")}
-        </span>
-      </div>
+      <span className="text-base font-bold text-foreground">
+        {t("screen.menuLayout.title")}
+      </span>
       <SegmentedControl<MenuLayout>
         groupLabel={t("screen.menuLayout.groupLabel")}
         options={options}

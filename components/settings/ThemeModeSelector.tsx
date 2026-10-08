@@ -46,14 +46,9 @@ export function ThemeModeSelector() {
 
   return (
     <div className="flex flex-col gap-3 px-5 py-4">
-      <div className="flex flex-col gap-1">
-        <span className="text-base font-bold text-foreground">
-          {t("screen.theme.title")}
-        </span>
-        <span className="text-base font-medium text-muted-foreground">
-          {t("screen.theme.desc")}
-        </span>
-      </div>
+      <span className="text-base font-bold text-foreground">
+        {t("screen.theme.title")}
+      </span>
       <SegmentedControl<AppTheme>
         groupLabel={t("screen.theme.groupLabel")}
         options={options}

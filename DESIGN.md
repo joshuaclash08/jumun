@@ -162,6 +162,7 @@ A small set of CTA-adjacent surfaces (the primary button's own shadow, the cart 
 
 ### Named Rules
 **The Border-and-Shadow Rule** (supersedes the prior Never-Alone color-shift rule). Toss cards are white-on-white — the boundary reads via a 1px `border-subtle` border *and* a `shadow-resting` together, not a background color-shift. Every elevated surface still pairs two boundary cues, never relies on one alone; the two cues themselves changed from "shadow + color-shift" to "shadow + border," matching Toss's literal card spec (`reference/TDS_Toss_Merged_Design_System.md` §8).
+*(Exception: ADR 0012 2-column menu product grid. As established in `docs/decisions/0012-top-left-navigation-and-large-card-grid.md`, product cards in the 2-column menu grid are borderless and shadowless (`border-none shadow-none`), relying on full-bleed photography, rounded squircle image containers, and white background spacing rather than a boxed card enclosure, matching Toss Shopping/Order feed patterns.)*
 
 ## Shapes
 
@@ -195,6 +196,7 @@ Buttons specifically graduate per size rather than mapping to one named token: `
 - **Background:** `Bright White` on `Bright White` — no longer a visible color-shift (was `Card Surface` `#EFECE4`).
 - **Border:** 1px `Subtle Divider`, always present now (was: none by default, added only between adjacent flush cards). Together with the shadow below, this is the boundary — see the Border-and-Shadow Rule.
 - **Shadow:** Resting.
+- **2-Column Menu Grid Exception (ADR 0012):** Product cards rendered in the main 2-column menu grid intentionally omit both border and outer card shadow (`border-none shadow-none`). The visual boundary is defined by the image aspect ratio, radius, and surrounding canvas whitespace, maximizing food photography appetite appeal without container boxiness.
 
 ### Bottom Sheets (signature component)
 The way flow-scoped secondary content (product detail, cart, checkout) appears — never a full route change; this is also explicitly Toss's own stated preference. Enters from the bottom with a spring motion, Layered shadow, `Bright White` background. One consistent motion signature is used for every sheet in the product. Settings remains the one deliberate exception — a dedicated route, not a sheet (`docs/decisions/0007-settings-as-dedicated-route.md`).
@@ -210,7 +212,7 @@ Unchanged. No persistent navigation chrome — no tab bar, no top nav, no breadc
 
 ### Do:
 - **Do** keep Toss Blue to one element class per screen — the primary action or the current selection (**The One Accent Rule**).
-- **Do** pair every elevated surface with a shadow *and* a border (**The Border-and-Shadow Rule**).
+- **Do** pair every elevated surface with a shadow *and* a border (**The Border-and-Shadow Rule**; see Cards for the ADR 0012 2-column grid borderless exception).
 - **Do** hold body text to 18px/1.5/−0.01em minimum weight 500, and never render any text smaller than 16px, anywhere — including where Toss's own scale would go smaller (Caption/Body-Small are not used in this product).
 - **Do** show unavailable/error/success state through color *and* text *and* icon together — never color alone.
 - **Do** collapse every animation (Motion or Lenis — GSAP was removed, `docs/decisions/0009-motion-only-animation.md`) to instant when the visitor's reduced-motion setting is on, no exceptions — including the NFC/QR hero animation, whose `reduceMotion` gating was verified unchanged by this pass.

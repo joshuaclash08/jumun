@@ -12,7 +12,7 @@
   },
   "invalidLink": {
     "title": "Order link not found",
-    "desc": "Please re-scan the table QR code or NFC tag, or try visiting the sample store.",
+    "desc": "Please re-scan the QR code or NFC tag.",
     "openSample": "Open Sample Store"
   }
 }

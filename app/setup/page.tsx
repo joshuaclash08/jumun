@@ -5,15 +5,17 @@ import { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "motion/react";
 import { HandHeart, Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
 import { SETUP_COMPLETED_KEY, SETUP_COMPLETED_COOKIE, sanitizeReturnTo } from "@/lib/constants/setup";
-import { useTranslation, translate, DEFAULT_LOCALE } from "@/lib/i18n";
+import { useTranslation } from "@/lib/i18n";
 
-function SetupContent() {
+interface SetupUIProps {
+  returnTo: string;
+}
+
+function SetupUI({ returnTo }: SetupUIProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const rawReturnTo = searchParams.get("returnTo");
-  const returnTo = sanitizeReturnTo(rawReturnTo);
   const reducedMotion = useAccessibilityStore((s) => s.reducedMotion);
   const hydrateThemeFromSystem = useAccessibilityStore((s) => s.hydrateThemeFromSystem);
   const hydrateLanguageFromSystem = useAccessibilityStore((s) => s.hydrateLanguageFromSystem);
@@ -37,8 +39,6 @@ function SetupContent() {
   };
 
   const handleNeedHelp = () => {
-    // Navigate to settings, carrying returnTo through so settings can
-    // redirect back to the original destination after completion.
     router.push(`/settings?returnTo=${encodeURIComponent(returnTo)}`);
   };
 
@@ -50,16 +50,16 @@ function SetupContent() {
   return (
     <main
       id="main-content"
-      className="flex min-h-[100dvh] flex-col items-center justify-center bg-background px-6"
+      className="flex min-h-[100vh] min-h-[100dvh] flex-col items-center justify-center bg-background px-6"
     >
       <motion.div
-        initial={reducedMotion ? { opacity: 1 } : { opacity: 0, y: 20 }}
+        initial={false}
         animate={{ opacity: 1, y: 0 }}
         transition={{
-          duration: reducedMotion ? 0 : 0.5,
+          duration: reducedMotion ? 0 : 0.4,
           ease: [0.22, 1, 0.36, 1],
         }}
-        className="flex w-full max-w-[380px] flex-col items-center gap-10"
+        className="flex w-full max-w-[380px] flex-col items-center gap-10 opacity-100"
       >
         {/* ── Icon ──────────────────────────────────────────────────── */}
         <div className="flex h-20 w-20 items-center justify-center rounded-[20px] bg-secondary">
@@ -71,64 +71,53 @@ function SetupContent() {
         </div>
 
         {/* ── Text ──────────────────────────────────────────────────── */}
-        <div className="flex flex-col items-center gap-3 text-center">
+        <div className="flex flex-col items-center text-center">
           <h1 className="text-[28px] font-extrabold leading-tight tracking-[-0.02em] text-foreground">
             {t("title")}
           </h1>
-          <p className="text-base font-medium leading-relaxed text-muted-foreground whitespace-pre-line">
-            {t("desc")}
-          </p>
         </div>
 
         {/* ── Buttons ───────────────────────────────────────────────── */}
         <div className="flex w-full flex-col gap-3">
           {/* Primary: need help → settings */}
-          <motion.button
-            type="button"
-            whileTap={reducedMotion ? undefined : { scale: 0.98 }}
-            transition={{ duration: 0.096, ease: [0.22, 1, 0.36, 1] }}
-            onClick={handleNeedHelp}
-            className="flex h-[56px] w-full items-center justify-center gap-2 rounded-[12px] bg-primary text-[16px] font-bold text-white transition-colors hover:bg-[#0050D9] active:bg-[#003EA8]"
-          >
+          <Button size="cta-full" onClick={handleNeedHelp} className="touch-manipulation">
             <Sparkles className="h-5 w-5" strokeWidth={2} aria-hidden="true" />
             {t("needHelp")}
-          </motion.button>
+          </Button>
 
           {/* Ghost: no help → original page */}
-          <motion.button
-            type="button"
-            whileTap={reducedMotion ? undefined : { scale: 0.98 }}
-            transition={{ duration: 0.096, ease: [0.22, 1, 0.36, 1] }}
+          <Button
+            variant="ghost"
+            size="cta-full"
             onClick={handleNoHelp}
-            className="flex h-[56px] w-full items-center justify-center rounded-[12px] bg-transparent text-[16px] font-bold text-muted-foreground transition-colors hover:bg-muted/60 active:bg-muted"
+            className="text-muted-foreground touch-manipulation"
           >
             {t("noHelp")}
-          </motion.button>
+          </Button>
         </div>
       </motion.div>
     </main>
   );
 }
 
+function SetupWithParams() {
+  const searchParams = useSearchParams();
+  const rawReturnTo = searchParams.get("returnTo");
+  const returnTo = sanitizeReturnTo(rawReturnTo);
+  return <SetupUI returnTo={returnTo} />;
+}
+
 /**
  * /setup — First-run onboarding gate.
+ *
+ * Uses <SetupUI returnTo="/" /> as the Suspense fallback so SSR delivers the real UI
+ * immediately with ZERO spinner flash. When useSearchParams resolves on client,
+ * returnTo is automatically updated.
  */
 export default function SetupPage() {
-  const loadingLabel = translate(DEFAULT_LOCALE, "common.loading");
-
   return (
-    <Suspense
-      fallback={
-        <div className="flex min-h-[100dvh] items-center justify-center bg-background">
-          <div
-            className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent"
-            role="status"
-            aria-label={loadingLabel}
-          />
-        </div>
-      }
-    >
-      <SetupContent />
+    <Suspense fallback={<SetupUI returnTo="/" />}>
+      <SetupWithParams />
     </Suspense>
   );
 }
