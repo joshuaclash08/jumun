@@ -1,5 +1,9 @@
 # UX Planning Notes — August 2026
 
+> [!NOTE] **HISTORICAL ARCHIVE (2026-08-16 / 2026-08-17)**  
+> 이 문서는 2026년 8월 기준의 과거 UX 기획 노트입니다.  
+> 2026년 10월 현재 최신 프로젝트 상태, 아키텍처 및 구현 스펙은 [README.md](../README.md), [UPDATE.md](../UPDATE.md), [docs/features.md](features.md), [docs/architecture.md](architecture.md)를 참조하십시오.
+
 **Scope note: this started as a planning document; several items below were subsequently applied on direct follow-up instruction ("적용까지 된거야?").** Each item is marked **Applied**, **Already fixed** (was part of concurrent work), or **Open** (still a real recommendation, not yet done). Cross-references `docs/component-standards.md` for the prescriptive target state each finding points toward.
 
 **⚠️ New finding, most significant item in this document — see §7.** While reconciling this doc against the live app, a systemic violation of the product's own stated "never render text smaller than 16px, anywhere" floor was found: `text-xs` (12px) is used at ~29 call sites app-wide for descriptions, badges, timestamps, and captions. This wasn't part of the original audit and needs a decision before it's touched — see §7 for the full list and the tradeoff.

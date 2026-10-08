@@ -35,7 +35,7 @@ A native app version is a separate, confirmed near-term companion surface, not a
 
 ## Capabilities and Constraints
 
-Phase 1 (this build): menu browsing, cart, mocked checkout, order confirmation, a reachable-anytime accessibility settings panel, full native screen-reader support. Explicitly out of scope for Phase 1: voice ordering (STT), custom auto-TTS narration, real payment processing, real backend/persistence, any native-only hardware API, tablet/desktop layouts. See `plan.md` for the full phased roadmap and `docs/decisions/` for the reasoning behind each boundary.
+Phase 1 (this build): menu browsing (2-col grid / 1-col list), 4-step wizard sequential order flow, cart review, mocked checkout, order confirmation with celebratory receipt, a reachable-anytime accessibility settings panel, full native screen-reader support (VoiceOver / TalkBack), and client-side audio guide narration via Web Speech API (`hooks/useVoiceGuide.ts`). Explicitly out of scope for Phase 1: voice ordering (STT intent parsing), real payment gateway processing, real backend/persistence, any native-only hardware API, tablet/desktop layouts. See `plan.md` for the full phased roadmap and `docs/decisions/` for the reasoning behind each boundary.
 
 Known web-platform constraint: iOS Safari has no Vibration API at all — haptic feedback must stay supplementary (never load-bearing) until a native app exists.
 
@@ -47,7 +47,7 @@ Name: Jumun (주문 — Korean for "order"). No logo, wordmark, or other visual 
 
 ## Evidence on Hand
 
-None. No real menu photography, no existing brand assets, no confirmed real venue partnerships at this stage. The Phase 1 menu is explicitly fictional (see `docs/decisions/0002-menu-domain.md`) — future work must not fabricate real testimonials, real venue names, or real pricing data as if they were confirmed facts.
+Menu photography: 29 real high-resolution food and beverage photography assets (`public/images/menu/*.jpg`) integrated per ADR 0013 for menu cards, detail sheets, and carousels. The Phase 1 venue and menu items remain fictional (see `docs/decisions/0002-menu-domain.md` and `docs/decisions/0013-menu-photography.md`) — future work must not fabricate real testimonials, real venue names, or real pricing data as if they were confirmed facts.
 
 A prior, partially-built attempt at this product (`legacy-reference/`, not tracked in this repo's git history) exists locally and is treated as anti-reference evidence — useful for identifying what not to repeat (see `docs/decisions/*.md`), not as approved visual or product truth.
 

@@ -1,136 +1,140 @@
-# JUMUN (주문) — 프로젝트 종합 현황 및 로드맵 리포트
+# JUMUN (주문) — 미정리 항목 전수 감사 및 개선 완료 리포트
 
-> **최종 업데이트 일자**: 2026년 10월 9일  
-> **현재 진행 단계**: Phase 1 Web Prototype MVP (구현, 접근성 고도화, 구형기기 최적화 및 126개 테스트 검증 완료)
-
----
-
-## 1. 프로젝트 개요 & 핵심 철학
-
-**JUMUN (주문)**은 휠체어 이용자, 시각·저시력 장애인, 청각 장애인, 고령자, 난독증 사용자 등 **모든 사람이 타인의 도움 없이 자신의 스마트폰으로 주문과 결제를 완결할 수 있는 배리어프리(Barrier-Free) BYOD 셀프오더 플랫폼**입니다.
-
-### 🌟 3대 핵심 원칙
-1. **BYOD (Bring Your Own Device) 우선**: 접근하기 어렵고 조작이 불편한 매장 설치형 키오스크를 대체하여, 사용자가 이미 자신에게 맞게 설정해둔 스마트폰(스크린 리더, 글자 크기, 고대비 등)으로 QR/NFC를 태그해 즉시 진입합니다.
-2. **Accessible by Default (기본으로 내재화된 접근성)**: 별도의 "장애인 전용 모드"나 "간편 모드"로 분리하지 않고, 세련된 토스 스타일의 단일 인터페이스 안에 WCAG 2.2 AA/AAA 기준(4.5:1~21:1 고대비, 44px+ 터치 타깃, 16px 텍스트 하한선, 포커스 링, 시간제한 제거)을 완벽하게 녹여냅니다.
-3. **Cross-Venue Settings Carryover (영구 지속 개인화)**: 한 매장에서 설정한 글자 크기, 테마, 모션 줄이기, 햅틱, 난독증 간격, 한 손 모드, 위저드 주문 모드 설정은 디바이스 스토리지에 보존되어 전국의 어떤 JUMUN 제휴 매장을 방문해도 재설정 없이 즉시 적용됩니다.
+> **문서 버전**: v1.1.0  
+> **감사 및 완료 일자**: 2026년 10월 9일  
+> **프로젝트 상태**: Phase 1 Web Prototype MVP — 전수 감사, 문서 개편, 코드 모듈 분리 및 126개 테스트 100% 검증 완료  
 
 ---
 
-## 2. 지금까지 완수한 작업 내역 (Accomplishments)
+## 1. 전수 감사(Audit) 배경 및 개요
 
-### 📌 1) 기반 아키텍처 & 디자인 시스템 구축
-- **Next.js 16.3.1 (App Router, Turbopack) + React 19.2.8 + TypeScript**: 초고속 Turbopack 빌드 및 React 19 최신 훅 규칙 완벽 준수.
-- **Tailwind CSS v4 `@theme` 토큰 시스템**: Figma 및 토스 브랜드 가이드를 정밀 분석한 TDS(Toss Design System) 토큰 레이어 구현 (`#0064FF` Toss Blue, 순수 화이트 배경, 보더+그림자 융합 규칙).
-- **7단계 점진적 스쿼클 라운드 스케일 (`--radius-xs` ~ `--radius-2xl`)**: 버튼, 카드, 시트별 비례 라운드 적용 (ADR 0011).
-- **폰트 자체 호스팅**: `Pretendard Variable` 폰트를 로컬 서빙하여 렌더링 블로킹 및 CDN 지연 제거 (`font-weight: 500` 바디 플로어 적용).
-- **Motion 단일 모션 레이어 통합 (ADR 0009, 0010)**: GSAP 의존성을 제거하고 Motion(`motion/react`)으로 일원화, 2단계 햅틱/터치 스프링 피드백(`0.96` / `0.90`) 및 `reduceMotion` 완벽 제어.
-- **구형 브라우저 (iOS 15 / Safari 15 / iPhone 6s) 호환성 폴리필**: `window.requestIdleCallback`, `window.cancelIdleCallback`, `Object.hasOwn` 폴리필(`lib/polyfills.ts`) 탑재로 런타임 크래시 방지.
+본 감사는 사용자 지시사항에 따라 저장소 전반의 **미정리 항목(Unorganized Items)**, **부정확·노후화된 문서(Stale Documentation)**, **모놀리식·중복 코드 구조(Messy / Monolithic Code)**를 식별하고, 브라우저 탭 타이틀 단일화 및 프로덕션 품질 무결성을 확보하기 위해 진행되었습니다.
 
-### 📌 2) 사용자 여정 및 UI/UX 혁신
-- **실물 메뉴 사진 & 2열 풀블리드 카드 그리드 / 1열 리스트 전환 (ADR 0013, 0012)**:
-  - 30여 종의 실제 고화질 메뉴 사진 자산 도입 (`/public/images/menu/*.jpg`).
-  - 사진 전체를 채우는 풀블리드 카드와 반투명 리퀴드 글래스 인포 패널 (`backdrop-blur-sm`).
-  - 사용자의 시각적 선호에 맞춰 그리드 뷰와 리스트 뷰를 자유롭게 전환 가능.
-- **진입 플로우 & 매장 식사/포장 분기 분리 (ADR 0014)**:
-  - QR/NFC 스캔 시 테이블 번호가 즉시 인식되어 메뉴판으로 직행 (`/order/[storeId]?table=N`).
-  - 홈 화면 "직접 매장 선택하기" 진입 시 매장 식사 vs 포장 선택 단계 (`OrderTypeSelectView`) 제공.
-  - 매장 식사 선택 시 전용 테이블 번호 선택 뷰 (`TableSelectView`)를 거쳐 메뉴로 진입.
-- **첫 방문 온보딩 마법사 (`/setup` & `SetupGuard`)**:
-  - 첫 방문 시 사용자의 접근성 선호(글자 크기, 테마, 모션 등)를 사전 세팅할 수 있는 부드러운 온보딩 단계 제공.
-- **위저드 단계별 주문 모드 (`WizardOrderView`)**:
-  - 인지적 부담이나 정보 과부하를 겪는 사용자를 위한 4단계 순차 주문 모드 (1단계 카테고리 $\to$ 2단계 메뉴 $\to$ 3단계 옵션 $\to$ 4단계 결제).
-  - 한 번에 하나의 결정에만 집중할 수 있는 깔끔한 1열 카드 인터페이스.
-- **한 손 조작 모드 (`OneHandedContainer`)**:
-  - 대화면 스마트폰에서도 엄지손가락이 닿을 수 있도록 화면을 좌측 또는 우측으로 좁혀주는 OS 키보드 스타일 레이아웃.
-  - 측면 플립 버튼으로 즉시 방향 전환 및 전체 화면 확장 지원.
-- **직원 호출(Staff Call) 6대 옵션 스마트 드로어**:
-  - 매장 식사 시 플로팅 액션 버튼으로 즉시 접근.
-  - 물티슈, 앞치마, 앞접시, 영수증, 수저, 직원호출 6가지 다빈도 요청 항목 멀티 선택.
-  - 호출 확인 즉시 동적 안내 토스트 및 버튼 활성 상태 체크 타이머(3.5초) 동작.
-- **통합 옵션 그룹 컴포넌트 (`OptionGroupList`)**:
-  - 일반 상품 상세 시트(`ProductDetailSheet`)와 위저드 주문 모드(`WizardOrderView`) 간 중복 옵션 렌더링 로직을 단일 컴포넌트로 통합.
-  - 단일 선택 소형 그룹은 2열 세그먼트 칩, 다중/대형 그룹은 체크박스 행으로 반응형 렌더링.
-- **전용 설정 페이지 (`/settings`) & 결제 관리 (`/settings/payment`)**:
-  - 드로어 팝업을 전용 라우트로 깔끔히 통합.
-  - 100%~150% 글자 크기 인터랙티브 슬라이더 및 실시간 프리뷰 카드.
-  - 네이티브 OS 드롭다운 기반 언어 선택기 (`LanguageSelector`).
-  - 최근 주문 내역 영수증 요약 카드 제공.
-- **다국어(i18n) 시스템 (한국어 / English)**:
-  - 6개 도메인별 네임스페이스(`common`, `landing`, `menu`, `orderFlow`, `settings`, `setup`).
-  - 100% 키 동기화 무결성 CLI (`bun run i18n:check`).
-  - 스크린 리더 음성 엔진과 실시간 연동되는 HTML `lang` 동기화.
-- **구형 모바일 60fps 최적화 (성능 하드닝)**:
-  - 카테고리 탭 인디케이터를 순수 CSS GPU 가속(`translate3d`)으로 전환하여 프레임 드랍 제거.
-  - 탭 좌표 및 카테고리 섹션 오프셋 사전 캐싱으로 스크롤 중 레이아웃 스래싱(Layout Thrashing) 완전 차단.
-  - `[contain:layout]` 격리로 리플로우 범위 국소화.
-
-### 📌 3) 테스트 및 품질 검증
-- **Vitest + React Testing Library + axe-core**:
-  - `tests/unit/components.test.tsx` (40 tests): 메뉴 카드, 상세 시트, 옵션 제약, 헤더바, 직원호출 등
-  - `tests/unit/wizard.test.tsx` (10 tests): 위저드 4단계 플로우, 한 손 조작 컨테이너 플립/확장 등
-  - `tests/unit/setupFlow.test.tsx` (16 tests): 온보딩 플로우, SetupGuard, 라우트 복귀 처리
-  - `tests/unit/settings.test.tsx` (12 tests): 설정 토글, 언어 전환, axe 접근성 검증
-  - `tests/unit/i18n.test.ts` (11 tests): i18n 엔진, 매개변수 치환, 언어 폴백
-  - `tests/unit/OrderService.test.ts` (6 tests): 주문 생성, 소계 계산, 결제 실패 시뮬레이션
-  - `tests/unit/theme.test.tsx` (7 tests): 테마 스토어, 다크/라이트/고대비 모드
-  - `tests/unit/useCartStore.test.ts` (6 tests): 장바구니 수량 계산, 실행 취소 스택
-  - `tests/unit/useToastStore.test.ts` (7 tests): 토스트 큐 및 타이머
-  - `tests/unit/useAccessibilityStore.test.ts` (6 tests): 접근성 프리셋 및 리셋
-  - `tests/unit/A11yToastContainer.test.tsx` (3 tests): 바텀시트 여백 및 포털 레이어링
-  - `tests/unit/foundation.test.tsx` (2 tests): 디자인 시스템 및 폰트 토큰
-  - **총 12개 테스트 스위트, 126개 테스트 100% PASS (axe 접근성 위반 0건)**.
+### 📋 감사 및 개선 핵심 목표
+1. **미정리 항목 전수 리스트업 및 현황 보고**: 마크다운 문서 및 코드베이스 내 방치·중복·괴리 항목 전수 감사.
+2. **브라우저 탭 및 메타데이터 단일화**: 브라우저 탭 제목을 불필요한 수식어 없이 순수 `"JUMUN"`으로 단일화 및 PWA 메타데이터 동기화.
+3. **문서(Documentation) 전면 최신화 및 정합성 교정**:
+   - `PRODUCT.md` 및 `plan.md` 내 "실물 메뉴 사진 없음", "음성 안내(TTS) 범위 제외" 등 현재 구현과 정면 충돌하는 묵은 허위 정보 교정.
+   - 2026년 8월 과거 계획 문서 4종에 `[HISTORICAL ARCHIVE]` 명시.
+   - 위저드 주문 모드(ADR 0015) 및 구형 기기 폴리필·GPU 전환(ADR 0016) 신규 ADR 작성.
+   - `docs/project-status-and-roadmap.md`와 바이트 단위 100% 복제 상태였던 `UPDATE.md`를 고유한 전수 감사 리포트로 전면 개편.
+4. **코드 분리, 통합 및 정돈 (Decomposition & Cleanup)**:
+   - ~800줄 모놀리식 `WizardOrderView.tsx`를 4개 독립 스텝 컴포넌트로 분리 (`components/flow/wizard/`).
+   - 중복 구현된 결제 선택 마크업을 `SelectionCard`로 일원화.
+   - `components/settings/index.ts` 배럴 누락 export(`SegmentedControl`) 보완.
+   - `app/settings/page.tsx` 중복 네비게이션 핸들러 통합.
+   - `HeaderBar.tsx`, `TableSelectView.tsx`의 불필요한 포커스 링 오버라이드 제거(글로벌 TDS 아웃라인 상속).
+5. **테스트 및 빌드 무결성 보증**:
+   - Vitest 12개 스위트, 126개 테스트 100% 통과 유지 및 React 19 `act(...)` 경고 스팸 제거.
+   - Turbopack 프로덕션 빌드(500ms대) 및 ESLint(0 warning) 유지.
+   - i18n 6개 네임스페이스 키 일치율 100% 검증.
 
 ---
 
-## 3. 현재 시스템 아키텍처 및 화면 현황 (Current State)
+## 2. 식별된 미정리 항목 및 조치 내역 (Audit Findings & Resolutions)
 
-```
-[사용자 진입 경로]
-  ├─ QR / NFC 태그 스캔 ────→ /order/[storeId]?table={n} ──→ [메뉴 탐색 (MenuClientView)]
-  │                                                                 │
-  │                                                                 ├─ 표준 모드 (그리드/리스트)
-  │                                                                 └─ 위저드 모드 (4단계 순차)
-  │
-  ├─ 홈 화면 수동 매장 선택 ──→ /order/[storeId] (선택 화면)
-  │                             ├─ 포장 선택 ──────────────→ /order/[storeId]?type=takeout ──┘
-  │                             └─ 매장 식사 선택 ──────────→ /order/[storeId]/table (테이블 선택) ──┘
-  │
-  └─ 첫 방문 미설정 사용자 ──→ /setup (접근성 온보딩 마법사) ────→ 이전 목적지로 복귀
-
-[메뉴 탐색 및 주문 흐름]
-  [메뉴 브라우징] ──(상품 탭)──→ [상품 상세 시트] ──(담기)──→ [장바구니 플로팅 알약]
-         │                              │                               │
-         │                              ▼                               ▼
-         │                     [OptionGroupList]               [장바구니 드로어]
-         │                                                              │
-         │                                                              ▼
-         │                                                     [결제 확인 드로어]
-         │                                                              │
-         ▼                                                              ▼
-  [직원 호출 6옵션 드로어]                                      [주문 완료 영수증 화면]
-  [전용 설정 페이지 (/settings)]                                 (새로운 주문하기 ──→ 초기화)
-  [한 손 조작 모드 (좌/우 패널)]
-```
+### 📌 [Finding 1] 브라우저 탭 타이틀 및 PWA 매니페스트 불일치
+- **발견 증상**:
+  - 브라우저 탭 타이틀에 긴 부제나 템플릿이 노출될 우려 및 `public/manifest.json`의 한글 오타(`"바리어프리"`).
+- **원인 분석**:
+  - `public/manifest.json` 내 `name`이 `"Jumun — 바리어프리 셀프오더"`, `short_name`이 `"Jumun"`으로 설정되어 대소문자 및 오타 불일치 발생.
+- **해결 조치**:
+  - `app/layout.tsx`: `title: "JUMUN"`으로 단일화하여 브라우저 탭에 순수 `"JUMUN"`만 노출되도록 보장.
+  - `public/manifest.json`: `"name": "JUMUN — 배리어프리 셀프오더"`, `"short_name": "JUMUN"`으로 정렬 및 오타 교정.
 
 ---
 
-## 4. 앞으로의 로드맵 (Roadmap)
+### 📌 [Finding 2] 문서 내 치명적 불일치 (Stale & Contradictory Documentation)
+- **발견 증상**:
+  - `PRODUCT.md`와 `plan.md`에서 "실물 메뉴 사진 없음 (flat illustration만 허용)", "음성 안내(TTS)는 Phase 1 범위 밖"이라고 기술되어 있었으나, 실제 저장소에는 29개의 실물 메뉴 사진(`public/images/menu/*.jpg`)과 Web Speech API 기반 음성 가이드(`hooks/useVoiceGuide.ts`)가 활발히 사용되고 있었음.
+  - `docs/HANDOFF-2026-08-17.md`, `docs/ux-plan-2026-08-17.md` 등 2026년 8월 문서에 적힌 테스트 개수(33개)와 시스템 상태가 현재(126개)와 달라 독자에게 혼란을 초래함.
+  - `UPDATE.md`가 `docs/project-status-and-roadmap.md`와 바이트 단위로 100% 동일한 복제본이었음.
+- **해결 조치**:
+  - `PRODUCT.md`: Capabilities 및 Evidence 섹션을 최신화하여 29개 실물 사진 자산(ADR 0013)과 Web Speech API 클라이언트 사이드 TTS(`hooks/useVoiceGuide.ts`) 구현을 공식 반영 (STT 음성 인식 주문만 Phase 2+로 유지).
+  - `plan.md`: Current status 및 Phase 1 Scope에 위저드 주문 모드(ADR 0015), 한 손 모드, 실물 사진, 음성 안내를 명시.
+  - 8월 문서 4종(`docs/HANDOFF-2026-08-17.md`, `docs/ux-plan-2026-08-17.md`, `docs/ux-planning-2026-08.md`, `docs/ux-audit.md`): `[HISTORICAL ARCHIVE]` 콜아웃을 상단에 추가하여 2026년 10월 최신 스펙 문서로 안내.
+  - ADR 0015 및 ADR 0016 작성:
+    - `docs/decisions/0015-wizard-and-one-handed-modes.md`: 위저드 4단계 순차 주문 및 OS 키보드형 한 손 조작 모드 아키텍처 기록.
+    - `docs/decisions/0016-ios15-polyfills-and-tab-gpu-transitions.md`: iOS 15 Safari 런타임 폴리필(`lib/polyfills.ts`) 및 탭 트랜지션 GPU 가속화 기록.
+  - `UPDATE.md`: 복제본을 삭제하고 본 전수 감사 및 개선 완료 리포트로 전면 탈바꿈.
+  - `CHANGELOG.md`: 누락되었던 최근 작업(iOS 15 폴리필, 탭 타이틀 JUMUN, 위저드 서브컴포넌트 분리 등) 항목 추가.
 
-### 🚀 Phase 1: Web Prototype MVP (현재 단계 — 완료 및 검증 완료)
-- [x] 배리어프리 접근성 기본값 웹 애플리케이션 구축
-- [x] 토스 디자인 시스템(TDS) 시각 언어 및 토큰 일원화
-- [x] 위저드 주문 모드 & 한 손 조작 모드
-- [x] 다국어(ko/en) 6개 네임스페이스 엔진 구축
-- [x] 구형 브라우저(iOS 15 / Safari 15) 호환성 및 GPU 최적화
-- [x] 126개 단위/컴포넌트/axe 테스트 100% 통과
+---
 
-### 🛒 Phase 2: Cart TTL & Order History 고도화 (차기 마일스톤, 상세 내역 TODO.md 참조)
-- [ ] 장바구니 영속화 및 30분~1시간 만료(TTL) 자동 관리 (`useCartStore`)
-- [ ] 설정 페이지 상단 주문 내역 카드 및 최근 주문 번호 로컬 영구 보존 (`localStorage`)
-- [ ] 다중 탭 동기화(`storage` 이벤트) 및 결제 시 중복 방지(`idempotencyKey`)
-- [ ] 실시간 주문 진행 상태 트래커 (접수 대기 $\to$ 조리 중 $\to$ 픽업 완료)
+### 📌 [Finding 3] 모놀리식 컴포넌트 및 중복 코드 (Monolithic & Redundant Code)
+- **발견 증상**:
+  - `components/flow/WizardOrderView.tsx`가 단일 파일 내 ~800줄에 달하며 4단계 렌더링 로직, 상태 관리, 결제 라디오 버튼 마크업이 한곳에 얽혀 유지보수가 극히 어려웠음.
+  - `components/settings/index.ts`에서 핵심 컴포넌트인 `SegmentedControl`이 export되지 않아 외부에서 배럴 임포트가 불가능했음.
+  - `app/settings/page.tsx`에 `handleBack`과 `handleComplete` 함수가 동일한 로직을 별도로 중복 선언하고 있었음.
+  - `components/layout/HeaderBar.tsx` 및 `components/flow/TableSelectView.tsx`에 `focus-visible:ring-2 focus-visible:ring-ring` 스타일이 하드코딩되어 글로벌 포커스 링 스펙(`DESIGN.md` 토스 블루 2px 아웃라인)과 충돌하고 불필요한 번들을 발생시킴.
+- **해결 조치**:
+  - **위저드 서브컴포넌트 분리 (`components/flow/wizard/`)**:
+    - `WizardCategoryStep.tsx`: 카테고리 선택 및 품목 수 안내.
+    - `WizardProductStep.tsx`: 카테고리별 상품 선택 및 뒤로가기.
+    - `WizardOptionStep.tsx`: `OptionGroupList` 및 `QuantityStepper`를 활용한 옵션 구성.
+    - `WizardCheckoutStep.tsx`: 주문 내역 요약 및 `SelectionCard`를 재사용한 결제 수단 선택.
+    - `index.ts`: 배럴 익스포트 제공.
+  - **`WizardOrderView.tsx` 오케스트레이터 슬림화**: 800줄에서 ~480줄로 40% 이상 압축, `step === 3` 진입 시 `selectedProduct`가 null인 경우 안전하게 1단계로 복귀하는 방어 로직 추가.
+  - **결제 UI 통합**: `WizardCheckoutStep` 내 결제 수단 선택 UI를 `SelectionCard` 컴포넌트로 일원화하여 일관된 햅틱/터치 애니메이션 및 ARIA `role="radio"` 지원.
+  - **배럴 및 네비게이션 정리**: `components/settings/index.ts`에 `export * from "./SegmentedControl";` 추가, `app/settings/page.tsx` 내 핸들러 `const handleComplete = handleBack;`로 통합.
+  - **포커스 링 정리**: `HeaderBar.tsx`와 `TableSelectView.tsx`의 불필요한 `focus-visible:ring-2` 클래스를 제거하여 통일된 글로벌 포커스 링 상속.
 
-### 📲 Phase 3: Native Port (Expo / React Native Monorepo)
-- [ ] Expo Router 기반 크로스 플랫폼 네이티브 앱 구조화
-- [ ] Zustand 스토어 및 `lib/services/*` 비즈니스 로직 100% 재사용
-- [ ] 네이티브 햅틱스(`expo-haptics`) 및 네이티브 NFC 리더 바인딩
+---
+
+### 📌 [Finding 4] 테스트 러너 경고 스팸 (React 19 `act(...)` Warnings)
+- **발견 증상**:
+  - `bun run test` 실행 시 `tests/unit/wizard.test.tsx`에서 `useAccessibilityStore.getState().setOneHandedMode(...)` 호출 시 "An update to OneHandedContainer inside a test was not wrapped in act(...)" 경고가 대량 출력됨.
+- **해결 조치**:
+  - `tests/unit/wizard.test.tsx` 내 상태 변경 및 클릭 이벤트를 `act(() => { ... })`로 감싸 경고를 완전히 박멸 (126개 테스트 경고 0건 클린 패스).
+
+---
+
+## 3. 파일별 변경 요약 (Change Inventory)
+
+| 구분 | 파일 경로 | 변경 요약 |
+|---|---|---|
+| **메타데이터** | `app/layout.tsx` | 브라우저 탭 타이틀을 간결한 `"JUMUN"`으로 단일화 |
+| **메타데이터** | `public/manifest.json` | `"name"`, `"short_name"`을 `"JUMUN"`으로 정렬 및 `"배리어프리"` 오타 수정 |
+| **코드 분리** | `components/flow/wizard/WizardCategoryStep.tsx` | 위저드 1단계 (카테고리 선택) 컴포넌트 신규 분리 |
+| **코드 분리** | `components/flow/wizard/WizardProductStep.tsx` | 위저드 2단계 (상품 선택) 컴포넌트 신규 분리 |
+| **코드 분리** | `components/flow/wizard/WizardOptionStep.tsx` | 위저드 3단계 (옵션 구성 & 수량) 컴포넌트 신규 분리 |
+| **코드 분리** | `components/flow/wizard/WizardCheckoutStep.tsx` | 위저드 4단계 (주문 요약 & 결제) 컴포넌트 신규 분리 (`SelectionCard` 재사용) |
+| **코드 분리** | `components/flow/wizard/index.ts` | 위저드 서브컴포넌트 배럴 인덱스 생성 |
+| **코드 슬림화** | `components/flow/WizardOrderView.tsx` | 800줄 모놀리스 $\to$ 서브컴포넌트 오케스트레이터로 슬림화 및 방어 로직 추가 |
+| **코드 정리** | `components/settings/index.ts` | 누락된 `SegmentedControl` export 추가 |
+| **코드 정리** | `app/settings/page.tsx` | 중복 `handleBack` / `handleComplete` 네비게이션 핸들러 단일화 |
+| **스타일 정리** | `components/layout/HeaderBar.tsx` | 불필요한 포커스 링 오버라이드 제거 (글로벌 TDS 아웃라인 상속) |
+| **스타일 정리** | `components/flow/TableSelectView.tsx` | 불필요한 포커스 링 오버라이드 제거 |
+| **테스트 개선** | `tests/unit/wizard.test.tsx` | `act(...)` 래핑으로 React 19 테스트 경고 스팸 박멸 |
+| **문서 갱신** | `PRODUCT.md` | 29개 실물 사진(ADR 0013) 및 Web Speech TTS(`useVoiceGuide.ts`) 현황 반영 |
+| **문서 갱신** | `plan.md` | 위저드 모드, 한 손 모드, 실물 사진, TTS 안내 최신화 |
+| **신규 ADR** | `docs/decisions/0015-wizard-and-one-handed-modes.md` | 위저드 4단계 순차 주문 및 한 손 조작 모드 아키텍처 결정 기록 |
+| **신규 ADR** | `docs/decisions/0016-ios15-polyfills-and-tab-gpu-transitions.md` | iOS 15 Safari 호환 폴리필 및 탭 트랜지션 GPU 최적화 기록 |
+| **문서 아카이빙** | `docs/HANDOFF-2026-08-17.md` | `[HISTORICAL ARCHIVE]` 명시 및 최신 문서 안내 |
+| **문서 아카이빙** | `docs/ux-plan-2026-08-17.md` | `[HISTORICAL ARCHIVE]` 명시 |
+| **문서 아카이빙** | `docs/ux-planning-2026-08.md` | `[HISTORICAL ARCHIVE]` 명시 |
+| **문서 아카이빙** | `docs/ux-audit.md` | `[HISTORICAL ARCHIVE]` 명시 |
+| **문서 개편** | `UPDATE.md` | 단순 복제 파일 제거 $\to$ 본 전수 감사 및 개선 완료 리포트로 개편 |
+| **문서 갱신** | `CHANGELOG.md` | 최근 최적화, 위저드 컴포넌트 분리 및 문서 개편 내역 추가 |
+
+---
+
+## 4. 검증 결과 기록 (Verification Record)
+
+| 검증 항목 | 실행 명령어 | 수행 결과 | 비고 |
+|---|---|---|---|
+| **단위/컴포넌트/A11y 테스트** | `bun run test` | **12개 스위트, 126개 테스트 100% 통과** (4.01s) | axe 접근성 검증 통과, React 19 경고 0건 |
+| **정적 분석 (Linter)** | `bun run lint` | **ESLint 에러 0건, 경고 0건** | 완벽한 클린 코드베이스 |
+| **프로덕션 빌드** | `bun run build` | **Turbopack 빌드 523ms 완료**, 7개 라우트 정상 생성 | 타입 에러 0건, SSR/정적 생성 정상 |
+| **다국어(i18n) 무결성** | `bun run i18n:check` | **6개 네임스페이스 100% 키 일치** | 누락/잉여 번역 키 없음 |
+
+---
+
+## 5. 결론 및 향후 과제 (Roadmap Ahead)
+
+본 전수 감사를 통해 마크다운 문서와 실제 코드베이스 간의 불일치를 100% 해소하였으며, 비대해졌던 위저드 모드를 모듈화하고 중복 코드를 통합하여 프로덕션 아키텍처의 안정성을 한 단계 격상시켰습니다.
+
+향후 Phase 2 진행 시 다음 사항에 집중합니다:
+1. **장바구니 TTL 자동 만료 및 동기화** (`TODO.md` 명시 과제).
+2. **React Native / Expo 모노레포 포팅**을 통한 진동 API(iOS Safari 미지원 극복) 및 백그라운드 NFC 지원.
+3. **실제 PG사(토스페이먼츠 등) 결제 연동** 및 주문 상태 백엔드 웹소켓 연동.

@@ -1,5 +1,9 @@
 # UX / 구조 / 로직 / 시스템 감사 (2026-08-16)
 
+> [!NOTE] **HISTORICAL ARCHIVE (2026-08-16)**  
+> 이 문서는 2026년 8월 16일 기준의 초기 시스템 감사 기록입니다.  
+> 2026년 10월 현재 최신 프로젝트 상태, 아키텍처 및 구현 스펙은 [README.md](../README.md), [UPDATE.md](../UPDATE.md), [docs/features.md](features.md), [docs/architecture.md](architecture.md)를 참조하십시오.
+
 전체 코드베이스(`app/`, `components/`, `lib/`, `store/`, `docs/`)를 읽고 정리한 문제 목록. 각 항목은 `파일:줄` 참조와 함께 "왜 문제인지"와 "권고안"을 적었다. 이 문서를 근거로 후속 구현 작업(`docs/decisions/`, `CHANGELOG.md`)을 진행한다.
 
 > 참고: `AGENTS.md`의 "이건 당신이 아는 Next.js가 아니다" 경고는 실제로 `next dev`(v16.3.1 canary)가 자동 생성하는 정상 기능이다 (`node_modules/next/dist/server/lib/generate-agent-files.js` 실존, `node_modules/next/dist/docs/` 실존 확인). 프롬프트 인젝션이 아니라 진짜 브레이킹체인지 경고이므로 무시하지 않고 라우팅 관련 작업 전에 참고했다.

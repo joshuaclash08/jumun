@@ -8,13 +8,19 @@ This file is a history — entries are appended, never rewritten. For current-st
 
 ### Added
 
+- `components/flow/wizard/` — Decomposed monolithic ~800-line `WizardOrderView.tsx` into 4 modular step subcomponents (`WizardCategoryStep.tsx`, `WizardProductStep.tsx`, `WizardOptionStep.tsx`, `WizardCheckoutStep.tsx`) with a unified barrel export (`components/flow/wizard/index.ts`).
+- `components/flow/wizard/WizardCheckoutStep.tsx` — Reused `SelectionCard` for payment method selection, ensuring consistent spring tap feedback and accessible `role="radio"` semantics.
+- `components/settings/index.ts` — Added missing export for `SegmentedControl`.
+- `docs/decisions/0015-wizard-and-one-handed-modes.md` — ADR documenting 4-step wizard sequential flow and OS keyboard style one-handed layout container.
+- `docs/decisions/0016-ios15-polyfills-and-tab-gpu-transitions.md` — ADR documenting iOS 15 Safari runtime polyfills (`lib/polyfills.ts`) and CSS GPU-accelerated category tab transitions.
+- `UPDATE.md` — Replaced duplicate documentation file with the comprehensive repository audit and cleanup report.
 - `components/layout/OneHandedContainer.tsx` — Mobile OS keyboard style One-Handed Layout container (emulating iOS, Android, and iPadOS one-handed keyboards): compresses content lane to ~82% width docked to the active hand, with a dedicated ~18% gutter rail housing a flip direction button (`ArrowLeft` / `ArrowRight`) and a full-width restore button (`Maximize2`). Works seamlessly across both standard catalog and wizard ordering views.
 - `components/settings/OrderModeSelector.tsx` — Segmented control to choose between `일반 메뉴판 둘러보기 (기본)` and `단계별 간편 주문 (1화면 1선택)`.
 - Global VoiceOver (TTS) integration across the entire application — Voice guidance now narrates category selection, product card click, option changes, cart drawer actions, checkout method updates, and final receipt confirmation across both standard and wizard order flows.
 - `components/flow/WizardOrderView.tsx` — 4-step Wizard ordering flow ("한 화면에 하나의 선택만 제시": Category → Product → Options & Checkout/Add More → Payment) tailored for cognitive clarity and motor impairment accessibility.
 - `components/settings/OneHandedModeSelector.tsx` — One-Handed Layout segmented control (`기본(양손)`, `왼손 모드`, `오른손 모드`) to bias interactive controls and action bars into the user's active thumb arc (designed for hemiplegic / stroke aftermath users).
 - `hooks/useVoiceGuide.ts` — Web Speech API (TTS) integration providing Korean speech narration for wizard steps, options, and actions with mute/unmute control.
-- `tests/unit/wizard.test.tsx` — Unit and axe accessibility tests covering one-handed layout classes, full 4-step wizard flow, multi-item cart accumulation, disclaimer banner, and mode switching.
+- `tests/unit/wizard.test.tsx` — Unit and axe accessibility tests covering one-handed layout classes, full 4-step wizard flow, multi-item cart accumulation, disclaimer banner, and mode switching. Wrapped state updates in `act(...)` to eliminate React 19 test warning spam.
 
 ### Changed
 

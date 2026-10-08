@@ -14,7 +14,7 @@ The physical entry point is a single tag at the table carrying both a printed QR
 
 ## Current status
 
-**Phase 1 Web Prototype MVP — Complete & Polished.** All Phase 1 screens (Landing with live QR scanner, Order Type & Table selection, 2-column menu with full-bleed photos & liquid-glass info panels, featured recommendations carousel, search fallback, product detail bottom sheet with option constraints, cart review with quantity undo, mocked checkout with payment selection, and confirmation receipt with celebratory animations) are fully implemented, polished to the Toss Design System tokens, and validated with automated Vitest + React Testing Library + axe accessibility tests (100% pass). Dedicated `/settings` sub-routes and persistent Staff Call two-step drawers are active. Next steps focus on Phase 2 Native port planning and backend/PG integration.
+**Phase 1 Web Prototype MVP — Complete & Polished.** All Phase 1 screens (Landing with live QR scanner, Order Type & Table selection, dual order modes: standard 2-column menu with full-bleed photos / 1-column list vs. 4-step sequential wizard order mode, OS keyboard style one-handed container, featured recommendations carousel, search fallback, product detail bottom sheet with option constraints, cart review with quantity undo, mocked checkout with payment selection, and confirmation receipt with celebratory animations) are fully implemented, polished to the Toss Design System tokens, and validated with automated Vitest + React Testing Library + axe accessibility tests (100% pass across 126 tests). Client-side Web Speech API audio guide (`useVoiceGuide.ts`), dedicated `/settings` sub-routes, and persistent Staff Call drawers are active. Next steps focus on Phase 2 Native port planning and backend/PG integration.
 
 A `legacy-reference/` folder exists alongside this plan (not tracked in this repo's git history — see `.gitignore`) containing a prior, partially-built attempt at this same product. It's used strictly as a source of ideas, constraints, and cautionary examples — not as a spec to inherit. Every place this documentation set draws on it, it says so explicitly, including where legacy got things wrong (a dead-end button, a countdown timer, disabled pinch-zoom, trademarked mock data — see the decision records in `docs/decisions/` for specifics).
 
@@ -44,15 +44,18 @@ Wire up iOS Universal Links (`apple-app-site-association`) and Android App Links
 
 ### In scope
 
-- Menu browsing, cart, mocked checkout, order confirmation — the full ordering flow, grounded in a fictional cafe menu (see `docs/decisions/0002-menu-domain.md`)
+- Menu browsing, cart, mocked checkout, order confirmation — the full ordering flow, grounded in a fictional cafe menu with real photography (see `docs/decisions/0002-menu-domain.md` and `docs/decisions/0013-menu-photography.md`)
+- Dual ordering modes: standard visual catalog browsing and 4-step sequential wizard ordering mode (`WizardOrderView.tsx`) with single-choice focus (ADR 0015)
+- OS keyboard style One-Handed Operating Mode (`OneHandedContainer.tsx`) for accessibility with large phones (ADR 0015)
 - The full accessibility baseline from `docs/design-system.md` applied to every screen by default — not an opt-in mode
-- A reachable-anytime settings panel for further personalization (high-contrast/AAA, font scale, reduced motion, haptics, dyslexia spacing, language)
+- Client-side Web Speech API audio guide narration (`hooks/useVoiceGuide.ts`) for Korean/English step reading and screen guidance
+- A reachable-anytime settings panel for further personalization (high-contrast/AAA, font scale slider preview, reduced motion, dyslexia spacing, language)
 - Native screen reader support (VoiceOver / TalkBack) via correct semantic HTML and ARIA — this is in scope everywhere, at all times, because it's a matter of writing correct markup, not a separate feature to build
 - Mobile viewport only (roughly 360–430px wide); zero effort spent on tablet or desktop layouts
 
 ### Explicitly out of scope for Phase 1
 
-- **Voice ordering (STT) and auto-TTS screen narration.** Legacy treated these as headline features; this plan defers them to Phase 2+. See `docs/decisions/0004-voice-scope.md` for the full reasoning.
+- **Voice ordering (STT intent parsing).** Deferring speech recognition and microphone intent parsing to Phase 2+ (native on-device speech APIs). (Note: Client-side TTS guidance via `useVoiceGuide.ts` is implemented in Phase 1 as an audio aid; speech-to-text ordering is what remains deferred).
 - **Real payment processing.** Checkout is mocked in Phase 1 — no PG/Stripe integration, no real money movement.
 - **Real backend / persistence.** Menu and order data are static/mocked. A real API is a Phase 2+ concern.
 - **Any native hardware API** (precise haptics beyond `navigator.vibrate` on Android Chrome, background NFC, native sensors) — these wait for Phase 2 by design; see the roadmap above.
