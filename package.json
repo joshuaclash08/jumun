@@ -16,7 +16,6 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "es-hangul": "^2.4.0",
-    "es-toolkit": "^1.50.0",
     "lenis": "^1.3.26",
     "lucide-react": "^1.31.0",
     "motion": "^13.1.0",
@@ -57,5 +56,13 @@
   "trustedDependencies": [
     "sharp",
     "unrs-resolver"
+  ],
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "not op_mini all",
+    "iOS >= 15",
+    "Safari >= 15",
+    "Chrome >= 90"
   ]
 }

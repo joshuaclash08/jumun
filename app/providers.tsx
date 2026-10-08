@@ -1,5 +1,6 @@
 "use client";
 
+import "@/lib/polyfills";
 import { useEffect, type ReactNode } from "react";
 import { useAccessibilityStore } from "@/store/useAccessibilityStore";
 import { useOSReducedMotionPreference } from "@/hooks/useReducedMotion";

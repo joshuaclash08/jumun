@@ -1,3 +1,4 @@
+import "@/lib/polyfills";
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { Providers } from "./providers";
@@ -14,7 +15,7 @@ const pretendard = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Jumun — 바리어프리 셀프오더",
+  title: "JUMUN",
   description: "QR/NFC로 바로 열리는, 모두를 위한 접근성 기본값 셀프오더 플랫폼.",
   manifest: "/manifest.json",
 };

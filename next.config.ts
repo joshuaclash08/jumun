@@ -9,6 +9,8 @@ const localIps = Object.values(os.networkInterfaces())
 
 const nextConfig: NextConfig = {
   allowedDevOrigins: [
+    "jumun.sharingurl.com",
+    "*.sharingurl.com",
     "172.30.40.227",
     "192.168.45.24",
     "172.30.1.42",
